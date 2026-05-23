@@ -31,7 +31,7 @@ export default async function handler(request: GatsbyFunctionRequest, response: 
 
   try {
     if (endpoint === "live-competitions") {
-      await proxyJson(`${REMOTE_API_BASE}/LiveCompetitions/`, response)
+      await proxyJson(`${REMOTE_API_BASE}/LiveAllCompetitions/`, response)
       return
     }
 

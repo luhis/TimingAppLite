@@ -13,15 +13,19 @@
     "build": "gatsby build",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/**/*.{js,jsx,ts,tsx} --fix"
   },
   "dependencies": {
     "bulma": "^1.0.4",
     "gatsby": "^5.6.0",
     "gatsby-plugin-image": "^3.6.0",
     "gatsby-plugin-sharp": "^5.6.0",
+    "gatsby-plugin-preact": "7.16.0",
     "gatsby-source-filesystem": "^5.6.0",
     "gatsby-transformer-sharp": "^5.6.0",
+    "preact": "10.29.1",
+    "preact-render-to-string": "6.6.7",
     "react": "^18.2.0",
     "react-bulma-components": "^4.1.0",
     "react-dom": "^18.2.0"
@@ -30,6 +34,9 @@
     "@types/node": "^18.11.18",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
+    "eslint": "9.39.4",
+    "eslint-config-preact": "2.0.0",
+    "eslint-config-prettier": "10.1.8",
     "typescript": "^4.9.5"
   }
 }
