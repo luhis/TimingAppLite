@@ -14,7 +14,8 @@
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/**/*.{js,jsx,ts,tsx} --fix"
+    "lint": "eslint src/**/*.{js,jsx,ts,tsx} --cache --cache-location .eslintcache",
+    "lint:fix": "eslint src/**/*.{js,jsx,ts,tsx} --cache --cache-location .eslintcache --fix"
   },
   "dependencies": {
     "bulma": "^1.0.4",

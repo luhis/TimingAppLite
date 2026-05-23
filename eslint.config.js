@@ -2,7 +2,6 @@ import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
-import prettier from 'eslint-plugin-prettier';
 import functional from "eslint-plugin-functional";
 import eslintConfigPrettier from 'eslint-config-prettier';
 import globals from 'globals';
@@ -19,7 +18,6 @@ export default [
         ecmaFeatures: {
           jsx: true,
         },
-        project: './tsconfig.json',
       },
       globals: {
         ...globals.browser,
@@ -29,7 +27,6 @@ export default [
       '@typescript-eslint': typescriptEslint,
       'react': react,
       'react-hooks': reactHooks,
-      'prettier': prettier,
       functional: functional,
     },
     settings: {
@@ -41,10 +38,8 @@ export default [
     rules: {
       ...typescriptEslint.configs['eslint-recommended'].rules,
       ...typescriptEslint.configs['recommended'].rules,
-      ...typescriptEslint.configs['recommended-requiring-type-checking'].rules,
       ...react.configs['recommended'].rules,
       ...reactHooks.configs['recommended'].rules,
-      ...prettier.configs['recommended'].rules,
       ...functional.configs["lite"].rules,
       ...eslintConfigPrettier.rules,
       
@@ -64,6 +59,17 @@ export default [
       'linebreak-style': ['error', 'unix'],
       'react/react-in-jsx-scope': 'off',
       "functional/no-return-void": "off",
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.json',
+      },
+    },
+    rules: {
+      ...typescriptEslint.configs['recommended-requiring-type-checking'].rules,
     },
   },
   {

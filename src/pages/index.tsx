@@ -113,22 +113,25 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
   const requestedLeaderboardId = queryParams.get("leaderboardid") ?? ""
 
   useEffect(() => {
-    let cancelled = false
+    const controller = new AbortController()
 
     const loadCompetitions = async () => {
       setLoadingCompetitions(true)
       setError(null)
 
       try {
-        const response = await fetch(`${API_BASE}?endpoint=live-competitions`)
+        const response = await fetch(`${API_BASE}?endpoint=live-competitions`, {
+          signal: controller.signal,
+        })
 
         if (!response.ok) {
-          throw new Error(`Unable to load competitions (${response.status})`)
+          setError(`Unable to load competitions (${response.status})`)
+          return
         }
 
         const data = (await response.json()) as Competition[]
 
-        if (cancelled) {
+        if (controller.signal.aborted) {
           return
         }
 
@@ -138,20 +141,20 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
         setCompetitionId(preferredCompetition?.id ?? "")
       } catch (fetchError) {
-        if (!cancelled) {
+        if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
           setError(fetchError instanceof Error ? fetchError.message : "Unable to load competitions")
         }
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setLoadingCompetitions(false)
         }
       }
     }
 
-    loadCompetitions()
+    void loadCompetitions()
 
     return () => {
-      cancelled = true
+      controller.abort()
     }
   }, [requestedCompetitionId])
 
@@ -162,7 +165,6 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       return
     }
 
-    let cancelled = false
     const controller = new AbortController()
 
     const loadLeaderboards = async () => {
@@ -175,12 +177,13 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         })
 
         if (!response.ok) {
-          throw new Error(`Unable to load leaderboard list (${response.status})`)
+          setError(`Unable to load leaderboard list (${response.status})`)
+          return
         }
 
         const data = (await response.json()) as LeaderboardSummary[]
 
-        if (cancelled) {
+        if (controller.signal.aborted) {
           return
         }
 
@@ -189,20 +192,19 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         const preferredLeaderboard = data.find(item => String(item.id) === requestedLeaderboardId) ?? data[0]
         setLeaderboardId(preferredLeaderboard ? String(preferredLeaderboard.id) : "")
       } catch (fetchError) {
-        if (!cancelled && !(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
+        if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
           setError(fetchError instanceof Error ? fetchError.message : "Unable to load leaderboards")
         }
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setLoadingLeaderboards(false)
         }
       }
     }
 
-    loadLeaderboards()
+    void loadLeaderboards()
 
     return () => {
-      cancelled = true
       controller.abort()
     }
   }, [competitionId, requestedLeaderboardId])
@@ -213,7 +215,6 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       return
     }
 
-    let cancelled = false
     const controller = new AbortController()
 
     const loadLeaderboard = async () => {
@@ -229,29 +230,29 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         )
 
         if (!response.ok) {
-          throw new Error(`Unable to load results (${response.status})`)
+          setError(`Unable to load results (${response.status})`)
+          return
         }
 
         const data = (await response.json()) as LeaderboardPayload
 
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setLeaderboard(data)
         }
       } catch (fetchError) {
-        if (!cancelled && !(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
+        if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
           setError(fetchError instanceof Error ? fetchError.message : "Unable to load results")
         }
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setLoadingResults(false)
         }
       }
     }
 
-    loadLeaderboard()
+    void loadLeaderboard()
 
     return () => {
-      cancelled = true
       controller.abort()
     }
   }, [competitionId, leaderboardId])
