@@ -1,0 +1,19 @@
+{
+  "name": "timing-app-lite",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Gatsby app to browse Sapphire leaderboard event results",
+  "license": "MIT",
+  "scripts": {
+    "build": "gatsby build",
+    "develop": "gatsby develop",
+    "start": "gatsby develop",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean"
+  },
+  "dependencies": {
+    "gatsby": "^5.14.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
