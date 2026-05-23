@@ -1,0 +1,2 @@
+# TimingAppLite
+TimingAppLive, but lighter
