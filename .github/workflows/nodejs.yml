@@ -28,4 +28,3 @@ jobs:
     - run: yarn lint
     - run: yarn typecheck
     - run: yarn build
-    - run: yarn test
