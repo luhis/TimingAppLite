@@ -1,8 +1,8 @@
-import * as React from "react"
-import type { HeadFC, PageProps } from "gatsby"
-import { useEffect, useMemo, useState } from "react"
-import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components"
-import "bulma/css/bulma.min.css"
+import * as React from "react";
+import type { HeadFC, PageProps } from "gatsby";
+import { useEffect, useMemo, useState } from "react";
+import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components";
+import "bulma/css/bulma.min.css";
 
 type Competition = {
   id: string
@@ -37,189 +37,189 @@ type FilterState = {
   className: string
 }
 
-const API_BASE = "/api/leaderboard"
+const API_BASE = "/api/leaderboard";
 
 const initialFilters: FilterState = {
   query: "",
   driver: "",
   club: "",
   className: "",
-}
+};
 
 const competitionStatusLabel = (active: string) => {
   switch (active) {
     case "0":
-      return "Live"
+      return "Live";
     case "1":
-      return "Scheduled"
+      return "Scheduled";
     case "2":
-      return "Finalised"
+      return "Finalised";
     case "3":
-      return "Provisional"
+      return "Provisional";
     default:
-      return "Open"
+      return "Open";
   }
-}
+};
 
 const stringifyCell = (value: string | number | null | undefined) => {
   if (value === null || value === undefined || value === "") {
-    return "-"
+    return "-";
   }
 
-  return String(value)
-}
+  return String(value);
+};
 
 const rowSearchText = (item: LeaderboardItem) =>
   Object.values(item)
     .map(value => stringifyCell(value).toLowerCase())
-    .join(" ")
+    .join(" ");
 
 const isSectionRow = (item: LeaderboardItem) => {
-  const meaningfulValues = Object.entries(item).filter(([, value]) => stringifyCell(value) !== "-")
+  const meaningfulValues = Object.entries(item).filter(([, value]) => stringifyCell(value) !== "-");
 
-  return meaningfulValues.length === 1 && Object.prototype.hasOwnProperty.call(item, "classname")
-}
+  return meaningfulValues.length === 1 && Object.prototype.hasOwnProperty.call(item, "classname");
+};
 
 const formatMeta = (competition: Competition | null) => {
   if (!competition) {
-    return "Waiting for live data"
+    return "Waiting for live data";
   }
 
   if (competition.finalised) {
-    return `Finalised ${competition.finalised}`
+    return `Finalised ${competition.finalised}`;
   }
 
   if (competition.provisional) {
-    return `Provisional ${competition.provisional}`
+    return `Provisional ${competition.provisional}`;
   }
 
-  return `${competition.dateddmmyyyy} event feed`
-}
+  return `${competition.dateddmmyyyy} event feed`;
+};
 
 const IndexPage: React.FC<PageProps> = ({ location }) => {
-  const [competitions, setCompetitions] = useState<Competition[]>([])
-  const [leaderboards, setLeaderboards] = useState<LeaderboardSummary[]>([])
-  const [leaderboard, setLeaderboard] = useState<LeaderboardPayload | null>(null)
-  const [competitionId, setCompetitionId] = useState("")
-  const [leaderboardId, setLeaderboardId] = useState("")
-  const [filters, setFilters] = useState<FilterState>(initialFilters)
-  const [loadingCompetitions, setLoadingCompetitions] = useState(true)
-  const [loadingLeaderboards, setLoadingLeaderboards] = useState(false)
-  const [loadingResults, setLoadingResults] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [leaderboards, setLeaderboards] = useState<LeaderboardSummary[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardPayload | null>(null);
+  const [competitionId, setCompetitionId] = useState("");
+  const [leaderboardId, setLeaderboardId] = useState("");
+  const [filters, setFilters] = useState<FilterState>(initialFilters);
+  const [loadingCompetitions, setLoadingCompetitions] = useState(true);
+  const [loadingLeaderboards, setLoadingLeaderboards] = useState(false);
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search])
-  const requestedCompetitionId = queryParams.get("competitionid") ?? ""
-  const requestedLeaderboardId = queryParams.get("leaderboardid") ?? ""
+  const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const requestedCompetitionId = queryParams.get("competitionid") ?? "";
+  const requestedLeaderboardId = queryParams.get("leaderboardid") ?? "";
 
   useEffect(() => {
-    const controller = new AbortController()
+    const controller = new AbortController();
 
     const loadCompetitions = async () => {
-      setLoadingCompetitions(true)
-      setError(null)
+      setLoadingCompetitions(true);
+      setError(null);
 
       try {
         const response = await fetch(`${API_BASE}?endpoint=live-competitions`, {
           signal: controller.signal,
-        })
+        });
 
         if (!response.ok) {
-          setError(`Unable to load competitions (${response.status})`)
-          return
+          setError(`Unable to load competitions (${response.status})`);
+          return;
         }
 
-        const data = (await response.json()) as Competition[]
+        const data = (await response.json()) as Competition[];
 
         if (controller.signal.aborted) {
-          return
+          return;
         }
 
-        setCompetitions(data)
+        setCompetitions(data);
 
-        const preferredCompetition = data.find(item => item.id === requestedCompetitionId) ?? data[0]
+        const preferredCompetition = data.find(item => item.id === requestedCompetitionId) ?? data[0];
 
-        setCompetitionId(preferredCompetition?.id ?? "")
+        setCompetitionId(preferredCompetition?.id ?? "");
       } catch (fetchError) {
         if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
-          setError(fetchError instanceof Error ? fetchError.message : "Unable to load competitions")
+          setError(fetchError instanceof Error ? fetchError.message : "Unable to load competitions");
         }
       } finally {
         if (!controller.signal.aborted) {
-          setLoadingCompetitions(false)
+          setLoadingCompetitions(false);
         }
       }
-    }
+    };
 
-    void loadCompetitions()
+    void loadCompetitions();
 
     return () => {
-      controller.abort()
-    }
-  }, [requestedCompetitionId])
+      controller.abort();
+    };
+  }, [requestedCompetitionId]);
 
   useEffect(() => {
     if (!competitionId) {
-      setLeaderboards([])
-      setLeaderboard(null)
-      return
+      setLeaderboards([]);
+      setLeaderboard(null);
+      return;
     }
 
-    const controller = new AbortController()
+    const controller = new AbortController();
 
     const loadLeaderboards = async () => {
-      setLoadingLeaderboards(true)
-      setError(null)
+      setLoadingLeaderboards(true);
+      setError(null);
 
       try {
         const response = await fetch(`${API_BASE}?endpoint=leaderboards&competitionId=${encodeURIComponent(competitionId)}`, {
           signal: controller.signal,
-        })
+        });
 
         if (!response.ok) {
-          setError(`Unable to load leaderboard list (${response.status})`)
-          return
+          setError(`Unable to load leaderboard list (${response.status})`);
+          return;
         }
 
-        const data = (await response.json()) as LeaderboardSummary[]
+        const data = (await response.json()) as LeaderboardSummary[];
 
         if (controller.signal.aborted) {
-          return
+          return;
         }
 
-        setLeaderboards(data)
+        setLeaderboards(data);
 
-        const preferredLeaderboard = data.find(item => String(item.id) === requestedLeaderboardId) ?? data[0]
-        setLeaderboardId(preferredLeaderboard ? String(preferredLeaderboard.id) : "")
+        const preferredLeaderboard = data.find(item => String(item.id) === requestedLeaderboardId) ?? data[0];
+        setLeaderboardId(preferredLeaderboard ? String(preferredLeaderboard.id) : "");
       } catch (fetchError) {
         if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
-          setError(fetchError instanceof Error ? fetchError.message : "Unable to load leaderboards")
+          setError(fetchError instanceof Error ? fetchError.message : "Unable to load leaderboards");
         }
       } finally {
         if (!controller.signal.aborted) {
-          setLoadingLeaderboards(false)
+          setLoadingLeaderboards(false);
         }
       }
-    }
+    };
 
-    void loadLeaderboards()
+    void loadLeaderboards();
 
     return () => {
-      controller.abort()
-    }
-  }, [competitionId, requestedLeaderboardId])
+      controller.abort();
+    };
+  }, [competitionId, requestedLeaderboardId]);
 
   useEffect(() => {
     if (!competitionId || !leaderboardId) {
-      setLeaderboard(null)
-      return
+      setLeaderboard(null);
+      return;
     }
 
-    const controller = new AbortController()
+    const controller = new AbortController();
 
     const loadLeaderboard = async () => {
-      setLoadingResults(true)
-      setError(null)
+      setLoadingResults(true);
+      setError(null);
 
       try {
         const response = await fetch(
@@ -227,77 +227,77 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
           {
             signal: controller.signal,
           }
-        )
+        );
 
         if (!response.ok) {
-          setError(`Unable to load results (${response.status})`)
-          return
+          setError(`Unable to load results (${response.status})`);
+          return;
         }
 
-        const data = (await response.json()) as LeaderboardPayload
+        const data = (await response.json()) as LeaderboardPayload;
 
         if (!controller.signal.aborted) {
-          setLeaderboard(data)
+          setLeaderboard(data);
         }
       } catch (fetchError) {
         if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
-          setError(fetchError instanceof Error ? fetchError.message : "Unable to load results")
+          setError(fetchError instanceof Error ? fetchError.message : "Unable to load results");
         }
       } finally {
         if (!controller.signal.aborted) {
-          setLoadingResults(false)
+          setLoadingResults(false);
         }
       }
-    }
+    };
 
-    void loadLeaderboard()
+    void loadLeaderboard();
 
     return () => {
-      controller.abort()
-    }
-  }, [competitionId, leaderboardId])
+      controller.abort();
+    };
+  }, [competitionId, leaderboardId]);
 
-  const selectedCompetition = competitions.find(item => item.id === competitionId) ?? null
-  const selectedLeaderboard = leaderboards.find(item => String(item.id) === leaderboardId) ?? null
+  const selectedCompetition = competitions.find(item => item.id === competitionId) ?? null;
+  const selectedLeaderboard = leaderboards.find(item => String(item.id) === leaderboardId) ?? null;
 
   const visibleRows = useMemo(() => {
     if (!leaderboard) {
-      return []
+      return [];
     }
 
-    const query = filters.query.trim().toLowerCase()
-    const driver = filters.driver.trim().toLowerCase()
-    const club = filters.club.trim().toLowerCase()
-    const className = filters.className.trim().toLowerCase()
+    const query = filters.query.trim().toLowerCase();
+    const driver = filters.driver.trim().toLowerCase();
+    const club = filters.club.trim().toLowerCase();
+    const className = filters.className.trim().toLowerCase();
 
     return leaderboard.items.filter(item => {
-      const matchesQuery = !query || rowSearchText(item).includes(query)
-      const matchesDriver = !driver || stringifyCell(item.driver).toLowerCase().includes(driver)
-      const matchesClub = !club || stringifyCell(item.club).toLowerCase().includes(club)
-      const matchesClass = !className || stringifyCell(item.classname).toLowerCase().includes(className)
+      const matchesQuery = !query || rowSearchText(item).includes(query);
+      const matchesDriver = !driver || stringifyCell(item.driver).toLowerCase().includes(driver);
+      const matchesClub = !club || stringifyCell(item.club).toLowerCase().includes(club);
+      const matchesClass = !className || stringifyCell(item.classname).toLowerCase().includes(className);
 
-      return matchesQuery && matchesDriver && matchesClub && matchesClass
-    })
-  }, [filters, leaderboard])
+      return matchesQuery && matchesDriver && matchesClub && matchesClass;
+    });
+  }, [filters, leaderboard]);
 
-  const sectionCount = useMemo(() => visibleRows.filter(isSectionRow).length, [visibleRows])
-  const dataRowCount = visibleRows.length - sectionCount
-  const isBusy = loadingCompetitions || loadingLeaderboards || loadingResults
-  const resultColumns = leaderboard?.columns ?? []
+  const sectionCount = useMemo(() => visibleRows.filter(isSectionRow).length, [visibleRows]);
+  const dataRowCount = visibleRows.length - sectionCount;
+  const isBusy = loadingCompetitions || loadingLeaderboards || loadingResults;
+  const resultColumns = leaderboard?.columns ?? [];
 
   const handleCompetitionChange = (value: string) => {
-    setCompetitionId(value)
-    setLeaderboardId("")
-    setLeaderboard(null)
-  }
+    setCompetitionId(value);
+    setLeaderboardId("");
+    setLeaderboard(null);
+  };
 
   const handleFilterChange = (field: keyof FilterState) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters(current => ({ ...current, [field]: event.target.value }))
-  }
+    setFilters(current => ({ ...current, [field]: event.target.value }));
+  };
 
   const resetFilters = () => {
-    setFilters(initialFilters)
-  }
+    setFilters(initialFilters);
+  };
 
   return (
     <Section>
@@ -472,7 +472,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                             <tr key={`section-${index}`} className="section-row">
                               <td colSpan={Math.max(resultColumns.length, 1)}>{stringifyCell(item.classname)}</td>
                             </tr>
-                          )
+                          );
                         }
 
                         return (
@@ -481,7 +481,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                               <td key={column.name}>{stringifyCell(item[column.name])}</td>
                             ))}
                           </tr>
-                        )
+                        );
                       })
                     ) : (
                       <tr>
@@ -498,10 +498,10 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         </Columns>
       </Container>
     </Section>
-  )
-}
+  );
+};
 
-export default IndexPage
+export default IndexPage;
 
 export const Head: HeadFC = () => (
   <>
@@ -511,4 +511,4 @@ export const Head: HeadFC = () => (
       content="Gatsby TypeScript leaderboard app powered by the Sapphire Solutions autotest API."
     />
   </>
-)
+);

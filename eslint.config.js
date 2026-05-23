@@ -57,6 +57,7 @@ export default [
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
       'no-implicit-globals': 'error',
       'linebreak-style': ['error', 'unix'],
+      'semi': ['error', 'always'],
       'react/react-in-jsx-scope': 'off',
       "functional/no-return-void": "off",
     },
