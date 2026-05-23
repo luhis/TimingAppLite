@@ -1,7 +1,8 @@
 import * as React from "react"
 import type { HeadFC, PageProps } from "gatsby"
 import { useEffect, useMemo, useState } from "react"
-import "../styles/site.css"
+import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components"
+import "bulma/css/bulma.min.css"
 
 type Competition = {
   id: string
@@ -36,7 +37,7 @@ type FilterState = {
   className: string
 }
 
-const API_BASE = "https://autotest.sapphire-solutions.co.uk/API/1"
+const API_BASE = "/api/leaderboard"
 
 const initialFilters: FilterState = {
   query: "",
@@ -119,7 +120,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       setError(null)
 
       try {
-        const response = await fetch(`${API_BASE}/LiveCompetitions/`)
+        const response = await fetch(`${API_BASE}?endpoint=live-competitions`)
 
         if (!response.ok) {
           throw new Error(`Unable to load competitions (${response.status})`)
@@ -169,7 +170,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       setError(null)
 
       try {
-        const response = await fetch(`${API_BASE}/Competitions/${competitionId}/Leaderboards/`, {
+        const response = await fetch(`${API_BASE}?endpoint=leaderboards&competitionId=${encodeURIComponent(competitionId)}`, {
           signal: controller.signal,
         })
 
@@ -220,9 +221,12 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       setError(null)
 
       try {
-        const response = await fetch(`${API_BASE}/Competitions/${competitionId}/Leaderboards/${leaderboardId}`, {
-          signal: controller.signal,
-        })
+        const response = await fetch(
+          `${API_BASE}?endpoint=leaderboard&competitionId=${encodeURIComponent(competitionId)}&leaderboardId=${encodeURIComponent(leaderboardId)}`,
+          {
+            signal: controller.signal,
+          }
+        )
 
         if (!response.ok) {
           throw new Error(`Unable to load results (${response.status})`)
@@ -295,165 +299,204 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
   }
 
   return (
-    <main className="page-shell">
-      <section className="hero-panel">
-        <div className="hero-copy">
-          <p className="eyebrow">Gatsby TypeScript leaderboard app</p>
-          <h1>Live autotest results without scraping the page.</h1>
-          <p className="hero-text">
-            This app talks directly to the Sapphire Solutions API behind the leaderboard site, surfaces the live event
-            feed, and lets you filter results quickly without leaving the page.
-          </p>
-          <div className="hero-stats">
-            <div>
-              <span>Events</span>
-              <strong>{competitions.length || "--"}</strong>
-            </div>
-            <div>
-              <span>Boards</span>
-              <strong>{leaderboards.length || "--"}</strong>
-            </div>
-            <div>
-              <span>Visible rows</span>
-              <strong>{leaderboard ? dataRowCount : "--"}</strong>
-            </div>
-          </div>
-        </div>
+    <Section>
+      <Container>
+        <Box className="mb-5">
+          <Columns>
+            <Columns.Column size={8}>
+              <Box>
+                <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7 mb-3">
+                  Gatsby TypeScript leaderboard app
+                </p>
+                <Heading renderAs="h1" size={1} className="mb-3">
+                  Live autotest results without scraping the page.
+                </Heading>
+                <p className="is-size-5 has-text-grey-dark">
+                  This app talks directly to the Sapphire Solutions API behind the leaderboard site, surfaces the live
+                  event feed, and lets you filter results quickly without leaving the page.
+                </p>
+                <Columns className="mt-4 is-variable is-4">
+                  <Columns.Column>
+                    <Box>
+                      <p className="has-text-grey is-size-7">Events</p>
+                      <Heading renderAs="p" size={3} className="mb-0">
+                        {competitions.length || "--"}
+                      </Heading>
+                    </Box>
+                  </Columns.Column>
+                  <Columns.Column>
+                    <Box>
+                      <p className="has-text-grey is-size-7">Boards</p>
+                      <Heading renderAs="p" size={3} className="mb-0">
+                        {leaderboards.length || "--"}
+                      </Heading>
+                    </Box>
+                  </Columns.Column>
+                  <Columns.Column>
+                    <Box>
+                      <p className="has-text-grey is-size-7">Visible rows</p>
+                      <Heading renderAs="p" size={3} className="mb-0">
+                        {leaderboard ? dataRowCount : "--"}
+                      </Heading>
+                    </Box>
+                  </Columns.Column>
+                </Columns>
+              </Box>
+            </Columns.Column>
 
-        <aside className="hero-card">
-          <span className={`status-pill status-${selectedCompetition?.active ?? "x"}`}>
-            {competitionStatusLabel(selectedCompetition?.active ?? "")}
-          </span>
-          <h2>{selectedCompetition?.name ?? "Loading current event"}</h2>
-          <p>{formatMeta(selectedCompetition)}</p>
-          <dl>
-            <div>
-              <dt>Board</dt>
-              <dd>{selectedLeaderboard?.name ?? "Waiting for leaderboard"}</dd>
-            </div>
-            <div>
-              <dt>Source</dt>
-              <dd>autotest.sapphire-solutions.co.uk/API/1</dd>
-            </div>
-          </dl>
-        </aside>
-      </section>
+            <Columns.Column size={4}>
+              <Box>
+                <Tag color={selectedCompetition?.active === "0" ? "success" : selectedCompetition?.active === "1" ? "warning" : selectedCompetition?.active === "2" ? "info" : "light"}>
+                  {competitionStatusLabel(selectedCompetition?.active ?? "")}
+                </Tag>
+                <Heading renderAs="h2" size={3} className="mb-2">
+                  {selectedCompetition?.name ?? "Loading current event"}
+                </Heading>
+                <p className="mb-4">{formatMeta(selectedCompetition)}</p>
+                <p className="has-text-grey is-size-7 mb-1">Board</p>
+                <p className="mb-3 has-text-weight-semibold">{selectedLeaderboard?.name ?? "Waiting for leaderboard"}</p>
+                <p className="has-text-grey is-size-7 mb-1">Source</p>
+                <p className="has-text-weight-semibold">autotest.sapphire-solutions.co.uk/API/1</p>
+              </Box>
+            </Columns.Column>
+          </Columns>
+        </Box>
 
-      <section className="workspace-grid">
-        <aside className="control-panel">
-          <div className="panel-heading">
-            <p className="eyebrow">Controls</p>
-            <h2>Choose an event and refine the results.</h2>
-          </div>
+        <Columns>
+          <Columns.Column size={4}>
+            <Box>
+              <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7 mb-3">Controls</p>
+              <Heading renderAs="h2" size={4} className="mb-4">
+                  Choose an event and refine the results.
+              </Heading>
 
-          <label>
-            <span>Competition</span>
-            <select value={competitionId} onChange={event => handleCompetitionChange(event.target.value)} disabled={loadingCompetitions}>
-              <option value="">Select a competition</option>
-              {competitions.map(item => (
-                <option key={item.id} value={item.id}>
-                  {item.dateddmmyyyy} · {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              <Form.Field>
+                <Form.Label>Competition</Form.Label>
+                <Form.Control>
+                  <Form.Select value={competitionId} onChange={event => handleCompetitionChange(event.target.value)} disabled={loadingCompetitions}>
+                    <option value="">Select a competition</option>
+                    {competitions.map(item => (
+                      <option key={item.id} value={item.id}>
+                        {item.dateddmmyyyy} · {item.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Control>
+              </Form.Field>
 
-          <label>
-            <span>Leaderboard</span>
-            <select value={leaderboardId} onChange={event => setLeaderboardId(event.target.value)} disabled={loadingLeaderboards || leaderboards.length === 0}>
-              <option value="">Select a leaderboard</option>
-              {leaderboards.map(item => (
-                <option key={item.id} value={String(item.id)}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              <Form.Field>
+                <Form.Label>Leaderboard</Form.Label>
+                <Form.Control>
+                  <Form.Select value={leaderboardId} onChange={event => setLeaderboardId(event.target.value)} disabled={loadingLeaderboards || leaderboards.length === 0}>
+                    <option value="">Select a leaderboard</option>
+                    {leaderboards.map(item => (
+                      <option key={item.id} value={String(item.id)}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Control>
+              </Form.Field>
 
-          <label>
-            <span>Global search</span>
-            <input value={filters.query} onChange={handleFilterChange("query")} placeholder="Search any result field" />
-          </label>
+              <Form.Field>
+                <Form.Label>Global search</Form.Label>
+                <Form.Control>
+                  <Form.Input value={filters.query} onChange={handleFilterChange("query")} placeholder="Search any result field" />
+                </Form.Control>
+              </Form.Field>
 
-          <label>
-            <span>Driver</span>
-            <input value={filters.driver} onChange={handleFilterChange("driver")} placeholder="Filter by driver" />
-          </label>
+              <Form.Field>
+                <Form.Label>Driver</Form.Label>
+                <Form.Control>
+                  <Form.Input value={filters.driver} onChange={handleFilterChange("driver")} placeholder="Filter by driver" />
+                </Form.Control>
+              </Form.Field>
 
-          <label>
-            <span>Club</span>
-            <input value={filters.club} onChange={handleFilterChange("club")} placeholder="Filter by club" />
-          </label>
+              <Form.Field>
+                <Form.Label>Club</Form.Label>
+                <Form.Control>
+                  <Form.Input value={filters.club} onChange={handleFilterChange("club")} placeholder="Filter by club" />
+                </Form.Control>
+              </Form.Field>
 
-          <label>
-            <span>Class</span>
-            <input value={filters.className} onChange={handleFilterChange("className")} placeholder="Filter by class" />
-          </label>
+              <Form.Field>
+                <Form.Label>Class</Form.Label>
+                <Form.Control>
+                  <Form.Input value={filters.className} onChange={handleFilterChange("className")} placeholder="Filter by class" />
+                </Form.Control>
+              </Form.Field>
 
-          <div className="panel-actions">
-            <button type="button" className="button-secondary" onClick={resetFilters}>
-              Reset filters
-            </button>
-          </div>
-        </aside>
+              <Form.Field kind="group">
+                <Form.Control>
+                  <Button color="light" type="button" onClick={resetFilters}>
+                    Reset filters
+                  </Button>
+                </Form.Control>
+              </Form.Field>
+            </Box>
+          </Columns.Column>
 
-        <section className="results-panel">
-          <div className="results-header">
-            <div>
-              <p className="eyebrow">Results</p>
-              <h2>{selectedLeaderboard?.name ?? "Leaderboard results"}</h2>
-            </div>
-            <div className="results-summary">
-              <span>{isBusy ? "Loading live data" : `${dataRowCount} result rows`}</span>
-              <span>{leaderboard ? `${sectionCount} section breaks` : "No board loaded"}</span>
-            </div>
-          </div>
+          <Columns.Column size={8}>
+            <Box>
+              <div className="is-flex is-justify-content-space-between is-align-items-end is-flex-wrap-wrap mb-4">
+                <div>
+                  <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7 mb-2">Results</p>
+                  <Heading renderAs="h2" size={3} className="mb-0">
+                    {selectedLeaderboard?.name ?? "Leaderboard results"}
+                  </Heading>
+                </div>
+                <div className="has-text-right">
+                  <p className="has-text-grey is-size-7">{isBusy ? "Loading live data" : `${dataRowCount} result rows`}</p>
+                  <p className="has-text-grey is-size-7">{leaderboard ? `${sectionCount} section breaks` : "No board loaded"}</p>
+                </div>
+              </div>
 
-          {error ? <div className="message-error">{error}</div> : null}
+              {error ? <Notification color="danger">{error}</Notification> : null}
+              {isBusy ? <Notification color="light">Fetching competition and leaderboard data.</Notification> : null}
 
-          {isBusy ? <div className="message-muted">Fetching competition and leaderboard data.</div> : null}
+              <div className="table-container">
+                <table className="table is-fullwidth is-striped is-hoverable is-narrow is-bordered">
+                  <thead>
+                    <tr>
+                      {resultColumns.map(column => (
+                        <th key={column.name}>{column.label}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleRows.length > 0 ? (
+                      visibleRows.map((item, index) => {
+                        if (isSectionRow(item)) {
+                          return (
+                            <tr key={`section-${index}`} className="section-row">
+                              <td colSpan={Math.max(resultColumns.length, 1)}>{stringifyCell(item.classname)}</td>
+                            </tr>
+                          )
+                        }
 
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  {resultColumns.map(column => (
-                    <th key={column.name}>{column.label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {visibleRows.length > 0 ? (
-                  visibleRows.map((item, index) => {
-                    if (isSectionRow(item)) {
-                      return (
-                        <tr key={`section-${index}`} className="section-row">
-                          <td colSpan={Math.max(resultColumns.length, 1)}>{stringifyCell(item.classname)}</td>
-                        </tr>
-                      )
-                    }
-
-                    return (
-                      <tr key={`${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`}>
-                        {resultColumns.map(column => (
-                          <td key={column.name}>{stringifyCell(item[column.name])}</td>
-                        ))}
+                        return (
+                          <tr key={`${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`}>
+                            {resultColumns.map(column => (
+                              <td key={column.name}>{stringifyCell(item[column.name])}</td>
+                            ))}
+                          </tr>
+                        )
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={Math.max(resultColumns.length, 1)} className="has-text-centered has-text-grey py-6">
+                          {leaderboard ? "No rows match the current filters." : "Select a competition and leaderboard to load the live results list."}
+                        </td>
                       </tr>
-                    )
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={Math.max(resultColumns.length, 1)} className="empty-state">
-                      {leaderboard ? "No rows match the current filters." : "Select a competition and leaderboard to load the live results list."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-    </main>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Box>
+          </Columns.Column>
+        </Columns>
+      </Container>
+    </Section>
   )
 }
 
