@@ -25,7 +25,7 @@
     "gatsby-plugin-sharp": "^5.6.0",
     "gatsby-source-filesystem": "^5.6.0",
     "gatsby-transformer-sharp": "^5.6.0",
-    "preact": "10.29.1",
+    "preact": "10.29.2",
     "preact-render-to-string": "6.6.7",
     "react": "19.2.5",
     "react-bulma-components": "^4.1.0",
