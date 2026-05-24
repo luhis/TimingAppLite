@@ -33,7 +33,6 @@ type LeaderboardPayload = {
 type FilterState = {
   query: string
   driver: string
-  club: string
   className: string
 }
 
@@ -42,7 +41,6 @@ const API_BASE = "/api/leaderboard";
 const initialFilters: FilterState = {
   query: "",
   driver: "",
-  club: "",
   className: "",
 };
 
@@ -279,16 +277,14 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
     const query = filters.query.trim().toLowerCase();
     const driver = filters.driver.trim().toLowerCase();
-    const club = filters.club.trim().toLowerCase();
     const className = filters.className.trim().toLowerCase();
 
     return leaderboard.items.filter(item => {
       const matchesQuery = !query || rowSearchText(item).includes(query);
       const matchesDriver = !driver || stringifyCell(item.driver).toLowerCase().includes(driver);
-      const matchesClub = !club || stringifyCell(item.club).toLowerCase().includes(club);
       const matchesClass = !className || stringifyCell(item.classname).toLowerCase() === className;
 
-      return matchesQuery && matchesDriver && matchesClub && matchesClass;
+      return matchesQuery && matchesDriver && matchesClass;
     });
   }, [filters, leaderboard]);
 
@@ -440,13 +436,6 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                 <Form.Label>Driver</Form.Label>
                 <Form.Control>
                   <Form.Input value={filters.driver} onChange={handleFilterChange("driver")} placeholder="Filter by driver" />
-                </Form.Control>
-              </Form.Field>
-
-              <Form.Field>
-                <Form.Label>Club</Form.Label>
-                <Form.Control>
-                  <Form.Input value={filters.club} onChange={handleFilterChange("club")} placeholder="Filter by club" />
                 </Form.Control>
               </Form.Field>
 
