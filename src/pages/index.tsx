@@ -286,11 +286,23 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       const matchesQuery = !query || rowSearchText(item).includes(query);
       const matchesDriver = !driver || stringifyCell(item.driver).toLowerCase().includes(driver);
       const matchesClub = !club || stringifyCell(item.club).toLowerCase().includes(club);
-      const matchesClass = !className || stringifyCell(item.classname).toLowerCase().includes(className);
+      const matchesClass = !className || stringifyCell(item.classname).toLowerCase() === className;
 
       return matchesQuery && matchesDriver && matchesClub && matchesClass;
     });
   }, [filters, leaderboard]);
+
+  const classOptions = useMemo(() => {
+    if (!leaderboard) {
+      return [];
+    }
+
+    const classes = leaderboard.items
+      .map(item => stringifyCell(item.classname).trim())
+      .filter(value => value !== "-" && value !== "");
+
+    return Array.from(new Set(classes)).sort((left, right) => left.localeCompare(right));
+  }, [leaderboard]);
 
   const sectionCount = useMemo(() => visibleRows.filter(isSectionRow).length, [visibleRows]);
   const dataRowCount = visibleRows.length - sectionCount;
@@ -441,7 +453,18 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
               <Form.Field>
                 <Form.Label>Class</Form.Label>
                 <Form.Control>
-                  <Form.Input value={filters.className} onChange={handleFilterChange("className")} placeholder="Filter by class" />
+                  <Form.Select
+                    value={filters.className}
+                    onChange={event => setFilters(current => ({ ...current, className: event.target.value }))}
+                    disabled={classOptions.length === 0}
+                  >
+                    <option value="">All classes</option>
+                    {classOptions.map(classOption => (
+                      <option key={classOption} value={classOption.toLowerCase()}>
+                        {classOption}
+                      </option>
+                    ))}
+                  </Form.Select>
                 </Form.Control>
               </Form.Field>
 
