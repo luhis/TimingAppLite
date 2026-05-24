@@ -1,6 +1,6 @@
 import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from "gatsby";
 
-const REMOTE_API_BASE = "https://autotest.sapphire-solutions.co.uk/API/1";
+import { REMOTE_API_BASE } from "../shared/apiBits";
 
 const allowCors = (response: GatsbyFunctionResponse) => {
   response.setHeader("Access-Control-Allow-Origin", "*");

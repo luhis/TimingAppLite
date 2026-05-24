@@ -1,4 +1,4 @@
-const REMOTE_API_BASE = "https://autotest.sapphire-solutions.co.uk/API/1";
+import { REMOTE_API_BASE } from "../../src/shared/apiBits";
 
 type FunctionResponse = {
   status: number;
