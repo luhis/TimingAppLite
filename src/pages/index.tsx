@@ -139,7 +139,15 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
         const preferredCompetition = data.find(item => item.id === requestedCompetitionId) ?? data[0];
 
-        setCompetitionId(preferredCompetition?.id ?? "");
+        if (!preferredCompetition) {
+          setCompetitionId("");
+          setLeaderboardId("");
+          setLeaderboards([]);
+          setLeaderboard(null);
+          return;
+        }
+
+        setCompetitionId(preferredCompetition.id);
       } catch (fetchError) {
         if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
           setError(fetchError instanceof Error ? fetchError.message : "Unable to load competitions");
@@ -160,8 +168,6 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
   useEffect(() => {
     if (!competitionId) {
-      setLeaderboards([]);
-      setLeaderboard(null);
       return;
     }
 
@@ -190,7 +196,14 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         setLeaderboards(data);
 
         const preferredLeaderboard = data.find(item => String(item.id) === requestedLeaderboardId) ?? data[0];
-        setLeaderboardId(preferredLeaderboard ? String(preferredLeaderboard.id) : "");
+
+        if (!preferredLeaderboard) {
+          setLeaderboardId("");
+          setLeaderboard(null);
+          return;
+        }
+
+        setLeaderboardId(String(preferredLeaderboard.id));
       } catch (fetchError) {
         if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
           setError(fetchError instanceof Error ? fetchError.message : "Unable to load leaderboards");
@@ -211,7 +224,6 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
   useEffect(() => {
     if (!competitionId || !leaderboardId) {
-      setLeaderboard(null);
       return;
     }
 
@@ -287,7 +299,13 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
   const handleCompetitionChange = (value: string) => {
     setCompetitionId(value);
+    setLeaderboards([]);
     setLeaderboardId("");
+    setLeaderboard(null);
+  };
+
+  const handleLeaderboardChange = (value: string) => {
+    setLeaderboardId(value);
     setLeaderboard(null);
   };
 
@@ -388,7 +406,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
               <Form.Field>
                 <Form.Label>Leaderboard</Form.Label>
                 <Form.Control>
-                  <Form.Select value={leaderboardId} onChange={event => setLeaderboardId(event.target.value)} disabled={loadingLeaderboards || leaderboards.length === 0}>
+                  <Form.Select value={leaderboardId} onChange={event => handleLeaderboardChange(event.target.value)} disabled={loadingLeaderboards || leaderboards.length === 0}>
                     <option value="">Select a leaderboard</option>
                     {leaderboards.map(item => (
                       <option key={item.id} value={String(item.id)}>
