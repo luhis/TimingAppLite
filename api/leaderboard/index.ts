@@ -1,19 +1,30 @@
 const REMOTE_API_BASE = "https://autotest.sapphire-solutions.co.uk/API/1";
 
-const corsHeaders = {
+type FunctionResponse = {
+  status: number;
+  headers: Record<string, string>;
+  body: string;
+};
+
+type HttpRequest = {
+  method?: string;
+  query?: Record<string, unknown>;
+};
+
+const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
   "Access-Control-Allow-Methods": "GET,OPTIONS",
   "Content-Type": "application/json; charset=utf-8",
 };
 
-const jsonResponse = (status, body) => ({
+const jsonResponse = (status: number, body: unknown): FunctionResponse => ({
   status,
   headers: corsHeaders,
   body: JSON.stringify(body),
 });
 
-const proxyJson = async (url) => {
+const proxyJson = async (url: string): Promise<FunctionResponse> => {
   const upstream = await fetch(url);
   const text = await upstream.text();
 
@@ -24,7 +35,7 @@ const proxyJson = async (url) => {
   };
 };
 
-module.exports = async function leaderboardApi(context, req) {
+module.exports = async function leaderboardApi(_context: unknown, req: HttpRequest): Promise<FunctionResponse> {
   if (req.method === "OPTIONS") {
     return {
       status: 204,
@@ -33,7 +44,8 @@ module.exports = async function leaderboardApi(context, req) {
     };
   }
 
-  const endpoint = String(req.query.endpoint || "");
+  const query = req.query ?? {};
+  const endpoint = String(query.endpoint ?? "");
 
   try {
     if (endpoint === "live-competitions") {
@@ -41,7 +53,7 @@ module.exports = async function leaderboardApi(context, req) {
     }
 
     if (endpoint === "leaderboards") {
-      const competitionId = String(req.query.competitionId || "");
+      const competitionId = String(query.competitionId ?? "");
 
       if (!competitionId) {
         return jsonResponse(400, { error: "Missing competitionId" });
@@ -51,8 +63,8 @@ module.exports = async function leaderboardApi(context, req) {
     }
 
     if (endpoint === "leaderboard") {
-      const competitionId = String(req.query.competitionId || "");
-      const leaderboardId = String(req.query.leaderboardId || "");
+      const competitionId = String(query.competitionId ?? "");
+      const leaderboardId = String(query.leaderboardId ?? "");
 
       if (!competitionId || !leaderboardId) {
         return jsonResponse(400, { error: "Missing competitionId or leaderboardId" });

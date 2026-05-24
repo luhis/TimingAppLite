@@ -1,0 +1,12 @@
+{
+  "name": "timing-app-lite-api",
+  "private": true,
+  "version": "1.0.0",
+  "main": "dist/leaderboard/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}
