@@ -11,6 +11,6 @@
   },
   "include": [
     "leaderboard/**/*.ts",
-    "../src/shared/apiBits.ts"
+    "shared/apiBits.ts"
   ]
 }

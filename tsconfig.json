@@ -99,5 +99,5 @@
     "skipLibCheck": true,                                /* Skip type checking all .d.ts files. */
     "ignoreDeprecations": "6.0"                        /* Silence editor warnings for options kept for Gatsby compatibility. */
   },
-  "include": ["./src/**/*", "./gatsby-node.ts", "./gatsby-config.ts", "./plugins/**/*"]
+  "include": ["./src/**/*", "./gatsby-node.ts", "./gatsby-config.ts", "./plugins/**/*", "api/shared"]
 }

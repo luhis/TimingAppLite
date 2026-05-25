@@ -1,4 +1,4 @@
-import { REMOTE_API_BASE } from "../../src/shared/apiBits";
+import { REMOTE_API_BASE } from "../shared/apiBits";
 
 type FunctionResponse = {
   status: number;
