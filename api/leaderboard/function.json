@@ -1,5 +1,5 @@
 {
-  "scriptFile": "../dist/api/leaderboard/index.js",
+  "scriptFile": "../dist/leaderboard/index.js",
   "bindings": [
     {
       "authLevel": "anonymous",

@@ -1,6 +1,6 @@
 import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from "gatsby";
 
-import { REMOTE_API_BASE } from "../../api/shared/apiBits";
+import { REMOTE_API_BASE } from "../../api/leaderboard/shared/apiBits";
 
 const allowCors = (response: GatsbyFunctionResponse) => {
   response.setHeader("Access-Control-Allow-Origin", "*");
