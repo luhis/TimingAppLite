@@ -1,71 +1,16 @@
 import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from "gatsby";
-
-import { REMOTE_API_BASE } from "../../api/leaderboard/shared/apiBits";
-
-const allowCors = (response: GatsbyFunctionResponse) => {
-  response.setHeader("Access-Control-Allow-Origin", "*");
-  response.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  response.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-};
-
-const proxyJson = async (url: string, response: GatsbyFunctionResponse) => {
-  const upstream = await fetch(url);
-
-  response.status(upstream.status);
-  allowCors(response);
-  response.setHeader("Content-Type", "application/json; charset=utf-8");
-  response.send(await upstream.text());
-};
+import { proxyLeaderboardRequest } from "../../api/leaderboard/shared/apiBits";
 
 export default async function handler(request: GatsbyFunctionRequest, response: GatsbyFunctionResponse) {
-  allowCors(response);
+  const proxyResponse = await proxyLeaderboardRequest({
+    method: request.method,
+    query: request.query,
+    fetchImpl: fetch,
+  });
 
-  if (request.method === "OPTIONS") {
-    response.status(204).send("");
-    return;
-  }
+  Object.entries(proxyResponse.headers).forEach(([headerName, headerValue]) => {
+    response.setHeader(headerName, headerValue);
+  });
 
-  console.log(`Received request for endpoint: ${request.query.endpoint}`);
-
-  const endpoint = String(request.query.endpoint ?? "");
-
-  try {
-    if (endpoint === "live-competitions") {
-      await proxyJson(`${REMOTE_API_BASE}/LiveAllCompetitions/`, response);
-      return;
-    }
-
-    if (endpoint === "leaderboards") {
-      const competitionId = String(request.query.competitionId ?? "");
-
-      if (!competitionId) {
-        response.status(400).json({ error: "Missing competitionId" });
-        return;
-      }
-
-      await proxyJson(`${REMOTE_API_BASE}/Competitions/${encodeURIComponent(competitionId)}/Leaderboards/`, response);
-      return;
-    }
-
-    if (endpoint === "leaderboard") {
-      const competitionId = String(request.query.competitionId ?? "");
-      const leaderboardId = String(request.query.leaderboardId ?? "");
-
-      if (!competitionId || !leaderboardId) {
-        response.status(400).json({ error: "Missing competitionId or leaderboardId" });
-        return;
-      }
-
-      await proxyJson(
-        `${REMOTE_API_BASE}/Competitions/${encodeURIComponent(competitionId)}/Leaderboards/${encodeURIComponent(leaderboardId)}`,
-        response
-      );
-      return;
-    }
-
-    response.status(404).json({ error: "Unknown endpoint" });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Proxy request failed";
-    response.status(502).json({ error: message });
-  }
+  response.status(proxyResponse.status).send(proxyResponse.body);
 }
