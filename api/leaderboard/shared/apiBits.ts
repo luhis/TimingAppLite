@@ -1,7 +1,7 @@
 
-export const REMOTE_API_BASE = "https://autotest.sapphire-solutions.co.uk/API/1";
+const REMOTE_API_BASE = "https://autotest.sapphire-solutions.co.uk/API/1";
 
-export type ProxyResponse = {
+type ProxyResponse = {
 	status: number;
 	headers: Record<string, string>;
 	body: string;
