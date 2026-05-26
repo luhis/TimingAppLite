@@ -296,7 +296,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
     const classes = leaderboard.items
       .map(item => stringifyCell(item.classname).trim())
-      .filter(value => value !== "-" && value !== "");
+      .filter(value => value !== "-" && value !== "" && value !== "Autotest");
 
     return Array.from(new Set(classes)).sort((left, right) => left.localeCompare(right));
   }, [leaderboard]);
