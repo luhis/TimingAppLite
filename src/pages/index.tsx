@@ -2,39 +2,14 @@ import * as React from "react";
 import type { HeadFC, PageProps } from "gatsby";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components";
+import type {
+  Competition,
+  FilterState,
+  LeaderboardItem,
+  LeaderboardPayload,
+  LeaderboardSummary,
+} from "../types/leaderboard";
 import "bulma/css/bulma.min.css";
-
-type Competition = {
-  id: string
-  active: string
-  name: string
-  dateddmmyyyy: string
-  provisional: string | null
-  finalised: string | null
-}
-
-type LeaderboardSummary = {
-  id: string | number
-  name: string
-}
-
-type LeaderboardColumn = {
-  name: string
-  label: string
-}
-
-type LeaderboardItem = Record<string, string | number | null | undefined>
-
-type LeaderboardPayload = {
-  columns: LeaderboardColumn[]
-  items: LeaderboardItem[]
-}
-
-type FilterState = {
-  query: string
-  driver: string
-  className: string
-}
 
 const API_BASE = "/api/leaderboard";
 
@@ -294,9 +269,10 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       return [];
     }
 
-    const classes = leaderboard.items
+    const toIgnore = leaderboard.items.filter(a => a.entry === undefined);
+    const classes = leaderboard.items.filter(a => !toIgnore.includes(a))
       .map(item => stringifyCell(item.classname).trim())
-      .filter(value => value !== "-" && value !== "" && value !== "Autotest");
+      .filter(value => value !== "-" && value !== "");
 
     return Array.from(new Set(classes)).sort((left, right) => left.localeCompare(right));
   }, [leaderboard]);
