@@ -105,6 +105,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
   const [loadingLeaderboards, setLoadingLeaderboards] = useState(false);
   const [loadingResults, setLoadingResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const requestedCompetitionId = queryParams.get("competitionid") ?? "";
@@ -218,7 +219,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     return () => {
       controller.abort();
     };
-  }, [competitionId, requestedLeaderboardId]);
+  }, [competitionId, requestedLeaderboardId, refreshTick]);
 
   useEffect(() => {
     if (!competitionId || !leaderboardId) {
@@ -265,7 +266,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     return () => {
       controller.abort();
     };
-  }, [competitionId, leaderboardId]);
+  }, [competitionId, leaderboardId, refreshTick]);
 
   const selectedCompetition = competitions.find(item => item.id === competitionId) ?? null;
   const selectedLeaderboard = leaderboards.find(item => String(item.id) === leaderboardId) ?? null;
@@ -323,6 +324,14 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
   const resetFilters = () => {
     setFilters(initialFilters);
+  };
+
+  const refreshCurrentSelection = () => {
+    if (!competitionId || !leaderboardId || isBusy) {
+      return;
+    }
+
+    setRefreshTick(current => current + 1);
   };
 
   return (
@@ -461,6 +470,16 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                 <Form.Control>
                   <Button color="light" type="button" onClick={resetFilters}>
                     Reset filters
+                  </Button>
+                </Form.Control>
+                <Form.Control>
+                  <Button
+                    color="link"
+                    type="button"
+                    onClick={refreshCurrentSelection}
+                    disabled={!competitionId || !leaderboardId || isBusy}
+                  >
+                    Refresh now
                   </Button>
                 </Form.Control>
               </Form.Field>
