@@ -1,6 +1,13 @@
+export enum CompetitionStatus {
+  Live = "0",
+  Scheduled = "1",
+  Finalised = "2",
+  Provisional = "3",
+}
+
 export type Competition = {
   id: string
-  active: string
+  active: CompetitionStatus
   name: string
   dateddmmyyyy: string
   provisional: string | null

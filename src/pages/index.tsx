@@ -3,6 +3,7 @@ import type { HeadFC, PageProps } from "gatsby";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components";
 import { fetchCompetitions, fetchLeaderboard, fetchLeaderboards } from "../lib/leaderboardApi";
+import { CompetitionStatus } from "../types/leaderboard";
 import type {
   Competition,
   FilterState,
@@ -18,15 +19,15 @@ const initialFilters: FilterState = {
   className: "",
 };
 
-const competitionStatusLabel = (active: string) => {
+const competitionStatusLabel = (active: CompetitionStatus | undefined) => {
   switch (active) {
-    case "0":
+    case CompetitionStatus.Live:
       return "Live";
-    case "1":
+    case CompetitionStatus.Scheduled:
       return "Scheduled";
-    case "2":
+    case CompetitionStatus.Finalised:
       return "Finalised";
-    case "3":
+    case CompetitionStatus.Provisional:
       return "Provisional";
     default:
       return "Open";
@@ -327,8 +328,8 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
             <Columns.Column size={4}>
               <Box>
-                <Tag color={selectedCompetition?.active === "0" ? "success" : selectedCompetition?.active === "1" ? "warning" : selectedCompetition?.active === "2" ? "info" : "light"}>
-                  {competitionStatusLabel(selectedCompetition?.active ?? "")}
+                <Tag color={selectedCompetition?.active === CompetitionStatus.Live ? "success" : selectedCompetition?.active === CompetitionStatus.Scheduled ? "warning" : selectedCompetition?.active === CompetitionStatus.Finalised ? "info" : "light"}>
+                  {competitionStatusLabel(selectedCompetition?.active)}
                 </Tag>
                 <Heading renderAs="h2" size={3} className="mb-2">
                   {selectedCompetition?.name ?? "Loading current event"}
