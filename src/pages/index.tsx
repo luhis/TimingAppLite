@@ -2,6 +2,7 @@ import * as React from "react";
 import type { HeadFC, PageProps } from "gatsby";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components";
+import { fetchCompetitions, fetchLeaderboard, fetchLeaderboards } from "../lib/leaderboardApi";
 import type {
   Competition,
   FilterState,
@@ -10,8 +11,6 @@ import type {
   LeaderboardSummary,
 } from "../types/leaderboard";
 import "bulma/css/bulma.min.css";
-
-const API_BASE = "/api/leaderboard";
 
 const initialFilters: FilterState = {
   query: "",
@@ -94,16 +93,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}?endpoint=live-competitions`, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          setError(`Unable to load competitions (${response.status})`);
-          return;
-        }
-
-        const data = (await response.json()) as Competition[];
+        const data = await fetchCompetitions(controller.signal);
 
         if (controller.signal.aborted) {
           return;
@@ -152,16 +142,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}?endpoint=leaderboards&competitionId=${encodeURIComponent(competitionId)}`, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          setError(`Unable to load leaderboard list (${response.status})`);
-          return;
-        }
-
-        const data = (await response.json()) as LeaderboardSummary[];
+        const data = await fetchLeaderboards(competitionId, controller.signal);
 
         if (controller.signal.aborted) {
           return;
@@ -208,19 +189,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       setError(null);
 
       try {
-        const response = await fetch(
-          `${API_BASE}?endpoint=leaderboard&competitionId=${encodeURIComponent(competitionId)}&leaderboardId=${encodeURIComponent(leaderboardId)}`,
-          {
-            signal: controller.signal,
-          }
-        );
-
-        if (!response.ok) {
-          setError(`Unable to load results (${response.status})`);
-          return;
-        }
-
-        const data = (await response.json()) as LeaderboardPayload;
+        const data = await fetchLeaderboard(competitionId, leaderboardId, controller.signal);
 
         if (!controller.signal.aborted) {
           setLeaderboard(data);
