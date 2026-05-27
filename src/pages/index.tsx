@@ -3,14 +3,12 @@ import type { HeadFC, PageProps } from "gatsby";
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components";
 import { fetchCompetitions, fetchLeaderboard, fetchLeaderboards } from "../lib/leaderboardApi";
-import { CompetitionStatus } from "../types/leaderboard";
-import type {
+import { CompetitionStatus,
   Competition,
   FilterState,
   LeaderboardItem,
   LeaderboardPayload,
-  LeaderboardSummary,
-} from "../types/leaderboard";
+  LeaderboardSummary, } from "../types/leaderboard";
 import "bulma/css/bulma.min.css";
 
 const initialFilters: FilterState = {
@@ -29,6 +27,7 @@ const competitionStatusLabel = (active: CompetitionStatus | undefined) => {
       return "Finalised";
     case CompetitionStatus.Provisional:
       return "Provisional";
+    case undefined:
     default:
       return "Open";
   }
@@ -150,16 +149,19 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         }
 
         setLeaderboards(data);
+        setLeaderboardId(currentLeaderboardId => {
+          const preferredLeaderboard =
+            data.find(item => String(item.id) === currentLeaderboardId) ??
+            data.find(item => String(item.id) === requestedLeaderboardId) ??
+            data[0];
 
-        const preferredLeaderboard = data.find(item => String(item.id) === requestedLeaderboardId) ?? data[0];
+          if (!preferredLeaderboard) {
+            setLeaderboard(null);
+            return "";
+          }
 
-        if (!preferredLeaderboard) {
-          setLeaderboardId("");
-          setLeaderboard(null);
-          return;
-        }
-
-        setLeaderboardId(String(preferredLeaderboard.id));
+          return String(preferredLeaderboard.id);
+        });
       } catch (fetchError) {
         if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
           setError(fetchError instanceof Error ? fetchError.message : "Unable to load leaderboards");
