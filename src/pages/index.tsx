@@ -1,14 +1,19 @@
 import * as React from "react";
 import type { HeadFC, PageProps } from "gatsby";
 import { useEffect, useMemo, useState } from "react";
+import type { HubConnection } from "@microsoft/signalr";
+
 import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components";
 import { fetchCompetitions, fetchLeaderboard, fetchLeaderboards } from "../lib/leaderboardApi";
-import { CompetitionStatus,
-  Competition,
-  FilterState,
-  LeaderboardItem,
-  LeaderboardPayload,
-  LeaderboardSummary, } from "../types/leaderboard";
+import {
+  CompetitionStatus,
+  type Competition,
+  type FilterState,
+  type LeaderboardItem,
+  type LeaderboardPayload,
+  type LeaderboardSummary,
+} from "../types/leaderboard";
+
 import "bulma/css/bulma.min.css";
 
 const initialFilters: FilterState = {
@@ -38,7 +43,7 @@ const stringifyCell = (value: string | number | null | undefined) => {
     return "-";
   }
 
-  return String(value);
+  return String(value).trim();
 };
 
 const rowSearchText = (item: LeaderboardItem) =>
@@ -68,6 +73,75 @@ const formatMeta = (competition: Competition | null) => {
   return `${competition.dateddmmyyyy} event feed`;
 };
 
+const signalRHubUrl = process.env.GATSBY_SIGNALR_HUB_URL ?? "";
+
+const competitionStatusColor = (status: CompetitionStatus | undefined) => {
+  switch (status) {
+    case CompetitionStatus.Live:        return "success";
+    case CompetitionStatus.Scheduled:   return "warning";
+    case CompetitionStatus.Finalised:   return "info";
+    case CompetitionStatus.Provisional:
+    case undefined:
+    default:                            return "light";
+  }
+};
+
+const withSubscriptionParams = (baseUrl: string, competitionId: string, leaderboardId: string) => {
+  const url = new URL(baseUrl, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+  url.searchParams.set("competitionId", competitionId);
+  url.searchParams.set("leaderboardId", leaderboardId);
+  return url.toString();
+};
+
+const getEntryKey = (item: LeaderboardItem) => {
+  const entry = item.entry;
+
+  if (entry === null || entry === undefined || entry === "") {
+    return "";
+  }
+
+  return String(entry);
+};
+
+const mergeRowsByEntry = (existingRows: LeaderboardItem[], incomingRows: LeaderboardItem[]) => {
+  const incomingByKey = incomingRows.reduce<Record<string, LeaderboardItem>>((allRows, row) => {
+    const key = getEntryKey(row);
+
+    if (!key) {
+      return allRows;
+    }
+
+    return { ...allRows, [key]: row };
+  }, {});
+
+  const mergedExistingRows = existingRows.map(row => {
+    const key = getEntryKey(row);
+
+    if (!key) {
+      return row;
+    }
+
+    return incomingByKey[key] ?? row;
+  });
+
+  const existingKeys = mergedExistingRows.reduce<Record<string, true>>((keys, row) => {
+    const key = getEntryKey(row);
+
+    if (!key) {
+      return keys;
+    }
+
+    return { ...keys, [key]: true };
+  }, {});
+
+  const appendedRows = incomingRows.filter(row => {
+    const key = getEntryKey(row);
+    return Boolean(key) && !existingKeys[key];
+  });
+
+  return [...mergedExistingRows, ...appendedRows];
+};
+
 const IndexPage: React.FC<PageProps> = ({ location }) => {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [leaderboards, setLeaderboards] = useState<LeaderboardSummary[]>([]);
@@ -80,6 +154,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
   const [loadingResults, setLoadingResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [streamResults, setStreamResults] = useState(true);
 
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const requestedCompetitionId = queryParams.get("competitionid") ?? "";
@@ -215,6 +290,69 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     };
   }, [competitionId, leaderboardId, refreshTick]);
 
+  useEffect(() => {
+    if (!competitionId || !leaderboardId || !signalRHubUrl || !streamResults) {
+      return;
+    }
+
+    const subscriptionPromise = (async (): Promise<HubConnection | null> => {
+      try {
+        const [signalR, { MessagePackHubProtocol }] = await Promise.all([
+          import("@microsoft/signalr"),
+          import("@microsoft/signalr-protocol-msgpack"),
+        ]);
+        const connection = new signalR.HubConnectionBuilder()
+          .withUrl(withSubscriptionParams(signalRHubUrl, competitionId, leaderboardId), {
+            transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
+          })
+          .withHubProtocol(new MessagePackHubProtocol())
+          .withAutomaticReconnect()
+          .configureLogging(signalR.LogLevel.Warning)
+          .build();
+
+        connection.on("ReceiveUpdate", (payload: LeaderboardItem[]) => {
+          if (payload.length === 0) {
+            return;
+          }
+
+          setLeaderboard(currentLeaderboard => {
+            if (!currentLeaderboard) {
+              return currentLeaderboard;
+            }
+
+            return {
+              ...currentLeaderboard,
+              items: mergeRowsByEntry(currentLeaderboard.items, payload),
+            };
+          });
+        });
+
+        await connection.start();
+        await connection.invoke("SubscribeToLeaderboard", competitionId, leaderboardId);
+
+        return connection;
+      } catch {
+        // Keep UI alive when SignalR endpoint details aren't available in this environment.
+        return null;
+      }
+    })();
+
+    return () => {
+      void subscriptionPromise
+        .then(connection => {
+          if (!connection) {
+            return;
+          }
+
+          return connection
+            .invoke("UnsubscribeFromLeaderboard", competitionId, leaderboardId)
+            .catch(() => undefined)
+            .then(() => connection.stop());
+        })
+        .catch(() => undefined);
+    };
+  }, [competitionId, leaderboardId, streamResults]);
+
   const selectedCompetition = competitions.find(item => item.id === competitionId) ?? null;
   const selectedLeaderboard = leaderboards.find(item => String(item.id) === leaderboardId) ?? null;
 
@@ -231,7 +369,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       const matchesQuery = !query || rowSearchText(item).includes(query);
       const matchesDriver = !driver || stringifyCell(item.driver).toLowerCase().includes(driver);
       const matchesClass = !className || stringifyCell(item.classname).toLowerCase() === className;
-
+    
       return matchesQuery && matchesDriver && matchesClass;
     });
   }, [filters, leaderboard]);
@@ -241,8 +379,8 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       return [];
     }
 
-    const toIgnore = leaderboard.items.filter(a => a.entry === undefined);
-    const classes = leaderboard.items.filter(a => !toIgnore.includes(a))
+    const classes = leaderboard.items
+      .filter(item => item.entry !== undefined)
       .map(item => stringifyCell(item.classname).trim())
       .filter(value => value !== "-" && value !== "");
 
@@ -330,7 +468,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
             <Columns.Column size={4}>
               <Box>
-                <Tag color={selectedCompetition?.active === CompetitionStatus.Live ? "success" : selectedCompetition?.active === CompetitionStatus.Scheduled ? "warning" : selectedCompetition?.active === CompetitionStatus.Finalised ? "info" : "light"}>
+                <Tag color={competitionStatusColor(selectedCompetition?.active)}>
                   {competitionStatusLabel(selectedCompetition?.active)}
                 </Tag>
                 <Heading renderAs="h2" size={3} className="mb-2">
@@ -351,13 +489,17 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
             <Box>
               <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7 mb-3">Controls</p>
               <Heading renderAs="h2" size={4} className="mb-4">
-                  Choose an event and refine the results.
+                Choose an event and refine the results.
               </Heading>
 
               <Form.Field>
                 <Form.Label>Competition</Form.Label>
                 <Form.Control>
-                  <Form.Select value={competitionId} onChange={event => handleCompetitionChange(event.target.value)} disabled={loadingCompetitions}>
+                  <Form.Select
+                    value={competitionId}
+                    onChange={event => handleCompetitionChange(event.target.value)}
+                    disabled={loadingCompetitions}
+                  >
                     <option value="">Select a competition</option>
                     {competitions.map(item => (
                       <option key={item.id} value={item.id}>
@@ -371,7 +513,11 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
               <Form.Field>
                 <Form.Label>Leaderboard</Form.Label>
                 <Form.Control>
-                  <Form.Select value={leaderboardId} onChange={event => handleLeaderboardChange(event.target.value)} disabled={loadingLeaderboards || leaderboards.length === 0}>
+                  <Form.Select
+                    value={leaderboardId}
+                    onChange={event => handleLeaderboardChange(event.target.value)}
+                    disabled={loadingLeaderboards || leaderboards.length === 0}
+                  >
                     <option value="">Select a leaderboard</option>
                     {leaderboards.map(item => (
                       <option key={item.id} value={String(item.id)}>
@@ -385,14 +531,22 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
               <Form.Field>
                 <Form.Label>Global search</Form.Label>
                 <Form.Control>
-                  <Form.Input value={filters.query} onChange={handleFilterChange("query")} placeholder="Search any result field" />
+                  <Form.Input
+                    value={filters.query}
+                    onChange={handleFilterChange("query")}
+                    placeholder="Search any result field"
+                  />
                 </Form.Control>
               </Form.Field>
 
               <Form.Field>
                 <Form.Label>Driver</Form.Label>
                 <Form.Control>
-                  <Form.Input value={filters.driver} onChange={handleFilterChange("driver")} placeholder="Filter by driver" />
+                  <Form.Input
+                    value={filters.driver}
+                    onChange={handleFilterChange("driver")}
+                    placeholder="Filter by driver"
+                  />
                 </Form.Control>
               </Form.Field>
 
@@ -411,6 +565,18 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                       </option>
                     ))}
                   </Form.Select>
+                </Form.Control>
+              </Form.Field>
+
+              <Form.Field>
+                <Form.Control>
+                  <Form.Checkbox
+                    checked={streamResults}
+                    onChange={event => setStreamResults(event.target.checked)}
+                    disabled={!signalRHubUrl}
+                  >
+                    Stream results
+                  </Form.Checkbox>
                 </Form.Control>
               </Form.Field>
 
