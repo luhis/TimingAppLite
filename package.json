@@ -18,8 +18,8 @@
     "lint:fix": "eslint src/**/*.{js,jsx,ts,tsx} --cache --cache-location .eslintcache --fix"
   },
   "dependencies": {
-    "@microsoft/signalr": "^9.0.6",
-    "@microsoft/signalr-protocol-msgpack": "9.0.6",
+    "@microsoft/signalr": "^10.0.0",
+    "@microsoft/signalr-protocol-msgpack": "10.0.0",
     "bulma": "^1.0.4",
     "gatsby": "^5.6.0",
     "gatsby-plugin-image": "^3.6.0",
