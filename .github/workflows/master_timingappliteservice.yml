@@ -1,7 +1,7 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy dotnet core project to Azure Function App - TimingAppLiteService
+name: Build and deploy dotnet core project to Azure Web App - TimingAppLiteService
 
 on:
   push:
@@ -43,8 +43,8 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_D20709A948D7488884E95EB663B23E72 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_15B1C2A221994EBF82CC8AE23970F995 }}
 
-      - name: 'Run Azure Functions Action'
-        uses: Azure/functions-action@v1
+      - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v3
         id: fa
         with:
           app-name: 'TimingAppLiteService'
