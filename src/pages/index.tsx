@@ -73,7 +73,7 @@ const formatMeta = (competition: Competition | null) => {
   return `${competition.dateddmmyyyy} event feed`;
 };
 
-const signalRHubUrl = process.env.GATSBY_SIGNALR_HUB_URL ?? "";
+const signalRHubUrl = (process.env.GATSBY_SIGNALR_HUB_URL ?? "") + "/hubs/leaderboard";
 
 const competitionStatusColor = (status: CompetitionStatus | undefined) => {
   switch (status) {
