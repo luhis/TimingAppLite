@@ -31,7 +31,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
 app.UseCors("AllowedOrigins");
-app.MapHub<LeaderboardHub>("/hubs/leaderboard").RequireCors("AllowedOrigins");
+app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
 app.MapGet("/API/1/LiveAllCompetitions", (IApiClient api) => api.GetLiveAllCompetitions());
+app.MapGet("/API/1/Competitions/{competionId:int}/LeaderBoards/{leaderboardId:int?}", (IApiClient api, int competionId, int? leaderboardId) => api.GetLeaderboards(competionId, leaderboardId));
 
 app.Run();

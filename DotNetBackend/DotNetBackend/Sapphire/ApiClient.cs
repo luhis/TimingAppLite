@@ -1,5 +1,4 @@
 ﻿using DotNetBackend.Dto;
-using System.Text;
 using System.Text.Json;
 
 namespace DotNetBackend.Sapphire;
@@ -31,19 +30,14 @@ public class ApiClient(IHttpClientFactory httpClientFactory) : IApiClient
         return await resp.Content.ReadFromJsonAsync<T>(_jsonOptions)
             ?? throw new InvalidOperationException($"Empty response from {url}");
     }
-}
 
-public sealed class ForgivingStringConverter : System.Text.Json.Serialization.JsonConverter<string>
-{
-    public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-        reader.TokenType switch
-        {
-            JsonTokenType.False => "false",
-            JsonTokenType.True => "true",
-            JsonTokenType.Number => Encoding.UTF8.GetString(reader.ValueSpan),
-            _ => reader.GetString(),
-        };
-
-    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options) =>
-        writer.WriteStringValue(value);
+    async Task<IResult> IApiClient.GetLeaderboards(int competionId, int? leaderboardId)
+    {
+        var client = _httpClientFactory.CreateClient();
+        var resp = await client.GetAsync($"{RemoteApiBase}/Competitions/{competionId}/Leaderboards/{leaderboardId}");
+        resp.EnsureSuccessStatusCode();
+        var contentType = resp.Content.Headers.ContentType?.ToString() ?? "application/json";
+        var stream = await resp.Content.ReadAsStreamAsync();
+        return Results.Stream(stream, contentType);
+    }
 }
