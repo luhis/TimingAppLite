@@ -11,7 +11,7 @@ public class LeaderboardHub : Hub
     private static readonly ConcurrentDictionary<(string competitionId, string leaderboardId), ImmutableHashSet<string>> _previousRows = new();
     private static readonly ConcurrentDictionary<(string competitionId, string leaderboardId), int> _subscriberCounts = new();
     private static readonly ConcurrentDictionary<string, ImmutableHashSet<(string competitionId, string leaderboardId)>> _connectionGroups = new();
-    private static readonly TimeSpan _timerInterval = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan _timerInterval = TimeSpan.FromSeconds(60);
     private static readonly CancellationTokenSource _timerCancellation = new();
     private static int _timerStarted;
 

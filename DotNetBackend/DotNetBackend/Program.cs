@@ -1,11 +1,21 @@
 using DotNetBackend.Hubs;
 using DotNetBackend.Sapphire;
+using Microsoft.AspNetCore.ResponseCompression;
+using System.Net.Mime;
 using System.Text.Json.Serialization.Metadata;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services.AddScoped<IApiClient, ApiClient>();
 builder.Services.AddHttpClient();
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Append(MediaTypeNames.Application.Json);
+});
 
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver());
@@ -30,6 +40,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
+app.UseResponseCompression();
 app.UseCors("AllowedOrigins");
 app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
 app.MapGet("/API/1/LiveAllCompetitions", (IApiClient api) => api.GetLiveAllCompetitions());
