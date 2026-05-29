@@ -35,7 +35,7 @@ jobs:
         uses: azure/container-apps-deploy-action@v2
         with:
           appSourcePath: ${{ github.workspace }}/DotNetBackend
-          dockerfilePath: Dockerfile
+          dockerfilePath: ./DotNetBackend/Dockerfile
           registryUrl: ${{ secrets.TIMINGAPPLITE_REGISTRY_URL }}
           registryUsername: ${{ secrets.TIMINGAPPLITE_REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.TIMINGAPPLITE_REGISTRY_PASSWORD }}
