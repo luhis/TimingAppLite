@@ -9,8 +9,8 @@ var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.Services.AddSingleton<IApiClient, ApiClient>();
 builder.Services.AddHttpClient();
-builder.Services.AddHostedService<LeaderboardService>();
 builder.Services.AddSingleton<LeaderboardService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<LeaderboardService>());
 
 builder.Services.AddResponseCompression(options =>
 {

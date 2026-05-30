@@ -13,8 +13,10 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     private static readonly TimeSpan TimerInterval = TimeSpan.FromSeconds(60);
 
     private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), ImmutableHashSet<string>> _previousRows = new();
-    private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), int> _subscriberCounts = new();
     private readonly ConcurrentDictionary<string, ImmutableHashSet<(string competitionId, string leaderboardId)>> _connectionGroups = new();
+
+    private IEnumerable<(string competitionId, string leaderboardId)> ActiveGroups =>
+        _connectionGroups.Values.SelectMany(g => g).Distinct();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -22,7 +24,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         try
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
-                foreach (var key in _subscriberCounts.Keys)
+                foreach (var key in ActiveGroups)
                     await PushChanges(key.competitionId, key.leaderboardId, stoppingToken);
         }
         catch (OperationCanceledException) { }
@@ -35,7 +37,6 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     public void Subscribe(string connectionId, string competitionId, string leaderboardId)
     {
         var key = (competitionId, leaderboardId);
-        _subscriberCounts.AddOrUpdate(key, 1, (_, v) => v + 1);
         _connectionGroups.AddOrUpdate(connectionId, ImmutableHashSet.Create(key), (_, existing) => existing.Add(key));
     }
 
@@ -46,7 +47,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     {
         if (_connectionGroups.TryRemove(connectionId, out var groups))
             foreach (var key in groups)
-                DecrementGroup(key);
+                _previousRows.TryRemove(key, out _);
     }
 
     private void RemoveConnection(string connectionId, (string competitionId, string leaderboardId) key)
@@ -60,17 +61,9 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
                 _connectionGroups[connectionId] = updated;
         }
 
-        DecrementGroup(key);
-    }
-
-    private void DecrementGroup((string competitionId, string leaderboardId) key)
-    {
-        var newCount = _subscriberCounts.AddOrUpdate(key, 0, (_, v) => Math.Max(0, v - 1));
-        if (newCount == 0)
-        {
+        // Clean up snapshot if no connection subscribes to this group anymore
+        if (!ActiveGroups.Contains(key))
             _previousRows.TryRemove(key, out _);
-            _subscriberCounts.TryRemove(key, out _);
-        }
     }
 
     private async Task PushChanges(string competitionId, string leaderboardId, CancellationToken cancellationToken)

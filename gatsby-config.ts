@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import type { GatsbyConfig } from "gatsby"
+import type { GatsbyConfig } from "gatsby";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV ?? "development"}` });
 dotenv.config();
@@ -25,6 +25,6 @@ const config: GatsbyConfig = {
       __key: "images",
     },
   ],
-}
+};
 
-export default config
+export default config;
