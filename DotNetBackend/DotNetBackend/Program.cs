@@ -1,13 +1,16 @@
 using DotNetBackend.Hubs;
 using DotNetBackend.Sapphire;
+using DotNetBackend.Services;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Net.Mime;
 using System.Text.Json.Serialization.Metadata;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
-builder.Services.AddScoped<IApiClient, ApiClient>();
+builder.Services.AddSingleton<IApiClient, ApiClient>();
 builder.Services.AddHttpClient();
+builder.Services.AddHostedService<LeaderboardService>();
+builder.Services.AddSingleton<LeaderboardService>();
 
 builder.Services.AddResponseCompression(options =>
 {
