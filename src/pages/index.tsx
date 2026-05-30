@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { HubConnection } from "@microsoft/signalr";
 
 import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components";
-import { fetchCompetitions, fetchLeaderboard, fetchLeaderboards } from "../lib/leaderboardApi";
+import { fetchAllCompetitions, fetchLeaderboard, fetchLeaderboards } from "../lib/leaderboardApi";
 import {
   CompetitionStatus,
   type Competition,
@@ -168,7 +168,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       setError(null);
 
       try {
-        const data = await fetchCompetitions(controller.signal);
+        const data = await fetchAllCompetitions(controller.signal);
 
         if (controller.signal.aborted) {
           return;
