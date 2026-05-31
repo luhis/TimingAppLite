@@ -15,7 +15,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), ImmutableHashSet<string>> _previousRows = new();
     private readonly ConcurrentDictionary<string, ImmutableHashSet<(string competitionId, string leaderboardId)>> _connectionGroups = new();
 
-    private IEnumerable<(string competitionId, string leaderboardId)> ActiveGroups =>
+    internal IEnumerable<(string competitionId, string leaderboardId)> ActiveGroups =>
         _connectionGroups.Values.SelectMany(g => g).Distinct();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
