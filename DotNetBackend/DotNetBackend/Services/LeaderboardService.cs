@@ -10,7 +10,7 @@ namespace DotNetBackend.Services;
 public sealed class LeaderboardService(IApiClient apiClient, IHubContext<LeaderboardHub> hubContext)
     : BackgroundService
 {
-    private static readonly TimeSpan TimerInterval = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan TimerInterval = TimeSpan.FromSeconds(180);
 
     private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), ImmutableHashSet<string>> _previousRows = new();
     private readonly ConcurrentDictionary<string, ImmutableHashSet<(string competitionId, string leaderboardId)>> _connectionGroups = new();
@@ -47,7 +47,8 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     {
         if (_connectionGroups.TryRemove(connectionId, out var groups))
             foreach (var key in groups)
-                _previousRows.TryRemove(key, out _);
+                if (!ActiveGroups.Contains(key))
+                    _previousRows.TryRemove(key, out _);
     }
 
     private void RemoveConnection(string connectionId, (string competitionId, string leaderboardId) key)
