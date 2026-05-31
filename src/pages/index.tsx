@@ -155,6 +155,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
   const [error, setError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
   const [streamResults, setStreamResults] = useState(true);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
 
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const requestedCompetitionId = queryParams.get("competitionid") ?? "";
@@ -315,6 +316,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
             return;
           }
 
+          setLastUpdateTime(new Date());
           setLeaderboard(currentLeaderboard => {
             if (!currentLeaderboard) {
               return currentLeaderboard;
@@ -612,6 +614,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                 <div className="has-text-right">
                   <p className="has-text-grey is-size-7">{isBusy ? "Loading live data" : `${dataRowCount} result rows`}</p>
                   <p className="has-text-grey is-size-7">{leaderboard ? `${sectionCount} section breaks` : "No board loaded"}</p>
+                  <p className="has-text-grey is-size-7">{lastUpdateTime ? `Last update ${lastUpdateTime.toLocaleTimeString()}` : "No updates yet"}</p>
                 </div>
               </div>
 

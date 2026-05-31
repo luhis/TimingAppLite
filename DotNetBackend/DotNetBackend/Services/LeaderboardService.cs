@@ -10,7 +10,7 @@ namespace DotNetBackend.Services;
 public sealed class LeaderboardService(IApiClient apiClient, IHubContext<LeaderboardHub> hubContext)
     : BackgroundService
 {
-    private static readonly TimeSpan TimerInterval = TimeSpan.FromSeconds(180);
+    private static readonly TimeSpan TimerInterval = TimeSpan.FromSeconds(60);
 
     private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), ImmutableHashSet<string>> _previousRows = new();
     private readonly ConcurrentDictionary<string, ImmutableHashSet<(string competitionId, string leaderboardId)>> _connectionGroups = new();
@@ -69,12 +69,15 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
     private async Task PushChanges(string competitionId, string leaderboardId, CancellationToken cancellationToken)
     {
+        Console.WriteLine($"{nameof(PushChanges)} {competitionId}, {leaderboardId}");
         var values = await apiClient.GetResults(competitionId, leaderboardId);
         var key = (competitionId, leaderboardId);
 
-        var serializedToItem = values.Items.ToDictionary(
-            item => JsonSerializer.Serialize(new SortedDictionary<string, string>(item)),
-            item => item);
+        var serializedToItem = values.Items
+            .Where(item => item.TryGetValue("classname", out var cn) && !string.IsNullOrEmpty(cn) && cn != " ")
+            .ToDictionary(
+                item => JsonSerializer.Serialize(new SortedDictionary<string, string>(item)),
+                item => item);
 
         var currentSet = ImmutableHashSet.CreateRange(serializedToItem.Keys);
         var prevSnapshot = _previousRows.GetValueOrDefault(key, ImmutableHashSet<string>.Empty);
@@ -82,7 +85,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
         _previousRows.AddOrUpdate(key, currentSet, (_, __) => currentSet);
 
-        if (changedItems.Count > 0)
+        //if (changedItems.Count > 0)
             await hubContext.Clients
                 .Group(LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId))
                 .SendAsync("ReceiveUpdate", changedItems, cancellationToken);
