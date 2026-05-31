@@ -5,16 +5,13 @@ namespace DotNetBackend.Hubs;
 
 public class LeaderboardHub(LeaderboardService leaderboardService) : Hub
 {
-    public Task SubscribeToLeaderboard(string competitionId, string leaderboardId)
+    public override async Task OnConnectedAsync()
     {
+        var competitionId = (Context.GetHttpContext().Request.Query["competitionId"]!);
+        var leaderboardId = (Context.GetHttpContext().Request.Query["leaderboardId"]!);
         leaderboardService.Subscribe(Context.ConnectionId, competitionId, leaderboardId);
-        return Groups.AddToGroupAsync(Context.ConnectionId, GetCompetitionGroup(competitionId, leaderboardId));
-    }
-
-    public Task UnsubscribeFromLeaderboard(string competitionId, string leaderboardId)
-    {
-        leaderboardService.Unsubscribe(Context.ConnectionId, competitionId, leaderboardId);
-        return Groups.RemoveFromGroupAsync(Context.ConnectionId, GetCompetitionGroup(competitionId, leaderboardId));
+        await Groups.AddToGroupAsync(Context.ConnectionId, GetCompetitionGroup(competitionId, leaderboardId));
+        await base.OnConnectedAsync();
     }
 
     public override Task OnDisconnectedAsync(Exception? exception)

@@ -88,6 +88,6 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         //if (changedItems.Count > 0)
             await hubContext.Clients
                 .Group(LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId))
-                .SendAsync("ReceiveUpdate", changedItems, cancellationToken);
+                .SendAsync("ReceiveUpdate", values.Items, cancellationToken);
     }
 }

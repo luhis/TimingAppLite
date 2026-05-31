@@ -330,8 +330,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         });
 
         await connection.start();
-        await connection.invoke("SubscribeToLeaderboard", competitionId, leaderboardId);
-
+        
         return connection;
       } catch {
         // Keep UI alive when SignalR endpoint details aren't available in this environment.
@@ -346,10 +345,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
             return;
           }
 
-          return connection
-            .invoke("UnsubscribeFromLeaderboard", competitionId, leaderboardId)
-            .catch(() => undefined)
-            .then(() => connection.stop());
+          return connection.stop();
         })
         .catch(() => undefined);
     };
