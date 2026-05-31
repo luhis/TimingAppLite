@@ -50,3 +50,5 @@ app.MapGet("/API/1/LiveAllCompetitions", (IApiClient api) => api.GetLiveAllCompe
 app.MapGet("/API/1/Competitions/{competionId:int}/LeaderBoards/{leaderboardId:int?}", (IApiClient api, int competionId, int? leaderboardId) => api.GetLeaderboards(competionId, leaderboardId));
 
 app.Run();
+
+public partial class Program { }
