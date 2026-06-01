@@ -24,9 +24,9 @@
     "gatsby-plugin-preact": "7.16.0",
     "preact": "10.29.2",
     "preact-render-to-string": "6.7.0",
-    "react": "19.2.6",
+    "react": "19.2.7",
     "react-bulma-components": "^4.1.0",
-    "react-dom": "19.2.6"
+    "react-dom": "19.2.7"
   },
   "devDependencies": {
     "@types/react": "^18.0.27",
