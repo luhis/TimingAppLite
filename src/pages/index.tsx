@@ -299,15 +299,11 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
     const subscriptionPromise = (async (): Promise<HubConnection | null> => {
       try {
-        const [signalR, { MessagePackHubProtocol }] = await Promise.all([
-          import("@microsoft/signalr"),
-          import("@microsoft/signalr-protocol-msgpack"),
-        ]);
+        const signalR = await import("@microsoft/signalr");
         const connection = new signalR.HubConnectionBuilder()
           .withUrl(withSubscriptionParams(signalRHubUrl, competitionId, leaderboardId), {
             transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
           })
-          .withHubProtocol(new MessagePackHubProtocol())
           .withAutomaticReconnect()
           .configureLogging(signalR.LogLevel.Warning)
           .build();

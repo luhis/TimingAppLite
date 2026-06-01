@@ -2,8 +2,6 @@ using DotNetBackend.Hubs;
 using DotNetBackend.Sapphire;
 using DotNetBackend.Serialization;
 using DotNetBackend.Services;
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Net.Mime;
 
@@ -38,11 +36,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddSignalR()
     .AddJsonProtocol(options =>
-        options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default))
-    .AddMessagePackProtocol(options =>
-        options.SerializerOptions = MessagePackSerializerOptions.Standard
-            .WithResolver(ContractlessStandardResolver.Instance)
-            .WithSecurity(MessagePackSecurity.UntrustedData));
+        options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default));
 
 var app = builder.Build();
 

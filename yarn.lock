@@ -1516,15 +1516,7 @@
   resolved "https://registry.yarnpkg.com/@lmdb/lmdb-win32-x64/-/lmdb-win32-x64-2.5.3.tgz#c72e8b6faae31d925d23a6db0379cc3fe0216fdd"
   integrity sha512-cK+Elf3RjEzrm3SerAhrFWL5oQAsZSJ/LmjL1joIpTfEP1etJJ9CTRvdaV6XLYAxaEkfdhk/9hOvHLbR9yIhCA==
 
-"@microsoft/signalr-protocol-msgpack@10.0.0":
-  version "10.0.0"
-  resolved "https://registry.yarnpkg.com/@microsoft/signalr-protocol-msgpack/-/signalr-protocol-msgpack-10.0.0.tgz#ac9eff3545149551d73b4fd19b8737c36b8b32dc"
-  integrity sha512-N4h4BD+y9kw/iszpDaDaIRJpxaRSA5uBtveM6HUIwmwkeJIPOoMrPNvmj77UrjZHAsbVwa/acLiWnPDfffO3yQ==
-  dependencies:
-    "@microsoft/signalr" ">=10.0.0"
-    "@msgpack/msgpack" "^2.7.0"
-
-"@microsoft/signalr@>=10.0.0", "@microsoft/signalr@^10.0.0":
+"@microsoft/signalr@^10.0.0":
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/@microsoft/signalr/-/signalr-10.0.0.tgz#465837ced767af7f7cc05988ea95afe8bb58d493"
   integrity sha512-0BRqz/uCx3JdrOqiqgFhih/+hfTERaUfCZXFB52uMaZJrKaPRzHzMuqVsJC/V3pt7NozcNXGspjKiQEK+X7P2w==
@@ -1543,11 +1535,6 @@
     "@lezer/common" "^1.0.0"
     "@lezer/lr" "^1.0.0"
     json5 "^2.2.1"
-
-"@msgpack/msgpack@^2.7.0":
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-2.8.0.tgz#4210deb771ee3912964f14a15ddfb5ff877e70b9"
-  integrity sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==
 
 "@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3":
   version "3.0.3"
