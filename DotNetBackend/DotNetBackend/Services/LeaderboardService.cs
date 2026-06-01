@@ -89,9 +89,15 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
         _previousResults.AddOrUpdate(key, values, (_, __) => values);
 
+        var groupName = LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId);
         //if (!values.Equals(prevSnapshot, StringComparison.Ordinal))
+        await hubContext.Clients
+            .Group(groupName)
+            .SendAsync("ReceiveRowUpdate", values.Items, CancellationToken.None);
+        //if (prevSnapshot != null && prevSnapshot.Columns.Count != values.Columns.Count)
+            //if (values.Columns is { Count: > 0 })
             await hubContext.Clients
-                .Group(LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId))
-                .SendAsync("ReceiveUpdate", values.Items, CancellationToken.None);
+                .Group(groupName)
+                .SendAsync("ReceiveColumnUpdate", values.Columns.ToArray(), CancellationToken.None);
     }
 }

@@ -7,6 +7,7 @@ import { Box, Button, Columns, Container, Form, Heading, Notification, Section, 
 import { fetchAllCompetitions, fetchLeaderboard, fetchLeaderboards } from "../lib/leaderboardApi";
 import {
   CompetitionStatus,
+  LeaderboardColumn,
   type Competition,
   type FilterState,
   type LeaderboardItem,
@@ -306,12 +307,12 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
           .withUrl(withSubscriptionParams(signalRHubUrl, competitionId, leaderboardId), {
             transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
           })
-          .withHubProtocol(new MessagePackHubProtocol())
+          //.withHubProtocol(new MessagePackHubProtocol())
           .withAutomaticReconnect()
           .configureLogging(signalR.LogLevel.Warning)
           .build();
 
-        connection.on("ReceiveUpdate", (payload: LeaderboardItem[]) => {
+        connection.on("ReceiveRowUpdate", (payload: LeaderboardItem[]) => {
           if (payload.length === 0) {
             return;
           }
@@ -325,6 +326,22 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
             return {
               ...currentLeaderboard,
               items: mergeRowsByEntry(currentLeaderboard.items, payload),
+            };
+          });
+        });
+        connection.on("ReceiveColumnUpdate", (payload: LeaderboardColumn[]) => {
+          if (payload.length === 0) {
+            return;
+          }
+
+          setLeaderboard(currentLeaderboard => {
+            if (!currentLeaderboard) {
+              return currentLeaderboard;
+            }
+
+            return {
+              ...currentLeaderboard,
+              columns: currentLeaderboard.columns,
             };
           });
         });
