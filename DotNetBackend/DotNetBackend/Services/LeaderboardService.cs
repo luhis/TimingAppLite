@@ -95,8 +95,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         await hubContext.Clients
             .Group(groupName)
             .SendAsync("ReceiveRowUpdate", values.Items, CancellationToken.None);
-        //if (prevSnapshot != null && prevSnapshot.Columns.Count != values.Columns.Count)
-            //if (values.Columns is { Count: > 0 })
+        if (prevSnapshot != null && prevSnapshot.Columns.Count != values.Columns.Count)
             await hubContext.Clients
                 .Group(groupName)
                 .SendAsync("ReceiveColumnUpdate", values.Columns, CancellationToken.None);

@@ -1,15 +1,15 @@
 import * as React from "react";
 import type { HeadFC, PageProps } from "gatsby";
-import { useEffect, useMemo, useState } from "react";
-import type { HubConnection } from "@microsoft/signalr";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { signalRHubUrl, useLeaderboardStream } from "../hooks/useLeaderboardStream";
 
 import { Box, Button, Columns, Container, Form, Heading, Notification, Section, Tag } from "react-bulma-components";
 import { fetchAllCompetitions, fetchLeaderboard, fetchLeaderboards } from "../lib/leaderboardApi";
 import {
   CompetitionStatus,
-  LeaderboardColumn,
   type Competition,
   type FilterState,
+  type LeaderboardColumn,
   type LeaderboardItem,
   type LeaderboardPayload,
   type LeaderboardSummary,
@@ -74,8 +74,6 @@ const formatMeta = (competition: Competition | null) => {
   return `${competition.dateddmmyyyy} event feed`;
 };
 
-const signalRHubUrl = (process.env.GATSBY_SIGNALR_HUB_URL ?? "") + "/hubs/leaderboard";
-
 const competitionStatusColor = (status: CompetitionStatus | undefined) => {
   switch (status) {
     case CompetitionStatus.Live:        return "success";
@@ -85,13 +83,6 @@ const competitionStatusColor = (status: CompetitionStatus | undefined) => {
     case undefined:
     default:                            return "light";
   }
-};
-
-const withSubscriptionParams = (baseUrl: string, competitionId: string, leaderboardId: string) => {
-  const url = new URL(baseUrl, typeof window !== "undefined" ? window.location.origin : "http://localhost");
-  url.searchParams.set("competitionId", competitionId);
-  url.searchParams.set("leaderboardId", leaderboardId);
-  return url.toString();
 };
 
 const getEntryKey = (item: LeaderboardItem) => {
@@ -292,77 +283,28 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     };
   }, [competitionId, leaderboardId, refreshTick]);
 
-  useEffect(() => {
-    if (!competitionId || !leaderboardId || !signalRHubUrl || !streamResults) {
-      return;
-    }
-
-    const subscriptionPromise = (async (): Promise<HubConnection | null> => {
-      try {
-        const signalR = await import("@microsoft/signalr");
-        const connection = new signalR.HubConnectionBuilder()
-          .withUrl(withSubscriptionParams(signalRHubUrl, competitionId, leaderboardId), {
-            transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
-          })
-          .withAutomaticReconnect()
-          .configureLogging(signalR.LogLevel.Warning)
-          .build();
-
-        connection.on("ReceiveRowUpdate", (payload: LeaderboardItem[]) => {
-          if (payload.length === 0) {
-            return;
-          }
-
-          setLastUpdateTime(new Date());
-          setLeaderboard(currentLeaderboard => {
-            if (!currentLeaderboard) {
-              return currentLeaderboard;
-            }
-
-            return {
-              ...currentLeaderboard,
-              items: mergeRowsByEntry(currentLeaderboard.items, payload),
-            };
-          });
-        });
-        connection.on("ReceiveColumnUpdate", (payload: LeaderboardColumn[]) => {
-          if (payload.length === 0) {
-            return;
-          }
-
-          setLeaderboard(currentLeaderboard => {
-            if (!currentLeaderboard) {
-              return currentLeaderboard;
-            }
-
-            return {
-              ...currentLeaderboard,
-              columns: currentLeaderboard.columns,
-            };
-          });
-        });
-
-        await connection.start();
-        
-        return connection;
-      } catch {
-        // Keep UI alive when SignalR endpoint details aren't available in this environment.
-        return null;
+  const handleRowUpdate = useCallback((rows: readonly LeaderboardItem[]) => {
+    setLastUpdateTime(new Date());
+    setLeaderboard(current => {
+      if (!current) {
+        return current;
       }
-    })();
 
-    return () => {
-      void subscriptionPromise
-        .then(connection => {
-          if (!connection) {
-            return;
-          }
+      return { ...current, items: mergeRowsByEntry(current.items, rows) };
+    });
+  }, []);
 
-          return connection.stop();
-        })
-        .catch(() => undefined);
-    };
-  }, [competitionId, leaderboardId, streamResults]);
+  const handleColumnUpdate = useCallback((columns: readonly LeaderboardColumn[]) => {
+    setLeaderboard(current => {
+      if (!current) {
+        return current;
+      }
+
+      return { ...current, columns: [...columns] };
+    });
+  }, []);
+
+  useLeaderboardStream(competitionId, leaderboardId, streamResults, handleRowUpdate, handleColumnUpdate);
 
   const selectedCompetition = competitions.find(item => item.id === competitionId) ?? null;
   const selectedLeaderboard = leaderboards.find(item => String(item.id) === leaderboardId) ?? null;
