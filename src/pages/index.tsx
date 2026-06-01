@@ -307,7 +307,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
           .withUrl(withSubscriptionParams(signalRHubUrl, competitionId, leaderboardId), {
             transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
           })
-          //.withHubProtocol(new MessagePackHubProtocol())
+          .withHubProtocol(new MessagePackHubProtocol())
           .withAutomaticReconnect()
           .configureLogging(signalR.LogLevel.Warning)
           .build();
