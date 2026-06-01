@@ -2,6 +2,6 @@
 
 public sealed record LeaderboardDto
 {
-    public required List<ColumnDto> Columns { get; init; }
-    public required List<Dictionary<string, string>> Items { get; init; }
+    public List<ColumnDto> Columns { get; init; } = [];
+    public List<Dictionary<string, string>> Items { get; init; } = [];
 }
