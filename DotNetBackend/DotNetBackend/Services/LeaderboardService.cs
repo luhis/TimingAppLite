@@ -1,18 +1,18 @@
+using DotNetBackend.Dto;
 using DotNetBackend.Hubs;
 using DotNetBackend.Sapphire;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Text.Json;
 
 namespace DotNetBackend.Services;
 
 public sealed class LeaderboardService(IApiClient apiClient, IHubContext<LeaderboardHub> hubContext)
     : BackgroundService
 {
-    private static readonly TimeSpan TimerInterval = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan TimerInterval = TimeSpan.FromSeconds(10);
 
-    private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), ImmutableHashSet<string>> _previousRows = new();
+    private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), LeaderboardDto?> _previousResults = new();
     private readonly ConcurrentDictionary<string, ImmutableHashSet<(string competitionId, string leaderboardId)>> _connectionGroups = new();
 
     internal IEnumerable<(string competitionId, string leaderboardId)> ActiveGroups =>
@@ -25,12 +25,24 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
                 foreach (var key in ActiveGroups)
-                    await PushChanges(key.competitionId, key.leaderboardId, stoppingToken);
+                    await SafePushChanges(key.competitionId, key.leaderboardId);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Leaderboard timer crashed: {ex}");
+        }
+    }
+
+    private async Task SafePushChanges(string competitionId, string leaderboardId)
+    {
+        try
+        {
+            await PushChanges(competitionId, leaderboardId);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"PushChanges failed for {competitionId}/{leaderboardId}: {ex}");
         }
     }
 
@@ -48,7 +60,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         if (_connectionGroups.TryRemove(connectionId, out var groups))
             foreach (var key in groups)
                 if (!ActiveGroups.Contains(key))
-                    _previousRows.TryRemove(key, out _);
+                    _previousResults.TryRemove(key, out _);
     }
 
     private void RemoveConnection(string connectionId, (string competitionId, string leaderboardId) key)
@@ -64,30 +76,22 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
         // Clean up snapshot if no connection subscribes to this group anymore
         if (!ActiveGroups.Contains(key))
-            _previousRows.TryRemove(key, out _);
+            _previousResults.TryRemove(key, out _);
     }
 
-    private async Task PushChanges(string competitionId, string leaderboardId, CancellationToken cancellationToken)
+    private async Task PushChanges(string competitionId, string leaderboardId)
     {
         Console.WriteLine($"{nameof(PushChanges)} {competitionId}, {leaderboardId}");
         var values = await apiClient.GetResults(competitionId, leaderboardId);
         var key = (competitionId, leaderboardId);
 
-        var serializedToItem = values.Items
-            .Where(item => item.TryGetValue("classname", out var cn) && !string.IsNullOrEmpty(cn) && cn != " ")
-            .ToDictionary(
-                item => JsonSerializer.Serialize(new SortedDictionary<string, string>(item)),
-                item => item);
+        var prevSnapshot = _previousResults.GetValueOrDefault(key, null);
 
-        var currentSet = ImmutableHashSet.CreateRange(serializedToItem.Keys);
-        var prevSnapshot = _previousRows.GetValueOrDefault(key, ImmutableHashSet<string>.Empty);
-        var changedItems = currentSet.Except(prevSnapshot).Select(s => serializedToItem[s]).ToList();
+        _previousResults.AddOrUpdate(key, values, (_, __) => values);
 
-        _previousRows.AddOrUpdate(key, currentSet, (_, __) => currentSet);
-
-        //if (changedItems.Count > 0)
+        //if (!values.Equals(prevSnapshot, StringComparison.Ordinal))
             await hubContext.Clients
                 .Group(LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId))
-                .SendAsync("ReceiveUpdate", values.Items, cancellationToken);
+                .SendAsync("ReceiveUpdate", values.Items, CancellationToken.None);
     }
 }

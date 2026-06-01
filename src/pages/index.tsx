@@ -103,7 +103,7 @@ const getEntryKey = (item: LeaderboardItem) => {
   return String(entry);
 };
 
-const mergeRowsByEntry = (existingRows: LeaderboardItem[], incomingRows: LeaderboardItem[]) => {
+const mergeRowsByEntry = (existingRows: readonly LeaderboardItem[], incomingRows: readonly LeaderboardItem[]) => {
   const incomingByKey = incomingRows.reduce<Record<string, LeaderboardItem>>((allRows, row) => {
     const key = getEntryKey(row);
 
