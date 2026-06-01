@@ -7,10 +7,11 @@ using System.Collections.Immutable;
 
 namespace DotNetBackend.Services;
 
-public sealed class LeaderboardService(IApiClient apiClient, IHubContext<LeaderboardHub> hubContext)
+public sealed class LeaderboardService(IApiClient apiClient, IHubContext<LeaderboardHub> hubContext, IConfiguration configuration)
     : BackgroundService
 {
-    private static readonly TimeSpan TimerInterval = TimeSpan.FromSeconds(10);
+    private readonly TimeSpan _timerInterval = TimeSpan.FromSeconds(
+        configuration.GetValue<int>("LeaderboardService:PollIntervalSeconds", 60));
 
     private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), LeaderboardDto?> _previousResults = new();
     private readonly ConcurrentDictionary<string, ImmutableHashSet<(string competitionId, string leaderboardId)>> _connectionGroups = new();
@@ -20,7 +21,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(TimerInterval);
+        using var timer = new PeriodicTimer(_timerInterval);
         try
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
