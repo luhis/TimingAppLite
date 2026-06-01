@@ -12,6 +12,8 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 {
     private readonly TimeSpan _timerInterval = TimeSpan.FromSeconds(
         configuration.GetValue<int>("LeaderboardService:PollIntervalSeconds", 60));
+    private readonly bool _optimisePushUpdates =
+        configuration.GetValue<bool>("LeaderboardService:OptimisePushUpdates", true);
 
     private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), LeaderboardDto?> _previousResults = new();
     private readonly ConcurrentDictionary<string, ImmutableHashSet<(string competitionId, string leaderboardId)>> _connectionGroups = new();
@@ -64,6 +66,21 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
                     _previousResults.TryRemove(key, out _);
     }
 
+    // Compares two leaderboard rows (Dictionary<string, string>) by value equality
+    private sealed class ItemComparer : IEqualityComparer<Dictionary<string, string>>
+    {
+        internal static readonly ItemComparer Instance = new();
+        public bool Equals(Dictionary<string, string>? x, Dictionary<string, string>? y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (x is null || y is null || x.Count != y.Count) return false;
+            foreach (var (k, v) in x)
+                if (!y.TryGetValue(k, out var yv) || v != yv) return false;
+            return true;
+        }
+        public int GetHashCode(Dictionary<string, string> obj) => obj.Count;
+    }
+
     private void RemoveConnection(string connectionId, (string competitionId, string leaderboardId) key)
     {
         if (_connectionGroups.TryGetValue(connectionId, out var groups))
@@ -91,11 +108,13 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         _previousResults.AddOrUpdate(key, values, (_, __) => values);
 
         var groupName = LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId);
-        //if (!values.Equals(prevSnapshot, StringComparison.Ordinal))
-        await hubContext.Clients
-            .Group(groupName)
-            .SendAsync("ReceiveRowUpdate", values.Items, CancellationToken.None);
-        if (prevSnapshot != null && prevSnapshot.Columns.Count != values.Columns.Count)
+        var rowsChanged = prevSnapshot == null
+            || !prevSnapshot.Items.SequenceEqual(values.Items, ItemComparer.Instance);
+        if (!_optimisePushUpdates || rowsChanged)
+            await hubContext.Clients
+                .Group(groupName)
+                .SendAsync("ReceiveRowUpdate", values.Items, CancellationToken.None);
+        if (!_optimisePushUpdates || (prevSnapshot != null && prevSnapshot.Columns.Count != values.Columns.Count))
             await hubContext.Clients
                 .Group(groupName)
                 .SendAsync("ReceiveColumnUpdate", values.Columns, CancellationToken.None);

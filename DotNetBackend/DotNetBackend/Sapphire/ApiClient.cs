@@ -1,4 +1,4 @@
-﻿using DotNetBackend.Dto;
+using DotNetBackend.Dto;
 using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
@@ -6,10 +6,11 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace DotNetBackend.Sapphire;
 
-public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache) : IApiClient
+public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration) : IApiClient
 {
     private const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk/API/1";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
+    private readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(
+        configuration.GetValue<int>("ApiClient:CacheDurationSeconds", 30));
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -39,7 +40,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache)
                 await resp.Content.ReadAsByteArrayAsync(ct),
                 resp.Content.Headers.ContentType?.ToString() ?? "application/json"
             );
-            cache.Set(cacheKey, cached, CacheDuration);
+            cache.Set(cacheKey, cached, _cacheDuration);
         }
         return Results.Bytes(cached.bytes, cached.contentType);
     }
@@ -56,7 +57,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache)
                 await resp.Content.ReadAsByteArrayAsync(ct),
                 resp.Content.Headers.ContentType?.ToString() ?? "application/json"
             );
-            cache.Set(cacheKey, cached, CacheDuration);
+            cache.Set(cacheKey, cached, _cacheDuration);
         }
         return Results.Bytes(cached.bytes, cached.contentType);
     }
