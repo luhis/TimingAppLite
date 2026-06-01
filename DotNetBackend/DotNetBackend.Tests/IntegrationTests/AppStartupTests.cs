@@ -41,7 +41,7 @@ public class AppStartupTests
     public async Task LiveAllCompetitions_ReturnsSuccess()
     {
         var client = CreateClient(mock =>
-            mock.Setup(c => c.GetLiveAllCompetitions())
+            mock.Setup(c => c.GetLiveAllCompetitions(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Results.Ok(new { items = Array.Empty<object>() })),
             out var mockRepo);
 
@@ -55,7 +55,7 @@ public class AppStartupTests
     public async Task LeaderBoards_ReturnsSuccess()
     {
         var client = CreateClient(mock =>
-            mock.Setup(c => c.GetLeaderboards(1, null))
+            mock.Setup(c => c.GetLeaderboards(1, null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Results.Ok(new { items = Array.Empty<object>() })),
             out var mockRepo);
 
@@ -69,7 +69,7 @@ public class AppStartupTests
     public async Task LeaderBoardsWithBoardId_ReturnsSuccess()
     {
         var client = CreateClient(mock =>
-            mock.Setup(c => c.GetLeaderboards(1, 2))
+            mock.Setup(c => c.GetLeaderboards(1, 2, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Results.Ok(new { items = Array.Empty<object>() })),
             out var mockRepo);
 

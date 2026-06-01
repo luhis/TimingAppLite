@@ -27,16 +27,16 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache)
             ?? throw new InvalidOperationException($"Empty response from {url}");
     }
 
-    async Task<IResult> IApiClient.GetLiveAllCompetitions()
+    async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
     {
         var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
             var client = httpClientFactory.CreateClient();
-            var resp = await client.GetAsync(LiveAllCompetitionsUrl());
+            var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
             resp.EnsureSuccessStatusCode();
             cached = (
-                await resp.Content.ReadAsByteArrayAsync(),
+                await resp.Content.ReadAsByteArrayAsync(ct),
                 resp.Content.Headers.ContentType?.ToString() ?? "application/json"
             );
             cache.Set(cacheKey, cached, CacheDuration);
@@ -44,16 +44,16 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache)
         return Results.Bytes(cached.bytes, cached.contentType);
     }
 
-    async Task<IResult> IApiClient.GetLeaderboards(int competionId, int? leaderboardId)
+    async Task<IResult> IApiClient.GetLeaderboards(int competionId, int? leaderboardId, CancellationToken ct)
     {
         var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competionId}:{leaderboardId}";
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
             var client = httpClientFactory.CreateClient();
-            var resp = await client.GetAsync(LeaderboardsUrl(competionId.ToString(), leaderboardId.ToString()));
+            var resp = await client.GetAsync(LeaderboardsUrl(competionId.ToString(), leaderboardId.ToString()), ct);
             resp.EnsureSuccessStatusCode();
             cached = (
-                await resp.Content.ReadAsByteArrayAsync(),
+                await resp.Content.ReadAsByteArrayAsync(ct),
                 resp.Content.Headers.ContentType?.ToString() ?? "application/json"
             );
             cache.Set(cacheKey, cached, CacheDuration);
