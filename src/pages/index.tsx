@@ -135,8 +135,8 @@ const mergeRowsByEntry = (existingRows: readonly LeaderboardItem[], incomingRows
 };
 
 const IndexPage: React.FC<PageProps> = ({ location }) => {
-  const [competitions, setCompetitions] = useState<Competition[]>([]);
-  const [leaderboards, setLeaderboards] = useState<LeaderboardSummary[]>([]);
+  const [competitions, setCompetitions] = useState<readonly Competition[]>([]);
+  const [leaderboards, setLeaderboards] = useState<readonly LeaderboardSummary[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardPayload | null>(null);
   const [competitionId, setCompetitionId] = useState("");
   const [leaderboardId, setLeaderboardId] = useState("");

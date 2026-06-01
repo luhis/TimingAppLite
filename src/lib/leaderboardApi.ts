@@ -13,10 +13,10 @@ const getJson = async <T>(url: string, errorPrefix: string, signal?: AbortSignal
 };
 
 export const fetchAllCompetitions = async (signal?: AbortSignal) =>
-  getJson<Competition[]>(`${API_BASE}/LiveAllCompetitions`, "Unable to load competitions", signal);
+  getJson<readonly Competition[]>(`${API_BASE}/LiveAllCompetitions`, "Unable to load competitions", signal);
 
 export const fetchLeaderboards = async (competitionId: string, signal?: AbortSignal) =>
-  getJson<LeaderboardSummary[]>(
+  getJson<readonly LeaderboardSummary[]>(
     `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/LeaderBoards/`,
     "Unable to load leaderboard list",
     signal
