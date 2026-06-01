@@ -1,9 +1,9 @@
 using DotNetBackend.Hubs;
 using DotNetBackend.Sapphire;
+using DotNetBackend.Serialization;
 using DotNetBackend.Services;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Net.Mime;
-using System.Text.Json.Serialization.Metadata;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -22,7 +22,7 @@ builder.Services.AddResponseCompression(options =>
 });
 
 builder.Services.ConfigureHttpJsonOptions(options =>
-    options.SerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver());
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default));
 
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowedOrigins", policy =>
@@ -36,7 +36,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddSignalR()
     .AddJsonProtocol(options =>
-        options.PayloadSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver())
+        options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default))
     .AddMessagePackProtocol();
 
 var app = builder.Build();

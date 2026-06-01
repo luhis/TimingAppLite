@@ -1,6 +1,8 @@
 ﻿using DotNetBackend.Dto;
+using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 namespace DotNetBackend.Sapphire;
 
@@ -8,7 +10,12 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache)
 {
     private const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk/API/1";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
-    private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true, Converters = { new ForgivingStringConverter() } };
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new ForgivingDictionaryConverter() },
+        TypeInfoResolver = AppJsonContext.Default,
+    };
 
     async Task<LeaderboardDto> IApiClient.GetResults(string competitionId, string leaderboardId)
     {
