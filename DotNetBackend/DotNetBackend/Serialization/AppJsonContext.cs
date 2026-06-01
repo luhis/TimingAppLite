@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 namespace DotNetBackend.Serialization;
 
 [JsonSerializable(typeof(LeaderboardDto))]
-[JsonSerializable(typeof(ColumnDto[]))]
 [JsonSerializable(typeof(List<ColumnDto>))]
 [JsonSerializable(typeof(List<Dictionary<string, string>>))]
 [JsonSerializable(typeof(Dictionary<string, string>))]

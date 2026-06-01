@@ -99,6 +99,6 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             //if (values.Columns is { Count: > 0 })
             await hubContext.Clients
                 .Group(groupName)
-                .SendAsync("ReceiveColumnUpdate", values.Columns.ToArray(), CancellationToken.None);
+                .SendAsync("ReceiveColumnUpdate", values.Columns, CancellationToken.None);
     }
 }
