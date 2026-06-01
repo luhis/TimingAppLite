@@ -450,7 +450,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                 <Form.Control>
                   <Form.Select
                     value={competitionId}
-                    onChange={event => handleCompetitionChange(event.target.value)}
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => handleCompetitionChange(event.target.value)}
                     disabled={loadingCompetitions}
                   >
                     <option value="">Select a competition</option>
@@ -468,7 +468,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                 <Form.Control>
                   <Form.Select
                     value={leaderboardId}
-                    onChange={event => handleLeaderboardChange(event.target.value)}
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => handleLeaderboardChange(event.target.value)}
                     disabled={loadingLeaderboards || leaderboards.length === 0}
                   >
                     <option value="">Select a leaderboard</option>
@@ -508,7 +508,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                 <Form.Control>
                   <Form.Select
                     value={filters.className}
-                    onChange={event => setFilters(current => ({ ...current, className: event.target.value }))}
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => setFilters(current => ({ ...current, className: event.target.value }))}
                     disabled={classOptions.length === 0}
                   >
                     <option value="">All classes</option>
@@ -525,7 +525,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                 <Form.Control>
                   <Form.Checkbox
                     checked={streamResults}
-                    onChange={event => setStreamResults(event.target.checked)}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => setStreamResults(event.target.checked)}
                     disabled={!signalRHubUrl}
                   >
                     Stream results
