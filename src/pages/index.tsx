@@ -295,6 +295,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
   }, []);
 
   const handleColumnUpdate = useCallback((columns: readonly LeaderboardColumn[]) => {
+    setLastUpdateTime(new Date());
     setLeaderboard(current => {
       if (!current) {
         return current;
@@ -564,7 +565,6 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
                 </div>
                 <div className="has-text-right">
                   <p className="has-text-grey is-size-7">{isBusy ? "Loading live data" : `${dataRowCount} result rows`}</p>
-                  <p className="has-text-grey is-size-7">{leaderboard ? `${sectionCount} section breaks` : "No board loaded"}</p>
                   <p className="has-text-grey is-size-7">{lastUpdateTime ? `Last update ${lastUpdateTime.toLocaleTimeString()}` : "No updates yet"}</p>
                 </div>
               </div>
