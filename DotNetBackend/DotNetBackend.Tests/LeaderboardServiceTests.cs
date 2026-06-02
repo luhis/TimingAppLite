@@ -23,10 +23,10 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", "comp1", "lb1");
+        service.Subscribe("conn1", 1, 2);
 
         service.ActiveGroups.Should().ContainSingle()
-            .Which.Should().Be(("comp1", "lb1"));
+            .Which.Should().Be((1, 2));
 
         _mockRepo.VerifyAll();
     }
@@ -36,8 +36,8 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", "comp1", "lb1");
-        service.Subscribe("conn1", "comp1", "lb2");
+        service.Subscribe("conn1", 1, 2);
+        service.Subscribe("conn1", 1, 3);
 
         service.ActiveGroups.Should().HaveCount(2);
 
@@ -49,11 +49,11 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", "comp1", "lb1");
-        service.Subscribe("conn2", "comp1", "lb1");
+        service.Subscribe("conn1", 1, 2);
+        service.Subscribe("conn2", 1, 2);
 
         service.ActiveGroups.Should().ContainSingle()
-            .Which.Should().Be(("comp1", "lb1"));
+            .Which.Should().Be((1, 2));
 
         _mockRepo.VerifyAll();
     }
@@ -63,8 +63,8 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", "comp1", "lb1");
-        service.Unsubscribe("conn1", "comp1", "lb1");
+        service.Subscribe("conn1", 1, 2);
+        service.Unsubscribe("conn1", 1, 2);
 
         service.ActiveGroups.Should().BeEmpty();
 
@@ -76,12 +76,12 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", "comp1", "lb1");
-        service.Subscribe("conn2", "comp1", "lb1");
-        service.Unsubscribe("conn1", "comp1", "lb1");
+        service.Subscribe("conn1", 1, 2);
+        service.Subscribe("conn2", 1, 2);
+        service.Unsubscribe("conn1", 1, 2);
 
         service.ActiveGroups.Should().ContainSingle()
-            .Which.Should().Be(("comp1", "lb1"));
+            .Which.Should().Be((1, 2));
 
         _mockRepo.VerifyAll();
     }
@@ -91,8 +91,8 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", "comp1", "lb1");
-        service.Subscribe("conn1", "comp2", "lb2");
+        service.Subscribe("conn1", 1, 2);
+        service.Subscribe("conn1", 1, 2);
         service.RemoveAllSubscriptions("conn1");
 
         service.ActiveGroups.Should().BeEmpty();
@@ -105,12 +105,12 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", "comp1", "lb1");
-        service.Subscribe("conn2", "comp1", "lb1");
+        service.Subscribe("conn1", 1, 2);
+        service.Subscribe("conn2", 1, 2);
         service.RemoveAllSubscriptions("conn1");
 
         service.ActiveGroups.Should().ContainSingle()
-            .Which.Should().Be(("comp1", "lb1"));
+            .Which.Should().Be((1, 2));
 
         _mockRepo.VerifyAll();
     }

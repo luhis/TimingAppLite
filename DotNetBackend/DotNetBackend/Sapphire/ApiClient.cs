@@ -2,7 +2,6 @@ using DotNetBackend.Dto;
 using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 
 namespace DotNetBackend.Sapphire;
 
@@ -18,14 +17,18 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         TypeInfoResolver = AppJsonContext.Default,
     };
 
-    async Task<LeaderboardDto> IApiClient.GetResults(string competitionId, string leaderboardId)
+    async Task<LeaderboardDto> IApiClient.GetResults(int competitionId, int leaderboardId)
     {
         var client = httpClientFactory.CreateClient();
         var url = LeaderboardsUrl(competitionId, leaderboardId);
         using var resp = await client.GetAsync(url);
         resp.EnsureSuccessStatusCode();
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+#pragma warning disable IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
         return await resp.Content.ReadFromJsonAsync<LeaderboardDto>(_jsonOptions)
             ?? throw new InvalidOperationException($"Empty response from {url}");
+#pragma warning restore IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
     }
 
     async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
@@ -51,7 +54,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
             var client = httpClientFactory.CreateClient();
-            var resp = await client.GetAsync(LeaderboardsUrl(competionId.ToString(), leaderboardId.ToString()), ct);
+            var resp = await client.GetAsync(LeaderboardsUrl(competionId, leaderboardId), ct);
             resp.EnsureSuccessStatusCode();
             cached = (
                 await resp.Content.ReadAsByteArrayAsync(ct),
@@ -65,6 +68,6 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
     private static string LiveAllCompetitionsUrl() =>
         $"{RemoteApiBase}/LiveAllCompetitions/";
 
-    private static string LeaderboardsUrl(string competitionId, string leaderboardId) =>
+    private static string LeaderboardsUrl(int competitionId, int? leaderboardId) =>
         $"{RemoteApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
 }

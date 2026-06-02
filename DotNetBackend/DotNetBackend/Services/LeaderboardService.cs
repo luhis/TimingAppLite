@@ -15,10 +15,10 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     private readonly bool _optimisePushUpdates =
         configuration.GetValue<bool>("LeaderboardService:OptimisePushUpdates", true);
 
-    private readonly ConcurrentDictionary<(string competitionId, string leaderboardId), LeaderboardDto?> _previousResults = new();
-    private readonly ConcurrentDictionary<string, ImmutableHashSet<(string competitionId, string leaderboardId)>> _connectionGroups = new();
+    private readonly ConcurrentDictionary<(int competitionId, int leaderboardId), LeaderboardDto?> _previousResults = new();
+    private readonly ConcurrentDictionary<string, ImmutableHashSet<(int competitionId, int leaderboardId)>> _connectionGroups = new();
 
-    internal IEnumerable<(string competitionId, string leaderboardId)> ActiveGroups =>
+    internal IEnumerable<(int competitionId, int leaderboardId)> ActiveGroups =>
         _connectionGroups.Values.SelectMany(g => g).Distinct();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,7 +37,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         }
     }
 
-    private async Task SafePushChanges(string competitionId, string leaderboardId)
+    private async Task SafePushChanges(int competitionId, int leaderboardId)
     {
         try
         {
@@ -49,13 +49,13 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         }
     }
 
-    public void Subscribe(string connectionId, string competitionId, string leaderboardId)
+    public void Subscribe(string connectionId, int competitionId, int leaderboardId)
     {
         var key = (competitionId, leaderboardId);
         _connectionGroups.AddOrUpdate(connectionId, ImmutableHashSet.Create(key), (_, existing) => existing.Add(key));
     }
 
-    public void Unsubscribe(string connectionId, string competitionId, string leaderboardId) =>
+    public void Unsubscribe(string connectionId, int competitionId, int leaderboardId) =>
         RemoveConnection(connectionId, (competitionId, leaderboardId));
 
     public void RemoveAllSubscriptions(string connectionId)
@@ -81,7 +81,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         public int GetHashCode(Dictionary<string, string> obj) => obj.Count;
     }
 
-    private void RemoveConnection(string connectionId, (string competitionId, string leaderboardId) key)
+    private void RemoveConnection(string connectionId, (int competitionId, int leaderboardId) key)
     {
         if (_connectionGroups.TryGetValue(connectionId, out var groups))
         {
@@ -97,7 +97,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             _previousResults.TryRemove(key, out _);
     }
 
-    private async Task PushChanges(string competitionId, string leaderboardId)
+    private async Task PushChanges(int competitionId, int leaderboardId)
     {
         Console.WriteLine($"{nameof(PushChanges)} {competitionId}, {leaderboardId}");
         var values = await apiClient.GetResults(competitionId, leaderboardId);

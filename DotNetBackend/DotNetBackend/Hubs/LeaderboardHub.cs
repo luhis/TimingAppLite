@@ -7,8 +7,9 @@ public class LeaderboardHub(LeaderboardService leaderboardService) : Hub
 {
     public override async Task OnConnectedAsync()
     {
-        var competitionId = Context.GetHttpContext().Request.Query["competitionId"]!;
-        var leaderboardId = Context.GetHttpContext().Request.Query["leaderboardId"]!;
+        var context = Context.GetHttpContext()!;
+        var competitionId = int.Parse(context.Request.Query["competitionId"]!);
+        var leaderboardId = int.Parse(context.Request.Query["leaderboardId"]!);
         leaderboardService.Subscribe(Context.ConnectionId, competitionId, leaderboardId);
         await Groups.AddToGroupAsync(Context.ConnectionId, GetCompetitionGroup(competitionId, leaderboardId));
         await base.OnConnectedAsync();
@@ -20,7 +21,7 @@ public class LeaderboardHub(LeaderboardService leaderboardService) : Hub
         return base.OnDisconnectedAsync(exception);
     }
 
-    internal static string GetCompetitionGroup(string competitionId, string leaderboardId) =>
+    internal static string GetCompetitionGroup(int competitionId, int leaderboardId) =>
         $"competition:{competitionId},leaderboard:{leaderboardId}";
 }
 
