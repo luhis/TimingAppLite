@@ -99,7 +99,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
     private async Task PushChanges(int competitionId, int leaderboardId)
     {
-        Console.WriteLine($"{nameof(PushChanges)} {competitionId}, {leaderboardId}");
+        logger.LogInformation($"{nameof(PushChanges)} {competitionId}, {leaderboardId}");
         var values = await apiClient.GetResults(competitionId, leaderboardId);
         var key = (competitionId, leaderboardId);
 
