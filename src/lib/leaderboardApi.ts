@@ -1,6 +1,6 @@
 import type { Competition, LeaderboardPayload, LeaderboardSummary } from "../types/leaderboard";
 
-const API_BASE = (process.env.GATSBY_SIGNALR_HUB_URL ?? "") +  "/API/1";
+const API_BASE = (process.env.GATSBY_SIGNALR_HUB_URL ?? "") + "/API/1";
 
 const getJson = async <T>(url: string, errorPrefix: string, signal?: AbortSignal): Promise<T> => {
   const response = await fetch(url, { signal });

@@ -7,7 +7,7 @@ using System.Collections.Immutable;
 
 namespace DotNetBackend.Services;
 
-public sealed class LeaderboardService(IApiClient apiClient, IHubContext<LeaderboardHub> hubContext, IConfiguration configuration)
+public sealed class LeaderboardService(IApiClient apiClient, IHubContext<LeaderboardHub> hubContext, IConfiguration configuration, ILogger<LeaderboardService> logger)
     : BackgroundService
 {
     private readonly TimeSpan _timerInterval = TimeSpan.FromSeconds(
@@ -33,7 +33,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Leaderboard timer crashed: {ex}");
+            logger.LogCritical(ex, "Leaderboard timer crashed — host will keep running");
         }
     }
 
@@ -45,7 +45,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"PushChanges failed for {competitionId}/{leaderboardId}: {ex}");
+            logger.LogError(ex, "PushChanges failed for {CompetitionId}/{LeaderboardId}", competitionId, leaderboardId);
         }
     }
 

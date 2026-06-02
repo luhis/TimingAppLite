@@ -3,6 +3,7 @@ using DotNetBackend.Sapphire;
 using DotNetBackend.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DotNetBackend.Tests;
 
@@ -16,7 +17,8 @@ public class LeaderboardServiceTests
               new(
             (apiClient ?? _mockRepo.Create<IApiClient>()).Object,
             (hubContext ?? _mockRepo.Create<IHubContext<LeaderboardHub>>()).Object,
-            new ConfigurationBuilder().Build());
+            new ConfigurationBuilder().Build(),
+            NullLogger<LeaderboardService>.Instance);
 
     [Fact]
     public void Subscribe_AddsConnectionToGroup()
