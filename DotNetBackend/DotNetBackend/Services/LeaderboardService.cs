@@ -104,19 +104,34 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         var key = (competitionId, leaderboardId);
 
         var prevSnapshot = _previousResults.GetValueOrDefault(key, null);
-
         _previousResults.AddOrUpdate(key, values, (_, __) => values);
 
         var groupName = LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId);
-        var rowsChanged = prevSnapshot == null
-            || !prevSnapshot.Items.SequenceEqual(values.Items, ItemComparer.Instance);
-        if (!_optimisePushUpdates || rowsChanged)
-            await hubContext.Clients
-                .Group(groupName)
+
+        if (!_optimisePushUpdates || prevSnapshot == null)
+        {
+            await hubContext.Clients.Group(groupName)
                 .SendAsync("ReceiveRowUpdate", values.Items, CancellationToken.None);
+        }
+        else
+        {
+            var prevByEntry = prevSnapshot.Items
+                .Where(r => r.ContainsKey("entry"))
+                .ToDictionary(r => r["entry"]);
+
+            var changedRows = values.Items
+                .Where(row => row.ContainsKey("entry")
+                    && (!prevByEntry.TryGetValue(row["entry"], out var prev)
+                        || !ItemComparer.Instance.Equals(row, prev)))
+                .ToList();
+
+            if (changedRows.Count > 0)
+                await hubContext.Clients.Group(groupName)
+                    .SendAsync("ReceiveRowUpdate", changedRows, CancellationToken.None);
+        }
+
         if (!_optimisePushUpdates || (prevSnapshot != null && prevSnapshot.Columns.Count != values.Columns.Count))
-            await hubContext.Clients
-                .Group(groupName)
+            await hubContext.Clients.Group(groupName)
                 .SendAsync("ReceiveColumnUpdate", values.Columns, CancellationToken.None);
     }
 }

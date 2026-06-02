@@ -9,7 +9,7 @@ namespace DotNetBackend.Tests;
 
 public class ApiClientTests
 {
-    private static ApiClient CreateClient(
+    private static IApiClient CreateClient(
         HttpMessageHandler handler,
         IMemoryCache? cache = null,
         IConfiguration? configuration = null)
@@ -28,7 +28,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var result = await ((IApiClient)client).GetLiveAllCompetitions();
+        var result = await client.GetLiveAllCompetitions();
 
         result.Should().NotBeNull();
         handler.CallCount.Should().Be(1);
@@ -41,7 +41,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var iface = (IApiClient)client;
+        var iface = client;
 
         await iface.GetLiveAllCompetitions();
         await iface.GetLiveAllCompetitions();
@@ -56,7 +56,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var result = await ((IApiClient)client).GetLeaderboards(1, null);
+        var result = await client.GetLeaderboards(1, null);
 
         result.Should().NotBeNull();
         handler.CallCount.Should().Be(1);
@@ -69,7 +69,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var iface = (IApiClient)client;
+        var iface = client;
 
         await iface.GetLeaderboards(1, 2);
         await iface.GetLeaderboards(1, 2);
@@ -84,7 +84,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var iface = (IApiClient)client;
+        var iface = client;
 
         await iface.GetLeaderboards(1, 2);
         await iface.GetLeaderboards(1, 3);
@@ -98,7 +98,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
-        var act = async () => await ((IApiClient)client).GetLiveAllCompetitions();
+        var act = async () => await client.GetLiveAllCompetitions();
 
         await act.Should().ThrowAsync<HttpRequestException>();
     }
@@ -119,7 +119,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(json, "application/json");
 
         var client = CreateClient(handler);
-        var result = await ((IApiClient)client).GetResults(1, 2);
+        var result = await client.GetResults(1, 2);
 
         result.Columns.Should().ContainSingle(c => c.Name == "Pos" && c.Label == "Position");
         result.Items.Should().ContainSingle(r => r["Pos"] == "1" && r["Driver"] == "Alice");
@@ -131,7 +131,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
-        var act = async () => await ((IApiClient)client).GetResults(1, 2);
+        var act = async () => await client.GetResults(1, 2);
 
         await act.Should().ThrowAsync<HttpRequestException>();
     }
@@ -143,7 +143,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(json), "application/json");
 
         var client = CreateClient(handler);
-        var result = await ((IApiClient)client).GetResults(1, 2);
+        var result = await client.GetResults(1, 2);
 
         result.Columns.Should().BeEmpty();
         result.Items.Should().BeEmpty();
