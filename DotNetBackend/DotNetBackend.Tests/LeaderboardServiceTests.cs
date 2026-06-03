@@ -32,7 +32,7 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", 1, 2);
+        service.Subscribe("conn1", (1, 2));
 
         service.ActiveGroups.Should().ContainSingle()
             .Which.Should().Be((1, 2));
@@ -45,8 +45,8 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", 1, 2);
-        service.Subscribe("conn1", 1, 3);
+        service.Subscribe("conn1", (1, 2));
+        service.Subscribe("conn1", (1, 3));
 
         service.ActiveGroups.Should().HaveCount(2);
 
@@ -58,8 +58,8 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", 1, 2);
-        service.Subscribe("conn2", 1, 2);
+        service.Subscribe("conn1", (1, 2));
+        service.Subscribe("conn2", (1, 2));
 
         service.ActiveGroups.Should().ContainSingle()
             .Which.Should().Be((1, 2));
@@ -72,8 +72,8 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", 1, 2);
-        service.Unsubscribe("conn1", 1, 2);
+        service.Subscribe("conn1", (1, 2));
+        service.Unsubscribe("conn1", (1, 2));
 
         service.ActiveGroups.Should().BeEmpty();
 
@@ -85,9 +85,9 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", 1, 2);
-        service.Subscribe("conn2", 1, 2);
-        service.Unsubscribe("conn1", 1, 2);
+        service.Subscribe("conn1", (1, 2));
+        service.Subscribe("conn2", (1, 2));
+        service.Unsubscribe("conn1", (1, 2));
 
         service.ActiveGroups.Should().ContainSingle()
             .Which.Should().Be((1, 2));
@@ -100,8 +100,8 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", 1, 2);
-        service.Subscribe("conn1", 1, 2);
+        service.Subscribe("conn1", (1, 2));
+        service.Subscribe("conn1", (1, 2));
         service.RemoveAllSubscriptions("conn1");
 
         service.ActiveGroups.Should().BeEmpty();
@@ -114,8 +114,8 @@ public class LeaderboardServiceTests
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", 1, 2);
-        service.Subscribe("conn2", 1, 2);
+        service.Subscribe("conn1", (1, 2));
+        service.Subscribe("conn2", (1, 2));
         service.RemoveAllSubscriptions("conn1");
 
         service.ActiveGroups.Should().ContainSingle()
@@ -166,7 +166,7 @@ public class PushChangesTests
             .Returns(Task.CompletedTask);
 
         var service = CreateService(apiClient, hubContext);
-        await service.PushChanges(1, 2);
+        await service.PushChanges((competitionId: 1, leaderboardId: 2));
 
         _mockRepo.VerifyAll();
     }
@@ -188,8 +188,8 @@ public class PushChangesTests
             .Returns(Task.CompletedTask);
 
         var service = CreateService(apiClient, hubContext);
-        await service.PushChanges(1, 2); // first — sends full list
-        await service.PushChanges(1, 2); // second — rows unchanged, sends nothing
+        await service.PushChanges((competitionId: 1, leaderboardId: 2)); // first — sends full list
+        await service.PushChanges((competitionId: 1, leaderboardId: 2)); // second — rows unchanged, sends nothing
 
         // ReceiveRowUpdate was called exactly once (first push only)
         clientProxy.Verify(
@@ -216,8 +216,8 @@ public class PushChangesTests
             .Returns(Task.CompletedTask);
 
         var service = CreateService(apiClient, hubContext);
-        await service.PushChanges(1, 2);
-        await service.PushChanges(1, 2);
+        await service.PushChanges((competitionId: 1, leaderboardId: 2));
+        await service.PushChanges((competitionId: 1, leaderboardId: 2));
 
         clientProxy.Verify(
             p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),
@@ -243,8 +243,8 @@ public class PushChangesTests
             .Returns(Task.CompletedTask);
 
         var service = CreateService(apiClient, hubContext);
-        await service.PushChanges(1, 2);
-        await service.PushChanges(1, 2);
+        await service.PushChanges((competitionId: 1, leaderboardId: 2));
+        await service.PushChanges((competitionId: 1, leaderboardId: 2));
 
         // First push: full list. Second push: only the new entry.
         clientProxy.Verify(
@@ -273,8 +273,8 @@ public class PushChangesTests
             .Returns(Task.CompletedTask);
 
         var service = CreateService(apiClient, hubContext);
-        await service.PushChanges(1, 2); // full list (first push)
-        await service.PushChanges(1, 2); // diff: no "entry" key → nothing sent
+        await service.PushChanges((competitionId: 1, leaderboardId: 2)); // full list (first push)
+        await service.PushChanges((competitionId: 1, leaderboardId: 2)); // diff: no "entry" key → nothing sent
 
         clientProxy.Verify(
             p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),

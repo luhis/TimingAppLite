@@ -28,7 +28,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
                 foreach (var key in ActiveGroups)
-                    await SafePushChanges(key.competitionId, key.leaderboardId);
+                    await SafePushChanges(key);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -37,26 +37,25 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         }
     }
 
-    private async Task SafePushChanges(int competitionId, int leaderboardId)
+    private async Task SafePushChanges((int competitionId, int leaderboardId) key)
     {
         try
         {
-            await PushChanges(competitionId, leaderboardId);
+            await PushChanges(key);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "PushChanges failed for {CompetitionId}/{LeaderboardId}", competitionId, leaderboardId);
+            logger.LogError(ex, "PushChanges failed for {CompetitionId}/{LeaderboardId}", key.competitionId, key.leaderboardId);
         }
     }
 
-    public void Subscribe(string connectionId, int competitionId, int leaderboardId)
+    public void Subscribe(string connectionId, (int competitionId, int leaderboardId) key)
     {
-        var key = (competitionId, leaderboardId);
         _connectionGroups.AddOrUpdate(connectionId, [key], (_, existing) => existing.Add(key));
     }
 
-    public void Unsubscribe(string connectionId, int competitionId, int leaderboardId) =>
-        RemoveConnection(connectionId, (competitionId, leaderboardId));
+    public void Unsubscribe(string connectionId, (int competitionId, int leaderboardId) key) =>
+        RemoveConnection(connectionId, key);
 
     public void RemoveAllSubscriptions(string connectionId)
     {
@@ -97,16 +96,15 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             _previousResults.TryRemove(key, out _);
     }
 
-    internal async Task PushChanges(int competitionId, int leaderboardId)
+    internal async Task PushChanges((int competitionId, int leaderboardId) key)
     {
-        logger.LogInformation($"{nameof(PushChanges)} {competitionId}, {leaderboardId}");
-        var values = await apiClient.GetResults(competitionId, leaderboardId);
-        var key = (competitionId, leaderboardId);
+        logger.LogInformation($"{nameof(PushChanges)} {key.competitionId}, {key.leaderboardId}");
+        var values = await apiClient.GetResults(key.competitionId, key.leaderboardId);
 
         var prevSnapshot = _previousResults.GetValueOrDefault(key, null);
         _previousResults.AddOrUpdate(key, values, (_, __) => values);
 
-        var groupName = LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId);
+        var groupName = LeaderboardHub.GetCompetitionGroup(key.competitionId, key.leaderboardId);
 
         if (!_optimisePushUpdates || prevSnapshot == null)
         {

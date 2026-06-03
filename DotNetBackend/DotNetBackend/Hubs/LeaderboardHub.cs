@@ -10,7 +10,7 @@ public class LeaderboardHub(LeaderboardService leaderboardService) : Hub
         var context = Context.GetHttpContext()!;
         var competitionId = int.Parse(context.Request.Query["competitionId"]!);
         var leaderboardId = int.Parse(context.Request.Query["leaderboardId"]!);
-        leaderboardService.Subscribe(Context.ConnectionId, competitionId, leaderboardId);
+        leaderboardService.Subscribe(Context.ConnectionId, (competitionId, leaderboardId));
         await Groups.AddToGroupAsync(Context.ConnectionId, GetCompetitionGroup(competitionId, leaderboardId));
         await base.OnConnectedAsync();
     }
