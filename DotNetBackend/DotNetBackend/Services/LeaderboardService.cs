@@ -52,7 +52,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     public void Subscribe(string connectionId, int competitionId, int leaderboardId)
     {
         var key = (competitionId, leaderboardId);
-        _connectionGroups.AddOrUpdate(connectionId, ImmutableHashSet.Create(key), (_, existing) => existing.Add(key));
+        _connectionGroups.AddOrUpdate(connectionId, [key], (_, existing) => existing.Add(key));
     }
 
     public void Unsubscribe(string connectionId, int competitionId, int leaderboardId) =>
@@ -97,7 +97,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             _previousResults.TryRemove(key, out _);
     }
 
-    private async Task PushChanges(int competitionId, int leaderboardId)
+    internal async Task PushChanges(int competitionId, int leaderboardId)
     {
         logger.LogInformation($"{nameof(PushChanges)} {competitionId}, {leaderboardId}");
         var values = await apiClient.GetResults(competitionId, leaderboardId);

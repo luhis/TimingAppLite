@@ -1,3 +1,4 @@
+using DotNetBackend.Dto;
 using DotNetBackend.Hubs;
 using DotNetBackend.Sapphire;
 using DotNetBackend.Services;
@@ -13,11 +14,17 @@ public class LeaderboardServiceTests
 
     private LeaderboardService CreateService(
         Mock<IApiClient>? apiClient = null,
-        Mock<IHubContext<LeaderboardHub>>? hubContext = null) =>
+        Mock<IHubContext<LeaderboardHub>>? hubContext = null,
+        bool optimisePushUpdates = true) =>
               new(
             (apiClient ?? _mockRepo.Create<IApiClient>()).Object,
             (hubContext ?? _mockRepo.Create<IHubContext<LeaderboardHub>>()).Object,
-            new ConfigurationBuilder().Build(),
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["LeaderboardService:OptimisePushUpdates"] = optimisePushUpdates.ToString()
+                })
+                .Build(),
             NullLogger<LeaderboardService>.Instance);
 
     [Fact]
@@ -114,6 +121,164 @@ public class LeaderboardServiceTests
         service.ActiveGroups.Should().ContainSingle()
             .Which.Should().Be((1, 2));
 
+        _mockRepo.VerifyAll();
+    }
+}
+
+public class PushChangesTests
+{
+    private readonly MockRepository _mockRepo = new(MockBehavior.Strict);
+
+    private static Mock<IClientProxy> SetupGroupClient(Mock<IHubContext<LeaderboardHub>> hubContext, string groupName)
+    {
+        var clientProxy = new Mock<IClientProxy>(MockBehavior.Strict);
+        var hubClients = new Mock<IHubClients>(MockBehavior.Strict);
+        hubClients.Setup(c => c.Group(groupName)).Returns(clientProxy.Object);
+        hubContext.Setup(h => h.Clients).Returns(hubClients.Object);
+        return clientProxy;
+    }
+
+    private LeaderboardService CreateService(Mock<IApiClient> apiClient, Mock<IHubContext<LeaderboardHub>> hubContext, bool optimise = true) =>
+        new(
+            apiClient.Object,
+            hubContext.Object,
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["LeaderboardService:OptimisePushUpdates"] = optimise.ToString()
+                })
+                .Build(),
+            NullLogger<LeaderboardService>.Instance);
+
+    [Fact]
+    public async Task PushChanges_FirstCall_SendsFullItemList()
+    {
+        var apiClient = _mockRepo.Create<IApiClient>();
+        var hubContext = _mockRepo.Create<IHubContext<LeaderboardHub>>();
+        var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
+        var items = new List<Dictionary<string, string>> { new() { ["entry"] = "1", ["pos"] = "1" } };
+        var dto = new LeaderboardDto { Items = items };
+
+        apiClient.Setup(a => a.GetResults(1, 2)).ReturnsAsync(dto);
+        var clientProxy = SetupGroupClient(hubContext, groupName);
+        clientProxy
+            .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.Is<object?[]>(a => a[0] == items), CancellationToken.None))
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService(apiClient, hubContext);
+        await service.PushChanges(1, 2);
+
+        _mockRepo.VerifyAll();
+    }
+
+    [Fact]
+    public async Task PushChanges_SecondCall_UnchangedRows_SendsNothing()
+    {
+        var apiClient = _mockRepo.Create<IApiClient>();
+        var hubContext = _mockRepo.Create<IHubContext<LeaderboardHub>>();
+        var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
+        var items = new List<Dictionary<string, string>> { new() { ["entry"] = "1", ["pos"] = "1" } };
+        var dto = new LeaderboardDto { Items = items };
+
+        apiClient.Setup(a => a.GetResults(1, 2)).ReturnsAsync(dto);
+        var clientProxy = SetupGroupClient(hubContext, groupName);
+        // Only the first call sends ReceiveRowUpdate
+        clientProxy
+            .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService(apiClient, hubContext);
+        await service.PushChanges(1, 2); // first — sends full list
+        await service.PushChanges(1, 2); // second — rows unchanged, sends nothing
+
+        // ReceiveRowUpdate was called exactly once (first push only)
+        clientProxy.Verify(
+            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),
+            Times.Once);
+        _mockRepo.VerifyAll();
+    }
+
+    [Fact]
+    public async Task PushChanges_SecondCall_ChangedRow_SendsChangedRow()
+    {
+        var apiClient = _mockRepo.Create<IApiClient>();
+        var hubContext = _mockRepo.Create<IHubContext<LeaderboardHub>>();
+        var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
+        var first  = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }] };
+        var second = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "2" }] };
+
+        apiClient.SetupSequence(a => a.GetResults(1, 2))
+            .ReturnsAsync(first)
+            .ReturnsAsync(second);
+        var clientProxy = SetupGroupClient(hubContext, groupName);
+        clientProxy
+            .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService(apiClient, hubContext);
+        await service.PushChanges(1, 2);
+        await service.PushChanges(1, 2);
+
+        clientProxy.Verify(
+            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),
+            Times.Exactly(2));
+        _mockRepo.VerifyAll();
+    }
+
+    [Fact]
+    public async Task PushChanges_SecondCall_NewEntry_SendsNewRow()
+    {
+        var apiClient = _mockRepo.Create<IApiClient>();
+        var hubContext = _mockRepo.Create<IHubContext<LeaderboardHub>>();
+        var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
+        var first  = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }] };
+        var second = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }, new() { ["entry"] = "2", ["pos"] = "2" }] };
+
+        apiClient.SetupSequence(a => a.GetResults(1, 2))
+            .ReturnsAsync(first)
+            .ReturnsAsync(second);
+        var clientProxy = SetupGroupClient(hubContext, groupName);
+        clientProxy
+            .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService(apiClient, hubContext);
+        await service.PushChanges(1, 2);
+        await service.PushChanges(1, 2);
+
+        // First push: full list. Second push: only the new entry.
+        clientProxy.Verify(
+            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),
+            Times.Exactly(2));
+        _mockRepo.VerifyAll();
+    }
+
+    [Fact]
+    public async Task PushChanges_RowWithoutEntryKey_IsIgnoredInDiff()
+    {
+        var apiClient = _mockRepo.Create<IApiClient>();
+        var hubContext = _mockRepo.Create<IHubContext<LeaderboardHub>>();
+        var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
+        // Both snapshots contain a row without "entry" — it should never be included in diff
+        var first  = new LeaderboardDto { Items = [new() { ["pos"] = "1" }] };
+        var second = new LeaderboardDto { Items = [new() { ["pos"] = "2" }] };
+
+        apiClient.SetupSequence(a => a.GetResults(1, 2))
+            .ReturnsAsync(first)
+            .ReturnsAsync(second);
+        var clientProxy = SetupGroupClient(hubContext, groupName);
+        // Only the first full-push ReceiveRowUpdate fires
+        clientProxy
+            .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService(apiClient, hubContext);
+        await service.PushChanges(1, 2); // full list (first push)
+        await service.PushChanges(1, 2); // diff: no "entry" key → nothing sent
+
+        clientProxy.Verify(
+            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),
+            Times.Once);
         _mockRepo.VerifyAll();
     }
 }
