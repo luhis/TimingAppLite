@@ -1,12 +1,24 @@
-import { HubConnectionBuilder, HttpTransportType, LogLevel } from "@microsoft/signalr";
+import {
+  HubConnectionBuilder,
+  HttpTransportType,
+  LogLevel,
+} from "@microsoft/signalr";
 import { useEffect } from "react";
 
 import type { LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
 
-export const signalRHubUrl = (process.env.GATSBY_SIGNALR_HUB_URL ?? "") + "/hubs/leaderboard";
+export const signalRHubUrl =
+  (process.env.GATSBY_SIGNALR_HUB_URL ?? "") + "/hubs/leaderboard";
 
-const withSubscriptionParams = (baseUrl: string, competitionId: string, leaderboardId: string) => {
-  const url = new URL(baseUrl, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+const withSubscriptionParams = (
+  baseUrl: string,
+  competitionId: string,
+  leaderboardId: string,
+) => {
+  const url = new URL(
+    baseUrl,
+    typeof window !== "undefined" ? window.location.origin : "http://localhost",
+  );
   url.searchParams.set("competitionId", competitionId);
   url.searchParams.set("leaderboardId", leaderboardId);
   return url.toString();
@@ -27,9 +39,13 @@ export const useLeaderboardStream = (
     const subscriptionPromise = (async () => {
       try {
         const connection = new HubConnectionBuilder()
-          .withUrl(withSubscriptionParams(signalRHubUrl, competitionId, leaderboardId), {
-            transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
-          })
+          .withUrl(
+            withSubscriptionParams(signalRHubUrl, competitionId, leaderboardId),
+            {
+              transport:
+                HttpTransportType.WebSockets | HttpTransportType.LongPolling,
+            },
+          )
           .withAutomaticReconnect()
           .configureLogging(LogLevel.Warning)
           .build();
@@ -57,7 +73,7 @@ export const useLeaderboardStream = (
 
     return () => {
       void subscriptionPromise
-        .then(connection => {
+        .then((connection) => {
           if (!connection) {
             return;
           }

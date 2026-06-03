@@ -6,33 +6,36 @@ export enum CompetitionStatus {
 }
 
 export type Competition = {
-  readonly id: string
-  readonly active: CompetitionStatus
-  readonly name: string
-  readonly dateddmmyyyy: string
-  readonly provisional: string | null
-  readonly finalised: string | null
+  readonly id: string;
+  readonly active: CompetitionStatus;
+  readonly name: string;
+  readonly dateddmmyyyy: string;
+  readonly provisional: string | null;
+  readonly finalised: string | null;
 };
 
 export type LeaderboardSummary = {
-  readonly id: string | number
-  readonly name: string
+  readonly id: string | number;
+  readonly name: string;
 };
 
 export type LeaderboardColumn = {
-  readonly name: string
-  readonly label: string
+  readonly name: string;
+  readonly label: string;
 };
 
-export type LeaderboardItem = Record<string, string | number | null | undefined>;
+export type LeaderboardItem = Record<
+  string,
+  string | number | null | undefined
+>;
 
 export type LeaderboardPayload = {
-  readonly columns: readonly LeaderboardColumn[]
-  readonly items: readonly LeaderboardItem[]
+  readonly columns: readonly LeaderboardColumn[];
+  readonly items: readonly LeaderboardItem[];
 };
 
 export type FilterState = {
-  readonly query: string
-  readonly driver: string
-  readonly className: string
+  readonly query: string;
+  readonly driver: string;
+  readonly className: string;
 };

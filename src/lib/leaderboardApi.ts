@@ -1,8 +1,16 @@
-import type { Competition, LeaderboardPayload, LeaderboardSummary } from "../types/leaderboard";
+import type {
+  Competition,
+  LeaderboardPayload,
+  LeaderboardSummary,
+} from "../types/leaderboard";
 
 const API_BASE = (process.env.GATSBY_SIGNALR_HUB_URL ?? "") + "/API/1";
 
-const getJson = async <T>(url: string, errorPrefix: string, signal?: AbortSignal): Promise<T> => {
+const getJson = async <T>(
+  url: string,
+  errorPrefix: string,
+  signal?: AbortSignal,
+): Promise<T> => {
   const response = await fetch(url, { signal });
 
   if (!response.ok) {
@@ -13,18 +21,29 @@ const getJson = async <T>(url: string, errorPrefix: string, signal?: AbortSignal
 };
 
 export const fetchAllCompetitions = async (signal?: AbortSignal) =>
-  getJson<readonly Competition[]>(`${API_BASE}/LiveAllCompetitions`, "Unable to load competitions", signal);
+  getJson<readonly Competition[]>(
+    `${API_BASE}/LiveAllCompetitions`,
+    "Unable to load competitions",
+    signal,
+  );
 
-export const fetchLeaderboards = async (competitionId: string, signal?: AbortSignal) =>
+export const fetchLeaderboards = async (
+  competitionId: string,
+  signal?: AbortSignal,
+) =>
   getJson<readonly LeaderboardSummary[]>(
     `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/LeaderBoards/`,
     "Unable to load leaderboard list",
-    signal
+    signal,
   );
 
-export const fetchLeaderboard = async (competitionId: string, leaderboardId: string, signal?: AbortSignal) =>
+export const fetchLeaderboard = async (
+  competitionId: string,
+  leaderboardId: string,
+  signal?: AbortSignal,
+) =>
   getJson<LeaderboardPayload>(
     `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/Leaderboards/${encodeURIComponent(leaderboardId)}`,
     "Unable to load results",
-    signal
+    signal,
   );

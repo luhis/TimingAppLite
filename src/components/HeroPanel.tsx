@@ -1,8 +1,14 @@
 import * as React from "react";
 import { Box, Columns, Heading, Tag } from "react-bulma-components";
-import { CompetitionStatus, type Competition, type LeaderboardSummary } from "../types/leaderboard";
+import {
+  CompetitionStatus,
+  type Competition,
+  type LeaderboardSummary,
+} from "../types/leaderboard";
 
-const competitionStatusLabel = (active: CompetitionStatus | undefined): string => {
+const competitionStatusLabel = (
+  active: CompetitionStatus | undefined,
+): string => {
   switch (active) {
     case CompetitionStatus.Live:
       return "Live";
@@ -18,7 +24,9 @@ const competitionStatusLabel = (active: CompetitionStatus | undefined): string =
   }
 };
 
-const competitionStatusColor = (status: CompetitionStatus | undefined): string => {
+const competitionStatusColor = (
+  status: CompetitionStatus | undefined,
+): string => {
   switch (status) {
     case CompetitionStatus.Live:
       return "success";
@@ -77,8 +85,9 @@ export const HeroPanel = ({
             Live autotest results without scraping the page.
           </Heading>
           <p className="is-size-5 has-text-grey-dark">
-            This app talks directly to the Sapphire Solutions API behind the leaderboard site, surfaces the live event
-            feed, and lets you filter results quickly without leaving the page.
+            This app talks directly to the Sapphire Solutions API behind the
+            leaderboard site, surfaces the live event feed, and lets you filter
+            results quickly without leaving the page.
           </p>
           <Columns className="mt-4 is-variable is-4">
             <Columns.Column>
@@ -119,9 +128,13 @@ export const HeroPanel = ({
           </Heading>
           <p className="mb-4">{formatMeta(selectedCompetition)}</p>
           <p className="has-text-grey is-size-7 mb-1">Board</p>
-          <p className="mb-3 has-text-weight-semibold">{selectedLeaderboard?.name ?? "Waiting for leaderboard"}</p>
+          <p className="mb-3 has-text-weight-semibold">
+            {selectedLeaderboard?.name ?? "Waiting for leaderboard"}
+          </p>
           <p className="has-text-grey is-size-7 mb-1">Source</p>
-          <p className="has-text-weight-semibold">autotest.sapphire-solutions.co.uk/API/1</p>
+          <p className="has-text-weight-semibold">
+            autotest.sapphire-solutions.co.uk/API/1
+          </p>
         </Box>
       </Columns.Column>
     </Columns>

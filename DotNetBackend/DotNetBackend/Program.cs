@@ -56,5 +56,3 @@ app.MapGet("/API/1/Competitions/{competionId:int}/LeaderBoards/{leaderboardId:in
 
 Console.WriteLine("Starting DotNetBackend...");
 app.Run();
-
-public partial class Program { }

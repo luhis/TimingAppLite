@@ -1,7 +1,11 @@
 import * as React from "react";
 import { Box, Button, Form, Heading } from "react-bulma-components";
 import { signalRHubUrl } from "../hooks/useLeaderboardStream";
-import type { Competition, FilterState, LeaderboardSummary } from "../types/leaderboard";
+import type {
+  Competition,
+  FilterState,
+  LeaderboardSummary,
+} from "../types/leaderboard";
 
 type ControlsPanelData = {
   readonly competitions: readonly Competition[];
@@ -19,7 +23,9 @@ type ControlsPanelData = {
 type ControlsPanelCallbacks = {
   readonly onCompetitionChange: (value: string) => void;
   readonly onLeaderboardChange: (value: string) => void;
-  readonly onFilterChange: (field: keyof FilterState) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  readonly onFilterChange: (
+    field: keyof FilterState,
+  ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
   readonly onClassChange: (value: string) => void;
   readonly onStreamResultsChange: (checked: boolean) => void;
   readonly onResetFilters: () => void;
@@ -46,7 +52,9 @@ export const ControlsPanel = ({
   onRefresh,
 }: ControlsPanelData & ControlsPanelCallbacks) => (
   <Box>
-    <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7 mb-3">Controls</p>
+    <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7 mb-3">
+      Controls
+    </p>
     <Heading renderAs="h2" size={4} className="mb-4">
       Choose an event and refine the results.
     </Heading>
@@ -56,11 +64,13 @@ export const ControlsPanel = ({
       <Form.Control>
         <Form.Select
           value={competitionId}
-          onChange={(event: React.ChangeEvent<HTMLSelectElement>) => onCompetitionChange(event.target.value)}
+          onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+            onCompetitionChange(event.target.value)
+          }
           disabled={loadingCompetitions}
         >
           <option value="">Select a competition</option>
-          {competitions.map(item => (
+          {competitions.map((item) => (
             <option key={item.id} value={item.id}>
               {item.dateddmmyyyy} · {item.name}
             </option>
@@ -74,11 +84,13 @@ export const ControlsPanel = ({
       <Form.Control>
         <Form.Select
           value={leaderboardId}
-          onChange={(event: React.ChangeEvent<HTMLSelectElement>) => onLeaderboardChange(event.target.value)}
+          onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+            onLeaderboardChange(event.target.value)
+          }
           disabled={loadingLeaderboards || leaderboards.length === 0}
         >
           <option value="">Select a leaderboard</option>
-          {leaderboards.map(item => (
+          {leaderboards.map((item) => (
             <option key={item.id} value={String(item.id)}>
               {item.name}
             </option>
@@ -114,11 +126,13 @@ export const ControlsPanel = ({
       <Form.Control>
         <Form.Select
           value={filters.className}
-          onChange={(event: React.ChangeEvent<HTMLSelectElement>) => onClassChange(event.target.value)}
+          onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+            onClassChange(event.target.value)
+          }
           disabled={classOptions.length === 0}
         >
           <option value="">All classes</option>
-          {classOptions.map(classOption => (
+          {classOptions.map((classOption) => (
             <option key={classOption} value={classOption.toLowerCase()}>
               {classOption}
             </option>
@@ -131,7 +145,9 @@ export const ControlsPanel = ({
       <Form.Control>
         <Form.Checkbox
           checked={streamResults}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => onStreamResultsChange(event.target.checked)}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            onStreamResultsChange(event.target.checked)
+          }
           disabled={!signalRHubUrl}
         >
           Stream results

@@ -1,7 +1,10 @@
 import type { GatsbyFunctionRequest, GatsbyFunctionResponse } from "gatsby";
 import { proxyLeaderboardRequest } from "../../api/leaderboard/shared/apiBits";
 
-export default async function handler(request: GatsbyFunctionRequest, response: GatsbyFunctionResponse) {
+export default async function handler(
+  request: GatsbyFunctionRequest,
+  response: GatsbyFunctionResponse,
+) {
   const proxyResponse = await proxyLeaderboardRequest({
     method: request.method,
     query: request.query,

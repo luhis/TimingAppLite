@@ -4,7 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLeaderboardStream } from "../hooks/useLeaderboardStream";
 
 import { Columns, Container, Section } from "react-bulma-components";
-import { fetchAllCompetitions, fetchLeaderboard, fetchLeaderboards } from "../lib/leaderboardApi";
+import {
+  fetchAllCompetitions,
+  fetchLeaderboard,
+  fetchLeaderboards,
+} from "../lib/leaderboardApi";
 import {
   type Competition,
   type FilterState,
@@ -13,7 +17,12 @@ import {
   type LeaderboardPayload,
   type LeaderboardSummary,
 } from "../types/leaderboard";
-import { isSectionRow, mergeRowsByEntry, rowSearchText, stringifyCell } from "../lib/leaderboardUtils";
+import {
+  isSectionRow,
+  mergeRowsByEntry,
+  rowSearchText,
+  stringifyCell,
+} from "../lib/leaderboardUtils";
 import { ControlsPanel } from "../components/ControlsPanel";
 import { HeroPanel } from "../components/HeroPanel";
 import { ResultsPanel } from "../components/ResultsPanel";
@@ -28,8 +37,12 @@ const initialFilters: FilterState = {
 
 const IndexPage: React.FC<PageProps> = ({ location }) => {
   const [competitions, setCompetitions] = useState<readonly Competition[]>([]);
-  const [leaderboards, setLeaderboards] = useState<readonly LeaderboardSummary[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardPayload | null>(null);
+  const [leaderboards, setLeaderboards] = useState<
+    readonly LeaderboardSummary[]
+  >([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardPayload | null>(
+    null,
+  );
   const [competitionId, setCompetitionId] = useState("");
   const [leaderboardId, setLeaderboardId] = useState("");
   const [filters, setFilters] = useState<FilterState>(initialFilters);
@@ -41,7 +54,10 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
   const [streamResults, setStreamResults] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
 
-  const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const queryParams = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search],
+  );
   const requestedCompetitionId = queryParams.get("competitionid") ?? "";
   const requestedLeaderboardId = queryParams.get("leaderboardid") ?? "";
 
@@ -61,7 +77,8 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
         setCompetitions(data);
 
-        const preferredCompetition = data.find(item => item.id === requestedCompetitionId) ?? data[0];
+        const preferredCompetition =
+          data.find((item) => item.id === requestedCompetitionId) ?? data[0];
 
         if (!preferredCompetition) {
           setCompetitionId("");
@@ -73,8 +90,17 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
         setCompetitionId(preferredCompetition.id);
       } catch (fetchError) {
-        if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
-          setError(fetchError instanceof Error ? fetchError.message : "Unable to load competitions");
+        if (
+          !(
+            fetchError instanceof DOMException &&
+            fetchError.name === "AbortError"
+          )
+        ) {
+          setError(
+            fetchError instanceof Error
+              ? fetchError.message
+              : "Unable to load competitions",
+          );
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -109,10 +135,10 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
         }
 
         setLeaderboards(data);
-        setLeaderboardId(currentLeaderboardId => {
+        setLeaderboardId((currentLeaderboardId) => {
           const preferredLeaderboard =
-            data.find(item => String(item.id) === currentLeaderboardId) ??
-            data.find(item => String(item.id) === requestedLeaderboardId) ??
+            data.find((item) => String(item.id) === currentLeaderboardId) ??
+            data.find((item) => String(item.id) === requestedLeaderboardId) ??
             data[0];
 
           if (!preferredLeaderboard) {
@@ -123,8 +149,17 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
           return String(preferredLeaderboard.id);
         });
       } catch (fetchError) {
-        if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
-          setError(fetchError instanceof Error ? fetchError.message : "Unable to load leaderboards");
+        if (
+          !(
+            fetchError instanceof DOMException &&
+            fetchError.name === "AbortError"
+          )
+        ) {
+          setError(
+            fetchError instanceof Error
+              ? fetchError.message
+              : "Unable to load leaderboards",
+          );
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -152,14 +187,27 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       setError(null);
 
       try {
-        const data = await fetchLeaderboard(competitionId, leaderboardId, controller.signal);
+        const data = await fetchLeaderboard(
+          competitionId,
+          leaderboardId,
+          controller.signal,
+        );
 
         if (!controller.signal.aborted) {
           setLeaderboard(data);
         }
       } catch (fetchError) {
-        if (!(fetchError instanceof DOMException && fetchError.name === "AbortError")) {
-          setError(fetchError instanceof Error ? fetchError.message : "Unable to load results");
+        if (
+          !(
+            fetchError instanceof DOMException &&
+            fetchError.name === "AbortError"
+          )
+        ) {
+          setError(
+            fetchError instanceof Error
+              ? fetchError.message
+              : "Unable to load results",
+          );
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -177,7 +225,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
 
   const handleRowUpdate = useCallback((rows: readonly LeaderboardItem[]) => {
     setLastUpdateTime(new Date());
-    setLeaderboard(current => {
+    setLeaderboard((current) => {
       if (!current) {
         return current;
       }
@@ -186,21 +234,32 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     });
   }, []);
 
-  const handleColumnUpdate = useCallback((columns: readonly LeaderboardColumn[]) => {
-    setLastUpdateTime(new Date());
-    setLeaderboard(current => {
-      if (!current) {
-        return current;
-      }
+  const handleColumnUpdate = useCallback(
+    (columns: readonly LeaderboardColumn[]) => {
+      setLastUpdateTime(new Date());
+      setLeaderboard((current) => {
+        if (!current) {
+          return current;
+        }
 
-      return { ...current, columns: [...columns] };
-    });
-  }, []);
+        return { ...current, columns: [...columns] };
+      });
+    },
+    [],
+  );
 
-  useLeaderboardStream(competitionId, leaderboardId, streamResults, handleRowUpdate, handleColumnUpdate);
+  useLeaderboardStream(
+    competitionId,
+    leaderboardId,
+    streamResults,
+    handleRowUpdate,
+    handleColumnUpdate,
+  );
 
-  const selectedCompetition = competitions.find(item => item.id === competitionId) ?? null;
-  const selectedLeaderboard = leaderboards.find(item => String(item.id) === leaderboardId) ?? null;
+  const selectedCompetition =
+    competitions.find((item) => item.id === competitionId) ?? null;
+  const selectedLeaderboard =
+    leaderboards.find((item) => String(item.id) === leaderboardId) ?? null;
 
   const visibleRows = useMemo(() => {
     if (!leaderboard) {
@@ -211,11 +270,13 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     const driver = filters.driver.trim().toLowerCase();
     const className = filters.className.trim().toLowerCase();
 
-    return leaderboard.items.filter(item => {
+    return leaderboard.items.filter((item) => {
       const matchesQuery = !query || rowSearchText(item).includes(query);
-      const matchesDriver = !driver || stringifyCell(item.driver).toLowerCase().includes(driver);
-      const matchesClass = !className || stringifyCell(item.classname).toLowerCase() === className;
-    
+      const matchesDriver =
+        !driver || stringifyCell(item.driver).toLowerCase().includes(driver);
+      const matchesClass =
+        !className || stringifyCell(item.classname).toLowerCase() === className;
+
       return matchesQuery && matchesDriver && matchesClass;
     });
   }, [filters, leaderboard]);
@@ -226,14 +287,19 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     }
 
     const classes = leaderboard.items
-      .filter(item => item.entry !== undefined)
-      .map(item => stringifyCell(item.classname).trim())
-      .filter(value => value !== "-" && value !== "");
+      .filter((item) => item.entry !== undefined)
+      .map((item) => stringifyCell(item.classname).trim())
+      .filter((value) => value !== "-" && value !== "");
 
-    return Array.from(new Set(classes)).sort((left, right) => left.localeCompare(right));
+    return Array.from(new Set(classes)).sort((left, right) =>
+      left.localeCompare(right),
+    );
   }, [leaderboard]);
 
-  const sectionCount = useMemo(() => visibleRows.filter(isSectionRow).length, [visibleRows]);
+  const sectionCount = useMemo(
+    () => visibleRows.filter(isSectionRow).length,
+    [visibleRows],
+  );
   const dataRowCount = visibleRows.length - sectionCount;
   const isBusy = loadingCompetitions || loadingLeaderboards || loadingResults;
   const resultColumns = leaderboard?.columns ?? [];
@@ -250,12 +316,14 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     setLeaderboard(null);
   };
 
-  const handleFilterChange = (field: keyof FilterState) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters(current => ({ ...current, [field]: event.target.value }));
-  };
+  const handleFilterChange =
+    (field: keyof FilterState) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setFilters((current) => ({ ...current, [field]: event.target.value }));
+    };
 
   const handleClassChange = (value: string) => {
-    setFilters(current => ({ ...current, className: value }));
+    setFilters((current) => ({ ...current, className: value }));
   };
 
   const handleStreamResultsChange = (checked: boolean) => {
@@ -271,7 +339,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
       return;
     }
 
-    setRefreshTick(current => current + 1);
+    setRefreshTick((current) => current + 1);
   };
 
   return (
