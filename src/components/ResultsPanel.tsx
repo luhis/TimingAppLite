@@ -53,12 +53,17 @@ export const ResultsPanel = ({
       </Notification>
     ) : null}
 
-    <div className="table-container">
+    <div className="table-container" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
       <table className="table is-fullwidth is-striped is-hoverable is-narrow is-bordered">
         <thead>
           <tr>
-            {columns.map((column) => (
-              <th key={column.name}>{column.label}</th>
+            {columns.map(column => (
+              <th
+                key={column.name}
+                style={{ position: 'sticky', top: 0, background: 'white', zIndex: 2 }}
+              >
+                {column.label}
+              </th>
             ))}
           </tr>
         </thead>
