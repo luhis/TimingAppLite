@@ -56,7 +56,7 @@ export const ResultsPanel = ({
     <Table.Container
       style={{ maxHeight: "80vh", overflow: "auto" }}
     >
-      <Table className="is-fullwidth is-striped is-hoverable is-narrow is-bordered">
+      <Table striped hoverable narrow bordered className="is-fullwidth">
         <thead>
           <tr>
             {columns.map((column) => {
