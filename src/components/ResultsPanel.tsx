@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, Heading, Notification } from "react-bulma-components";
+import { Box, Heading, Notification, Table } from "react-bulma-components";
 import type { LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
 import { isSectionRow, stringifyCell } from "../lib/leaderboardUtils";
 
@@ -53,11 +53,10 @@ export const ResultsPanel = ({
       </Notification>
     ) : null}
 
-    <div
-      className="table-container"
-      style={{ maxHeight: "60vh", overflow: "auto" }}
+    <Table.Container
+      style={{ maxHeight: "80vh", overflow: "auto" }}
     >
-      <table className="table is-fullwidth is-striped is-hoverable is-narrow is-bordered">
+      <Table className="is-fullwidth is-striped is-hoverable is-narrow is-bordered">
         <thead>
           <tr>
             {columns.map((column) => {
@@ -140,7 +139,7 @@ export const ResultsPanel = ({
             </tr>
           )}
         </tbody>
-      </table>
-    </div>
+      </Table>
+    </Table.Container>
   </Box>
 );
