@@ -270,15 +270,21 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
     const driver = filters.driver.trim().toLowerCase();
     const className = filters.className.trim().toLowerCase();
 
-    return leaderboard.items.filter((item) => {
+    const classNamesToAlwaysInclude = ["Autosolo", "Autotest", "PCA", " "];
+
+    const r = leaderboard.items.filter((item) => {
       const matchesQuery = !query || rowSearchText(item).includes(query);
       const matchesDriver =
         !driver || stringifyCell(item.driver).toLowerCase().includes(driver);
       const matchesClass =
-        !className || stringifyCell(item.classname).toLowerCase() === className;
+        !className ||
+        classNamesToAlwaysInclude.includes(stringifyCell(item.classname)) ||
+        stringifyCell(item.classname).toLowerCase() === className;
 
       return matchesQuery && matchesDriver && matchesClass;
     });
+
+    return r;
   }, [filters, leaderboard]);
 
   const classOptions = useMemo(() => {
@@ -345,14 +351,7 @@ const IndexPage: React.FC<PageProps> = ({ location }) => {
   return (
     <Section>
       <Container>
-        <HeroPanel
-          competitionsCount={competitions.length}
-          leaderboardsCount={leaderboards.length}
-          dataRowCount={dataRowCount}
-          leaderboardLoaded={leaderboard !== null}
-          selectedCompetition={selectedCompetition}
-          selectedLeaderboard={selectedLeaderboard}
-        />
+        <HeroPanel selectedCompetition={selectedCompetition} />
         <Columns>
           <Columns.Column size={4}>
             <ControlsPanel

@@ -1,10 +1,6 @@
 import * as React from "react";
 import { Box, Columns, Heading, Tag } from "react-bulma-components";
-import {
-  CompetitionStatus,
-  type Competition,
-  type LeaderboardSummary,
-} from "../types/leaderboard";
+import { CompetitionStatus, type Competition } from "../types/leaderboard";
 
 const competitionStatusLabel = (
   active: CompetitionStatus | undefined,
@@ -58,22 +54,10 @@ const formatMeta = (competition: Competition | null): string => {
 };
 
 type HeroPanelProps = {
-  readonly competitionsCount: number;
-  readonly leaderboardsCount: number;
-  readonly dataRowCount: number;
-  readonly leaderboardLoaded: boolean;
   readonly selectedCompetition: Competition | null;
-  readonly selectedLeaderboard: LeaderboardSummary | null;
 };
 
-export const HeroPanel = ({
-  competitionsCount,
-  leaderboardsCount,
-  dataRowCount,
-  leaderboardLoaded,
-  selectedCompetition,
-  selectedLeaderboard,
-}: HeroPanelProps) => (
+export const HeroPanel = ({ selectedCompetition }: HeroPanelProps) => (
   <Box className="mb-5">
     <Columns>
       <Columns.Column size={8}>
@@ -82,39 +66,14 @@ export const HeroPanel = ({
             Gatsby TypeScript leaderboard app
           </p>
           <Heading renderAs="h1" size={1} className="mb-3">
-            Live autotest results without scraping the page.
+            Live autotest results.
           </Heading>
           <p className="is-size-5 has-text-grey-dark">
-            This app talks directly to the Sapphire Solutions API behind the
-            leaderboard site, surfaces the live event feed, and lets you filter
-            results quickly without leaving the page.
+            This app talks to the Sapphire Solutions API via a compression and
+            push service. It aims to improve the experience of viewing live
+            competition results on mobile devices, and to provide a reference
+            implementation for anyone looking to do the same.
           </p>
-          <Columns className="mt-4 is-variable is-4">
-            <Columns.Column>
-              <Box>
-                <p className="has-text-grey is-size-7">Events</p>
-                <Heading renderAs="p" size={3} className="mb-0">
-                  {competitionsCount || "--"}
-                </Heading>
-              </Box>
-            </Columns.Column>
-            <Columns.Column>
-              <Box>
-                <p className="has-text-grey is-size-7">Boards</p>
-                <Heading renderAs="p" size={3} className="mb-0">
-                  {leaderboardsCount || "--"}
-                </Heading>
-              </Box>
-            </Columns.Column>
-            <Columns.Column>
-              <Box>
-                <p className="has-text-grey is-size-7">Visible rows</p>
-                <Heading renderAs="p" size={3} className="mb-0">
-                  {leaderboardLoaded ? dataRowCount : "--"}
-                </Heading>
-              </Box>
-            </Columns.Column>
-          </Columns>
         </Box>
       </Columns.Column>
 
@@ -127,14 +86,6 @@ export const HeroPanel = ({
             {selectedCompetition?.name ?? "Loading current event"}
           </Heading>
           <p className="mb-4">{formatMeta(selectedCompetition)}</p>
-          <p className="has-text-grey is-size-7 mb-1">Board</p>
-          <p className="mb-3 has-text-weight-semibold">
-            {selectedLeaderboard?.name ?? "Waiting for leaderboard"}
-          </p>
-          <p className="has-text-grey is-size-7 mb-1">Source</p>
-          <p className="has-text-weight-semibold">
-            autotest.sapphire-solutions.co.uk/API/1
-          </p>
         </Box>
       </Columns.Column>
     </Columns>
