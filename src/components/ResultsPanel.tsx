@@ -53,18 +53,36 @@ export const ResultsPanel = ({
       </Notification>
     ) : null}
 
-    <div className="table-container" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+    <div
+      className="table-container"
+      style={{ maxHeight: "60vh", overflow: "auto" }}
+    >
       <table className="table is-fullwidth is-striped is-hoverable is-narrow is-bordered">
         <thead>
           <tr>
-            {columns.map(column => (
-              <th
-                key={column.name}
-                style={{ position: 'sticky', top: 0, background: 'white', zIndex: 2 }}
-              >
-                {column.label}
-              </th>
-            ))}
+            {columns.map((column) => {
+              const isDriver = column.name === "driver";
+              return (
+                <th
+                  key={column.name}
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    background: "white",
+                    zIndex: isDriver ? 4 : 2,
+                    left: isDriver ? 0 : undefined,
+                    borderRight: isDriver
+                      ? "1px solid rgba(0,0,0,0.06)"
+                      : undefined,
+                    boxShadow: isDriver
+                      ? "2px 0 6px rgba(0,0,0,0.06)"
+                      : undefined,
+                  }}
+                >
+                  {column.label}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -84,11 +102,28 @@ export const ResultsPanel = ({
                 <tr
                   key={`${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`}
                 >
-                  {columns.map((column) => (
-                    <td key={column.name}>
-                      {stringifyCell(item[column.name])}
-                    </td>
-                  ))}
+                  {columns.map((column) => {
+                    const isDriver = column.name === "driver";
+                    return (
+                      <td
+                        key={column.name}
+                        style={
+                          isDriver
+                            ? {
+                                position: "sticky",
+                                left: 0,
+                                background: "white",
+                                zIndex: 1,
+                                borderRight: "1px solid rgba(0,0,0,0.06)",
+                                boxShadow: "2px 0 6px rgba(0,0,0,0.06)",
+                              }
+                            : undefined
+                        }
+                      >
+                        {stringifyCell(item[column.name])}
+                      </td>
+                    );
+                  })}
                 </tr>
               );
             })
