@@ -17,15 +17,15 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         TypeInfoResolver = AppJsonContext.Default,
     };
 
-    async Task<LeaderboardDto> IApiClient.GetResults(int competitionId, int leaderboardId)
+    async Task<LeaderboardDto> IApiClient.GetResults(int competitionId, int leaderboardId, CancellationToken ct)
     {
         var client = httpClientFactory.CreateClient();
         var url = LeaderboardsUrl(competitionId, leaderboardId);
-        using var resp = await client.GetAsync(url);
+        using var resp = await client.GetAsync(url, ct);
         resp.EnsureSuccessStatusCode();
 #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 #pragma warning disable IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
-        return await resp.Content.ReadFromJsonAsync<LeaderboardDto>(_jsonOptions)
+        return await resp.Content.ReadFromJsonAsync<LeaderboardDto>(_jsonOptions, ct)
             ?? throw new InvalidOperationException($"Empty response from {url}");
 #pragma warning restore IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
 #pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code

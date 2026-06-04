@@ -99,7 +99,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     internal async Task PushChanges((int competitionId, int leaderboardId) key)
     {
         logger.LogInformation($"{nameof(PushChanges)} {key.competitionId}, {key.leaderboardId}");
-        var values = await apiClient.GetResults(key.competitionId, key.leaderboardId);
+        var values = await apiClient.GetResults(key.competitionId, key.leaderboardId, CancellationToken.None);
 
         var prevSnapshot = _previousResults.GetValueOrDefault(key, null);
         _previousResults.AddOrUpdate(key, values, (_, __) => values);

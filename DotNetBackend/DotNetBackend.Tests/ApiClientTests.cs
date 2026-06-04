@@ -41,10 +41,9 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var iface = client;
 
-        await iface.GetLiveAllCompetitions();
-        await iface.GetLiveAllCompetitions();
+        await client.GetLiveAllCompetitions();
+        await client.GetLiveAllCompetitions();
 
         handler.CallCount.Should().Be(1, "second call should be served from cache");
     }
@@ -69,10 +68,9 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var iface = client;
 
-        await iface.GetLeaderboards(1, 2);
-        await iface.GetLeaderboards(1, 2);
+        await client.GetLeaderboards(1, 2);
+        await client.GetLeaderboards(1, 2);
 
         handler.CallCount.Should().Be(1, "same key should be served from cache");
     }
@@ -84,10 +82,9 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var iface = client;
 
-        await iface.GetLeaderboards(1, 2);
-        await iface.GetLeaderboards(1, 3);
+        await client.GetLeaderboards(1, 2);
+        await client.GetLeaderboards(1, 3);
 
         handler.CallCount.Should().Be(2, "different leaderboard IDs are different cache keys");
     }
@@ -119,7 +116,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(json, "application/json");
 
         var client = CreateClient(handler);
-        var result = await client.GetResults(1, 2);
+        var result = await client.GetResults(1, 2, CancellationToken.None);
 
         result.Columns.Should().ContainSingle(c => c.Name == "Pos" && c.Label == "Position");
         result.Items.Should().ContainSingle(r => r["Pos"] == "1" && r["Driver"] == "Alice");
@@ -131,7 +128,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
-        var act = async () => await client.GetResults(1, 2);
+        var act = async () => await client.GetResults(1, 2, CancellationToken.None);
 
         await act.Should().ThrowAsync<HttpRequestException>();
     }
@@ -143,7 +140,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(json), "application/json");
 
         var client = CreateClient(handler);
-        var result = await client.GetResults(1, 2);
+        var result = await client.GetResults(1, 2, CancellationToken.None);
 
         result.Columns.Should().BeEmpty();
         result.Items.Should().BeEmpty();

@@ -71,8 +71,7 @@ export const HeroPanel = ({ selectedCompetition }: HeroPanelProps) => (
           <p className="is-size-5 has-text-grey-dark">
             This app talks to the Sapphire Solutions API via a compression and
             push service. It aims to improve the experience of viewing live
-            competition results on mobile devices, and to provide a reference
-            implementation for anyone looking to do the same.
+            competition results on mobile devices.
           </p>
         </Box>
       </Columns.Column>
