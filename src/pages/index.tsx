@@ -3,7 +3,11 @@ import { Link, type HeadFC, type PageProps } from "gatsby";
 import { useEffect, useState } from "react";
 
 import { Box, Container, Heading, Section, Tag } from "react-bulma-components";
-import { fetchAllCompetitions } from "../lib/leaderboardApi";
+import {
+  fetchAllCompetitions,
+  isAbortError,
+  getErrorMessage,
+} from "../lib/leaderboardApi";
 import { type Competition } from "../types/leaderboard";
 import {
   competitionStatusColor,
@@ -31,17 +35,8 @@ const IndexPage: React.FC<PageProps> = () => {
           setCompetitions(data);
         }
       } catch (fetchError) {
-        if (
-          !(
-            fetchError instanceof DOMException &&
-            fetchError.name === "AbortError"
-          )
-        ) {
-          setError(
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Unable to load competitions",
-          );
+        if (!isAbortError(fetchError)) {
+          setError(getErrorMessage(fetchError, "Unable to load competitions"));
         }
       } finally {
         if (!controller.signal.aborted) {

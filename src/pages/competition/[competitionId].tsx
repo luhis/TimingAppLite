@@ -8,6 +8,8 @@ import {
   fetchAllCompetitions,
   fetchLeaderboard,
   fetchLeaderboards,
+  isAbortError,
+  getErrorMessage,
 } from "../../lib/leaderboardApi";
 import {
   type Competition,
@@ -113,17 +115,8 @@ const CompetitionPage: React.FC<PageProps> = ({ params, location }) => {
           return String(preferredLeaderboard.id);
         });
       } catch (fetchError) {
-        if (
-          !(
-            fetchError instanceof DOMException &&
-            fetchError.name === "AbortError"
-          )
-        ) {
-          setError(
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Unable to load leaderboards",
-          );
+        if (!isAbortError(fetchError)) {
+          setError(getErrorMessage(fetchError, "Unable to load leaderboards"));
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -161,17 +154,8 @@ const CompetitionPage: React.FC<PageProps> = ({ params, location }) => {
           setLeaderboard(data);
         }
       } catch (fetchError) {
-        if (
-          !(
-            fetchError instanceof DOMException &&
-            fetchError.name === "AbortError"
-          )
-        ) {
-          setError(
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Unable to load results",
-          );
+        if (!isAbortError(fetchError)) {
+          setError(getErrorMessage(fetchError, "Unable to load results"));
         }
       } finally {
         if (!controller.signal.aborted) {

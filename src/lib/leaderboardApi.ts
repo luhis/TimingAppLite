@@ -6,6 +6,12 @@ import type {
 
 const API_BASE = (process.env.GATSBY_SIGNALR_HUB_URL ?? "") + "/API/1";
 
+export const isAbortError = (error: unknown): boolean =>
+  error instanceof DOMException && error.name === "AbortError";
+
+export const getErrorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
+
 const getJson = async <T>(
   url: string,
   errorPrefix: string,
