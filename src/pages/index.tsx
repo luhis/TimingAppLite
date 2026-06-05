@@ -2,7 +2,7 @@ import * as React from "react";
 import { Link, type HeadFC, type PageProps } from "gatsby";
 import { useEffect, useState } from "react";
 
-import { Box, Container, Heading, Section, Tag } from "react-bulma-components";
+import { Box, Container, Heading, Panel, Section, Tag } from "react-bulma-components";
 import {
   fetchAllCompetitions,
   isAbortError,
@@ -74,37 +74,27 @@ const IndexPage: React.FC<PageProps> = () => {
           <p className="has-text-grey">No competitions found.</p>
         )}
 
-        {competitions.map((competition) => (
-          <Link
-            key={competition.id}
-            to={`/competition/${competition.id}`}
-            style={{
-              display: "block",
-              textDecoration: "none",
-              color: "inherit",
-            }}
-          >
-            <Box className="mb-3" style={{ cursor: "pointer" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                }}
+        {competitions.length > 0 && (
+          <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
+            {competitions.map((competition) => (
+              <Panel.Block
+                key={competition.id}
+                renderAs={Link}
+                to={`/competition/${competition.id}`}
               >
-                <Tag color={competitionStatusColor(competition.active)}>
+                <Tag color={competitionStatusColor(competition.active)} mr={3}>
                   {competitionStatusLabel(competition.active)}
                 </Tag>
-                <Heading renderAs="h2" size={5} className="mb-0">
+                <span className="has-text-weight-medium">
                   {competition.name}
-                </Heading>
-                <span className="has-text-grey is-size-6">
+                </span>
+                <span className="has-text-grey is-size-7 ml-auto">
                   {competition.dateddmmyyyy}
                 </span>
-              </div>
-            </Box>
-          </Link>
-        ))}
+              </Panel.Block>
+            ))}
+          </Panel>
+        )}
       </Container>
     </Section>
   );
