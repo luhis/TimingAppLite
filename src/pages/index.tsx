@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link, type HeadFC, type PageProps } from "gatsby";
 import { useEffect, useState } from "react";
-import { newValidDate, ValidDate } from "ts-date";
+import { newValidDate } from "ts-date";
 
 import {
   Box,
