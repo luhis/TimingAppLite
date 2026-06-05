@@ -21,6 +21,7 @@ import {
   competitionStatusColor,
   competitionStatusLabel,
 } from "../lib/competitionStatus";
+import { CompetitionDate } from "../components/CompetitionDate";
 
 import "bulma/css/bulma.min.css";
 
@@ -59,9 +60,6 @@ const IndexPage: React.FC<PageProps> = () => {
       controller.abort();
     };
   }, []);
-
-  const isToday = (date: ValidDate | null): boolean =>
-    date?.toDateString() === newValidDate().toDateString();
 
   return (
     <Section>
@@ -108,7 +106,7 @@ const IndexPage: React.FC<PageProps> = () => {
                     {competition.name}
                   </span>
                   <span className="has-text-grey is-size-7 ml-auto">
-                    {isToday(date) ? "🗓️" : null}
+                    <CompetitionDate date={date} />
                     {competition.dateddmmyyyy}
                   </span>
                 </Panel.Block>
