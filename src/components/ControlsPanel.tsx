@@ -1,27 +1,19 @@
 import * as React from "react";
 import { Box, Button, Form, Heading } from "react-bulma-components";
 import { signalRHubUrl } from "../hooks/useLeaderboardStream";
-import type {
-  Competition,
-  FilterState,
-  LeaderboardSummary,
-} from "../types/leaderboard";
+import type { FilterState, LeaderboardSummary } from "../types/leaderboard";
 
 type ControlsPanelData = {
-  readonly competitions: readonly Competition[];
   readonly leaderboards: readonly LeaderboardSummary[];
-  readonly competitionId: string;
   readonly leaderboardId: string;
   readonly filters: FilterState;
   readonly classOptions: readonly string[];
   readonly streamResults: boolean;
-  readonly loadingCompetitions: boolean;
   readonly loadingLeaderboards: boolean;
   readonly isBusy: boolean;
 };
 
 type ControlsPanelCallbacks = {
-  readonly onCompetitionChange: (value: string) => void;
   readonly onLeaderboardChange: (value: string) => void;
   readonly onFilterChange: (
     field: keyof FilterState,
@@ -33,17 +25,13 @@ type ControlsPanelCallbacks = {
 };
 
 export const ControlsPanel = ({
-  competitions,
   leaderboards,
-  competitionId,
   leaderboardId,
   filters,
   classOptions,
   streamResults,
-  loadingCompetitions,
   loadingLeaderboards,
   isBusy,
-  onCompetitionChange,
   onLeaderboardChange,
   onFilterChange,
   onClassChange,
@@ -56,28 +44,8 @@ export const ControlsPanel = ({
       Controls
     </p>
     <Heading renderAs="h2" size={4} className="mb-4">
-      Choose an event and refine the results.
+      Refine the results.
     </Heading>
-
-    <Form.Field>
-      <Form.Label>Competition</Form.Label>
-      <Form.Control>
-        <Form.Select
-          value={competitionId}
-          onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-            onCompetitionChange(event.target.value)
-          }
-          disabled={loadingCompetitions}
-        >
-          <option value="">Select a competition</option>
-          {competitions.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.dateddmmyyyy} · {item.name}
-            </option>
-          ))}
-        </Form.Select>
-      </Form.Control>
-    </Form.Field>
 
     <Form.Field>
       <Form.Label>Leaderboard</Form.Label>
@@ -166,7 +134,7 @@ export const ControlsPanel = ({
           color="link"
           type="button"
           onClick={onRefresh}
-          disabled={!competitionId || !leaderboardId || isBusy}
+          disabled={!leaderboardId || isBusy}
         >
           Refresh now
         </Button>

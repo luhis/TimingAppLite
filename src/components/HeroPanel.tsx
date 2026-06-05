@@ -1,41 +1,10 @@
 import * as React from "react";
 import { Box, Columns, Heading, Tag } from "react-bulma-components";
-import { CompetitionStatus, type Competition } from "../types/leaderboard";
-
-const competitionStatusLabel = (
-  active: CompetitionStatus | undefined,
-): string => {
-  switch (active) {
-    case CompetitionStatus.Live:
-      return "Live";
-    case CompetitionStatus.Scheduled:
-      return "Scheduled";
-    case CompetitionStatus.Finalised:
-      return "Finalised";
-    case CompetitionStatus.Provisional:
-      return "Provisional";
-    case undefined:
-    default:
-      return "Open";
-  }
-};
-
-const competitionStatusColor = (
-  status: CompetitionStatus | undefined,
-): string => {
-  switch (status) {
-    case CompetitionStatus.Live:
-      return "success";
-    case CompetitionStatus.Scheduled:
-      return "warning";
-    case CompetitionStatus.Finalised:
-      return "info";
-    case CompetitionStatus.Provisional:
-    case undefined:
-    default:
-      return "light";
-  }
-};
+import { type Competition } from "../types/leaderboard";
+import {
+  competitionStatusColor,
+  competitionStatusLabel,
+} from "../lib/competitionStatus";
 
 const formatMeta = (competition: Competition | null): string => {
   if (!competition) {

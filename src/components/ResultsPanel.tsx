@@ -53,9 +53,7 @@ export const ResultsPanel = ({
       </Notification>
     ) : null}
 
-    <Table.Container
-      style={{ maxHeight: "80vh", overflow: "auto" }}
-    >
+    <Table.Container style={{ maxHeight: "80vh", overflow: "auto" }}>
       <Table striped hoverable narrow bordered className="is-fullwidth">
         <thead>
           <tr>
