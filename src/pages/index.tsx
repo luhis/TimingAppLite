@@ -1,8 +1,16 @@
 import * as React from "react";
 import { Link, type HeadFC, type PageProps } from "gatsby";
 import { useEffect, useState } from "react";
+import { newValidDate, ValidDate } from "ts-date";
 
-import { Box, Container, Heading, Panel, Section, Tag } from "react-bulma-components";
+import {
+  Box,
+  Container,
+  Heading,
+  Panel,
+  Section,
+  Tag,
+} from "react-bulma-components";
 import {
   fetchAllCompetitions,
   isAbortError,
@@ -52,6 +60,9 @@ const IndexPage: React.FC<PageProps> = () => {
     };
   }, []);
 
+  const isToday = (date: ValidDate | null): boolean =>
+    date?.toDateString() === newValidDate().toDateString();
+
   return (
     <Section>
       <Container>
@@ -76,23 +87,33 @@ const IndexPage: React.FC<PageProps> = () => {
 
         {competitions.length > 0 && (
           <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
-            {competitions.map((competition) => (
-              <Panel.Block
-                key={competition.id}
-                renderAs={Link}
-                to={`/competition/${competition.id}`}
-              >
-                <Tag color={competitionStatusColor(competition.active)} mr={3}>
-                  {competitionStatusLabel(competition.active)}
-                </Tag>
-                <span className="has-text-weight-medium">
-                  {competition.name}
-                </span>
-                <span className="has-text-grey is-size-7 ml-auto">
-                  {competition.dateddmmyyyy}
-                </span>
-              </Panel.Block>
-            ))}
+            {competitions.map((competition) => {
+              // "24th May 2026"
+              const date = newValidDate(
+                competition.dateddmmyyyy.replace(/(st|nd|rd|th)/, ""),
+              );
+              return (
+                <Panel.Block
+                  key={competition.id}
+                  renderAs={Link}
+                  to={`/competition/${competition.id}`}
+                >
+                  <Tag
+                    color={competitionStatusColor(competition.active)}
+                    mr={3}
+                  >
+                    {competitionStatusLabel(competition.active)}
+                  </Tag>
+                  <span className="has-text-weight-medium">
+                    {competition.name}
+                  </span>
+                  <span className="has-text-grey is-size-7 ml-auto">
+                    {isToday(date) ? "🗓️" : null}
+                    {competition.dateddmmyyyy}
+                  </span>
+                </Panel.Block>
+              );
+            })}
           </Panel>
         )}
       </Container>

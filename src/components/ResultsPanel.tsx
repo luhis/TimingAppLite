@@ -14,6 +14,8 @@ type ResultsPanelProps = {
   readonly leaderboardLoaded: boolean;
 };
 
+const stickyColumnHeader = "entry";
+
 export const ResultsPanel = ({
   selectedLeaderboardName,
   isBusy,
@@ -58,7 +60,7 @@ export const ResultsPanel = ({
         <thead>
           <tr>
             {columns.map((column) => {
-              const isDriver = column.name === "driver";
+              const isDriver = column.name === stickyColumnHeader;
               return (
                 <th
                   key={column.name}
@@ -100,7 +102,7 @@ export const ResultsPanel = ({
                   key={`${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`}
                 >
                   {columns.map((column) => {
-                    const isDriver = column.name === "driver";
+                    const isDriver = column.name === stickyColumnHeader;
                     return (
                       <td
                         key={column.name}
