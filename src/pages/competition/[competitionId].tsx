@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, type HeadFC, type PageProps } from "gatsby";
+import { Link, type HeadFC } from "gatsby";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLeaderboardStream } from "../../hooks/useLeaderboardStream";
 
@@ -37,7 +37,13 @@ const initialFilters: FilterState = {
   className: "",
 };
 
-const CompetitionPage: React.FC<PageProps> = ({ params, location }) => {
+const CompetitionPage = ({
+  params,
+  location,
+}: {
+  readonly params: { readonly competitionId: string };
+  readonly location: { readonly search: string };
+}) => {
   const competitionId = params.competitionId;
 
   const [competition, setCompetition] = useState<Competition | null>(null);
@@ -96,30 +102,26 @@ const CompetitionPage: React.FC<PageProps> = ({ params, location }) => {
       try {
         const data = await fetchLeaderboards(competitionId, controller.signal);
 
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        setLeaderboards(data);
-        setLeaderboardId((currentLeaderboardId) => {
-          const preferredLeaderboard =
-            data.find((item) => String(item.id) === currentLeaderboardId) ??
-            data.find((item) => String(item.id) === requestedLeaderboardId) ??
-            data[0];
-
-          if (!preferredLeaderboard) {
-            setLeaderboard(null);
-            return "";
-          }
-
-          return String(preferredLeaderboard.id);
-        });
-      } catch (fetchError) {
-        if (!isAbortError(fetchError)) {
-          setError(getErrorMessage(fetchError, "Unable to load leaderboards"));
-        }
-      } finally {
         if (!controller.signal.aborted) {
+          setLeaderboards(data);
+          setLeaderboardId((currentLeaderboardId) => {
+            const preferredLeaderboard =
+              data.find((item) => String(item.id) === currentLeaderboardId) ??
+              data.find((item) => String(item.id) === requestedLeaderboardId) ??
+              data[0];
+
+            if (!preferredLeaderboard) {
+              setLeaderboard(null);
+              return "";
+            }
+
+            return String(preferredLeaderboard.id);
+          });
+          setLoadingLeaderboards(false);
+        }
+      } catch (fetchError) {
+        if (!controller.signal.aborted && !isAbortError(fetchError)) {
+          setError(getErrorMessage(fetchError, "Unable to load leaderboards"));
           setLoadingLeaderboards(false);
         }
       }
@@ -152,13 +154,11 @@ const CompetitionPage: React.FC<PageProps> = ({ params, location }) => {
 
         if (!controller.signal.aborted) {
           setLeaderboard(data);
+          setLoadingResults(false);
         }
       } catch (fetchError) {
-        if (!isAbortError(fetchError)) {
+        if (!controller.signal.aborted && !isAbortError(fetchError)) {
           setError(getErrorMessage(fetchError, "Unable to load results"));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
           setLoadingResults(false);
         }
       }
@@ -173,25 +173,19 @@ const CompetitionPage: React.FC<PageProps> = ({ params, location }) => {
 
   const handleRowUpdate = useCallback((rows: readonly LeaderboardItem[]) => {
     setLastUpdateTime(new Date());
-    setLeaderboard((current) => {
-      if (!current) {
-        return current;
-      }
-
-      return { ...current, items: mergeRowsByEntry(current.items, rows) };
-    });
+    setLeaderboard((current) =>
+      current
+        ? { ...current, items: mergeRowsByEntry(current.items, rows) }
+        : current,
+    );
   }, []);
 
   const handleColumnUpdate = useCallback(
     (columns: readonly LeaderboardColumn[]) => {
       setLastUpdateTime(new Date());
-      setLeaderboard((current) => {
-        if (!current) {
-          return current;
-        }
-
-        return { ...current, columns: [...columns] };
-      });
+      setLeaderboard((current) =>
+        current ? { ...current, columns: [...columns] } : current,
+      );
     },
     [],
   );
@@ -269,20 +263,15 @@ const CompetitionPage: React.FC<PageProps> = ({ params, location }) => {
     setFilters((current) => ({ ...current, className: value }));
   };
 
-  const handleStreamResultsChange = (checked: boolean) => {
+  const handleStreamResultsChange = (checked: boolean) =>
     setStreamResults(checked);
-  };
 
-  const resetFilters = () => {
-    setFilters(initialFilters);
-  };
+  const resetFilters = () => setFilters(initialFilters);
 
   const refreshCurrentSelection = () => {
-    if (!competitionId || !leaderboardId || isBusy) {
-      return;
+    if (competitionId && leaderboardId && !isBusy) {
+      setRefreshTick((current) => current + 1);
     }
-
-    setRefreshTick((current) => current + 1);
   };
 
   return (

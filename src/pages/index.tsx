@@ -1,7 +1,6 @@
 import * as React from "react";
-import { Link, type HeadFC, type PageProps } from "gatsby";
+import { Link, type HeadFC } from "gatsby";
 import { useEffect, useState } from "react";
-
 import {
   Container,
   Heading,
@@ -10,6 +9,7 @@ import {
   Section,
   Tag,
 } from "react-bulma-components";
+
 import {
   fetchAllCompetitions,
   isAbortError,
@@ -21,11 +21,11 @@ import {
   competitionStatusLabel,
 } from "../lib/competitionStatus";
 import { CompetitionDate } from "../components/CompetitionDate";
-
-import "bulma/css/bulma.min.css";
 import { parseDate } from "../lib/dataParser";
 
-const IndexPage: React.FC<PageProps> = () => {
+import "bulma/css/bulma.min.css";
+
+const IndexPage = () => {
   const [competitions, setCompetitions] = useState<readonly Competition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,16 +39,13 @@ const IndexPage: React.FC<PageProps> = () => {
 
       try {
         const data = await fetchAllCompetitions(controller.signal);
-
         if (!controller.signal.aborted) {
           setCompetitions(data);
+          setLoading(false);
         }
       } catch (fetchError) {
-        if (!isAbortError(fetchError)) {
+        if (!controller.signal.aborted && !isAbortError(fetchError)) {
           setError(getErrorMessage(fetchError, "Unable to load competitions"));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
           setLoading(false);
         }
       }
@@ -78,41 +75,33 @@ const IndexPage: React.FC<PageProps> = () => {
 
         {loading && <p className="has-text-grey">Loading competitions…</p>}
         {error && <p className="has-text-danger">{error}</p>}
-
         {!loading && !error && competitions.length === 0 && (
           <p className="has-text-grey">No competitions found.</p>
         )}
 
         {competitions.length > 0 && (
           <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
-            {competitions.map((competition) => {
-              // "24th May 2026"
-              const date = parseDate(competition.dateddmmyyyy);
-              return (
-                <Panel.Block
-                  key={competition.id}
-                  renderAs={Link}
-                  to={`/competition/${competition.id}`}
-                >
-                  <Tag
-                    color={competitionStatusColor(competition.active)}
-                    mr={3}
-                  >
-                    {competitionStatusLabel(competition.active)}
-                  </Tag>
-                  <span className="has-text-weight-medium">
-                    {competition.name}
-                  </span>
-                  <span>
-                    &nbsp;
-                    <CompetitionDate date={date} />
-                  </span>
-                  <span className="has-text-grey is-size-7 ml-auto">
-                    {competition.dateddmmyyyy}
-                  </span>
-                </Panel.Block>
-              );
-            })}
+            {competitions.map((competition) => (
+              <Panel.Block
+                key={competition.id}
+                renderAs={Link}
+                to={`/competition/${competition.id}`}
+              >
+                <Tag color={competitionStatusColor(competition.active)} mr={3}>
+                  {competitionStatusLabel(competition.active)}
+                </Tag>
+                <span className="has-text-weight-medium">
+                  {competition.name}
+                </span>
+                <span>
+                  &nbsp;
+                  <CompetitionDate date={parseDate(competition.dateddmmyyyy)} />
+                </span>
+                <span className="has-text-grey is-size-7 ml-auto">
+                  {competition.dateddmmyyyy}
+                </span>
+              </Panel.Block>
+            ))}
           </Panel>
         )}
       </Container>

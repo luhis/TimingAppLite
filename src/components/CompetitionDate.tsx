@@ -1,30 +1,33 @@
 import { Icon } from "react-bulma-components";
-import { newValidDate, ValidDate } from "ts-date";
+import { newValidDate, type ValidDate } from "ts-date";
 import * as React from "react";
 
-export const CompetitionDate: React.FC<{ date: ValidDate | null }> = ({
-  date,
-}) => {
-  if (date === null) {
-    return null;
-  }
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+type CompetitionDateProps = {
+  readonly date: ValidDate | null;
+};
+
+export const CompetitionDate = ({ date }: CompetitionDateProps) => {
+  if (!date) return null;
+
   const today = newValidDate();
-  const isToday = date.toDateString() === today.toDateString();
-  if (isToday) {
+
+  if (date.toDateString() === today.toDateString()) {
     return (
       <Icon className="is-size-4" title="Today">
         🗓️
       </Icon>
     );
   }
-  const isSoon =
-    date > today && date.getTime() - today.getTime() < 7 * 24 * 60 * 60 * 1000; // within the next week
-  if (isSoon) {
+
+  if (date > today && date.getTime() - today.getTime() < ONE_WEEK_MS) {
     return (
       <Icon className="is-size-4" title="Soon">
         🔜
       </Icon>
     );
   }
+
   return null;
 };
