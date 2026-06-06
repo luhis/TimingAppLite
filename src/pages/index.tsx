@@ -1,12 +1,11 @@
 import * as React from "react";
 import { Link, type HeadFC, type PageProps } from "gatsby";
 import { useEffect, useState } from "react";
-import { newValidDate } from "ts-date";
 
 import {
-  Box,
   Container,
   Heading,
+  Hero,
   Panel,
   Section,
   Tag,
@@ -24,6 +23,7 @@ import {
 import { CompetitionDate } from "../components/CompetitionDate";
 
 import "bulma/css/bulma.min.css";
+import { parseDate } from "../lib/dataParser";
 
 const IndexPage: React.FC<PageProps> = () => {
   const [competitions, setCompetitions] = useState<readonly Competition[]>([]);
@@ -64,17 +64,17 @@ const IndexPage: React.FC<PageProps> = () => {
   return (
     <Section>
       <Container>
-        <Box className="mb-5">
-          <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7 mb-3">
-            Gatsby TypeScript leaderboard app
-          </p>
-          <Heading renderAs="h1" size={1} className="mb-3">
-            Live autotest results.
-          </Heading>
-          <p className="is-size-5 has-text-grey-dark">
-            Select a competition below to view its leaderboards.
-          </p>
-        </Box>
+        <Hero className="is-info is-small">
+          <Hero.Body>
+            <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7">
+              Gatsby TypeScript leaderboard app
+            </p>
+            <Heading renderAs="h2" size={3} className="mb-2">
+              Live autotest results.
+            </Heading>
+            <p>Select a competition below to view its leaderboards.</p>
+          </Hero.Body>
+        </Hero>
 
         {loading && <p className="has-text-grey">Loading competitions…</p>}
         {error && <p className="has-text-danger">{error}</p>}
@@ -87,9 +87,7 @@ const IndexPage: React.FC<PageProps> = () => {
           <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
             {competitions.map((competition) => {
               // "24th May 2026"
-              const date = newValidDate(
-                competition.dateddmmyyyy.replace(/(st|nd|rd|th)/, ""),
-              );
+              const date = parseDate(competition.dateddmmyyyy);
               return (
                 <Panel.Block
                   key={competition.id}
@@ -106,7 +104,8 @@ const IndexPage: React.FC<PageProps> = () => {
                     {competition.name}
                   </span>
                   <span>
-                    &nbsp;<CompetitionDate date={date} />
+                    &nbsp;
+                    <CompetitionDate date={date} />
                   </span>
                   <span className="has-text-grey is-size-7 ml-auto">
                     {competition.dateddmmyyyy}
