@@ -4,7 +4,7 @@ import type {
   LeaderboardSummary,
 } from "../types/leaderboard";
 
-const API_BASE = (process.env.GATSBY_SIGNALR_HUB_URL ?? "") + "/API/1";
+const API_BASE = (process.env.GATSBY_BACKEND_URL ?? "") + "/API/1";
 
 export const isAbortError = (error: unknown): boolean =>
   error instanceof DOMException && error.name === "AbortError";

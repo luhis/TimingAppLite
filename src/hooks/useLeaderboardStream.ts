@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import type { LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
 
 export const signalRHubUrl =
-  (process.env.GATSBY_SIGNALR_HUB_URL ?? "") + "/hubs/leaderboard";
+  (process.env.GATSBY_BACKEND_URL ?? "") + "/hubs/leaderboard";
 
 const withSubscriptionParams = (
   baseUrl: string,

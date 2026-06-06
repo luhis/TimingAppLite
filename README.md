@@ -30,7 +30,7 @@ yarn run build
 Create a `.env` file with:
 
 ```sh
-GATSBY_SIGNALR_HUB_URL=http://localhost:5167
+GATSBY_BACKEND_URL=http://localhost:5167
 ```
 
 If you don't want to run the dotnet API locally, you can bypass the Lite server and connect directly to the sapphire server at `https://autotest.sapphire-solutions.co.uk`, but you will lose signalR capabilities and compression.  Or use the prod server at `https://timingapplite.purplesea-f465acb7.uksouth.azurecontainerapps.io`
