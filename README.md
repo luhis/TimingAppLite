@@ -12,8 +12,8 @@ Timing App Lite is a Gatsby TypeScript app that reads the live Sapphire Solution
 ## Development
 
 ```powershell
-npm install
-npm run develop
+yarn install
+yarn run develop
 ```
 
 The site will be available at `http://localhost:8000`.
@@ -21,6 +21,16 @@ The site will be available at `http://localhost:8000`.
 ## Validation
 
 ```powershell
-npm run typecheck
-npm run build
+yarn run typecheck
+yarn run build
 ```
+
+## Settings
+
+Create a `.env` file with:
+
+```sh
+GATSBY_SIGNALR_HUB_URL=http://localhost:5167
+```
+
+If you don't want to run the dotnet API locally, you can bypass the Lite server and connect directly to the sapphire server at `https://autotest.sapphire-solutions.co.uk`, but you will lose signalR capabilities and compression.
