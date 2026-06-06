@@ -105,8 +105,10 @@ const IndexPage: React.FC<PageProps> = () => {
                   <span className="has-text-weight-medium">
                     {competition.name}
                   </span>
+                  <span>
+                    &nbsp;<CompetitionDate date={date} />
+                  </span>
                   <span className="has-text-grey is-size-7 ml-auto">
-                    <CompetitionDate date={date} />
                     {competition.dateddmmyyyy}
                   </span>
                 </Panel.Block>

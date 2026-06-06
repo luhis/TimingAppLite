@@ -12,7 +12,7 @@ export const CompetitionDate: React.FC<{ date: ValidDate | null }> = ({
   const isToday = date.toDateString() === today.toDateString();
   if (isToday) {
     return (
-      <Icon className="is-size-3" size="large" title="Today">
+      <Icon className="is-size-4" title="Today">
         🗓️
       </Icon>
     );
@@ -21,7 +21,7 @@ export const CompetitionDate: React.FC<{ date: ValidDate | null }> = ({
     date > today && date.getTime() - today.getTime() < 7 * 24 * 60 * 60 * 1000; // within the next week
   if (isSoon) {
     return (
-      <Icon className="is-size-3" size="large" title="Soon">
+      <Icon className="is-size-4" title="Soon">
         🔜
       </Icon>
     );

@@ -60,7 +60,7 @@ export const ResultsPanel = ({
         <thead>
           <tr>
             {columns.map((column) => {
-              const isDriver = column.name === stickyColumnHeader;
+              const isSticky = column.name === stickyColumnHeader;
               return (
                 <th
                   key={column.name}
@@ -68,12 +68,12 @@ export const ResultsPanel = ({
                     position: "sticky",
                     top: 0,
                     background: "white",
-                    zIndex: isDriver ? 4 : 2,
-                    left: isDriver ? 0 : undefined,
-                    borderRight: isDriver
+                    zIndex: isSticky ? 4 : 2,
+                    left: isSticky ? 0 : undefined,
+                    borderRight: isSticky
                       ? "1px solid rgba(0,0,0,0.06)"
                       : undefined,
-                    boxShadow: isDriver
+                    boxShadow: isSticky
                       ? "2px 0 6px rgba(0,0,0,0.06)"
                       : undefined,
                   }}
@@ -102,12 +102,12 @@ export const ResultsPanel = ({
                   key={`${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`}
                 >
                   {columns.map((column) => {
-                    const isDriver = column.name === stickyColumnHeader;
+                    const isSticky = column.name === stickyColumnHeader;
                     return (
                       <td
                         key={column.name}
                         style={
-                          isDriver
+                          isSticky
                             ? {
                                 position: "sticky",
                                 left: 0,

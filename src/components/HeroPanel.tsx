@@ -19,7 +19,7 @@ const formatMeta = (competition: Competition | null): string => {
     return `Provisional ${competition.provisional}`;
   }
 
-  return `${competition.dateddmmyyyy} event feed`;
+  return `🏎️ ${competition.dateddmmyyyy} 🏁 event feed`;
 };
 
 type HeroPanelProps = {
