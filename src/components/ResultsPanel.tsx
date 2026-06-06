@@ -16,6 +16,32 @@ type ResultsPanelProps = {
 
 const stickyColumnHeader = "entry";
 
+const stickyHeaderStyle = {
+  position: "sticky" as const,
+  top: 0,
+  left: 0,
+  background: "white",
+  zIndex: 4,
+  borderRight: "1px solid rgba(0,0,0,0.06)",
+  boxShadow: "2px 0 6px rgba(0,0,0,0.06)",
+};
+
+const stickyHeaderNonStickyStyle = {
+  position: "sticky" as const,
+  top: 0,
+  background: "white",
+  zIndex: 2,
+};
+
+const stickyCellStyle = {
+  position: "sticky" as const,
+  left: 0,
+  background: "white",
+  zIndex: 1,
+  borderRight: "1px solid rgba(0,0,0,0.06)",
+  boxShadow: "2px 0 6px rgba(0,0,0,0.06)",
+};
+
 export const ResultsPanel = ({
   selectedLeaderboardName,
   isBusy,
@@ -48,40 +74,29 @@ export const ResultsPanel = ({
       </div>
     </div>
 
-    {error ? <Notification color="danger">{error}</Notification> : null}
-    {isBusy ? (
+    {error && <Notification color="danger">{error}</Notification>}
+    {isBusy && (
       <Notification color="light">
         Fetching competition and leaderboard data.
       </Notification>
-    ) : null}
+    )}
 
     <Table.Container style={{ maxHeight: "80vh", overflow: "auto" }}>
       <Table striped hoverable narrow bordered className="is-fullwidth">
         <thead>
           <tr>
-            {columns.map((column) => {
-              const isSticky = column.name === stickyColumnHeader;
-              return (
-                <th
-                  key={column.name}
-                  style={{
-                    position: "sticky",
-                    top: 0,
-                    background: "white",
-                    zIndex: isSticky ? 4 : 2,
-                    left: isSticky ? 0 : undefined,
-                    borderRight: isSticky
-                      ? "1px solid rgba(0,0,0,0.06)"
-                      : undefined,
-                    boxShadow: isSticky
-                      ? "2px 0 6px rgba(0,0,0,0.06)"
-                      : undefined,
-                  }}
-                >
-                  {column.label}
-                </th>
-              );
-            })}
+            {columns.map((column) => (
+              <th
+                key={column.name}
+                style={
+                  column.name === stickyColumnHeader
+                    ? stickyHeaderStyle
+                    : stickyHeaderNonStickyStyle
+                }
+              >
+                {column.label}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -101,28 +116,18 @@ export const ResultsPanel = ({
                 <tr
                   key={`${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`}
                 >
-                  {columns.map((column) => {
-                    const isSticky = column.name === stickyColumnHeader;
-                    return (
-                      <td
-                        key={column.name}
-                        style={
-                          isSticky
-                            ? {
-                                position: "sticky",
-                                left: 0,
-                                background: "white",
-                                zIndex: 1,
-                                borderRight: "1px solid rgba(0,0,0,0.06)",
-                                boxShadow: "2px 0 6px rgba(0,0,0,0.06)",
-                              }
-                            : undefined
-                        }
-                      >
-                        {stringifyCell(item[column.name])}
-                      </td>
-                    );
-                  })}
+                  {columns.map((column) => (
+                    <td
+                      key={column.name}
+                      style={
+                        column.name === stickyColumnHeader
+                          ? stickyCellStyle
+                          : undefined
+                      }
+                    >
+                      {stringifyCell(item[column.name])}
+                    </td>
+                  ))}
                 </tr>
               );
             })
