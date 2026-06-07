@@ -26,6 +26,7 @@ import {
   stringifyCell,
 } from "../../lib/leaderboardUtils";
 import { ControlsPanel } from "../../components/ControlsPanel";
+import { Footer } from "../../components/Footer";
 import { HeroPanel } from "../../components/HeroPanel";
 import { ResultsPanel } from "../../components/ResultsPanel";
 
@@ -315,6 +316,7 @@ const CompetitionPage = ({
           </Columns.Column>
         </Columns>
       </Container>
+      <Footer />
     </Section>
   );
 };

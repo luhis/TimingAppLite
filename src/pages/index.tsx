@@ -21,6 +21,7 @@ import {
   competitionStatusLabel,
 } from "../lib/competitionStatus";
 import { CompetitionDate } from "../components/CompetitionDate";
+import { Footer } from "../components/Footer";
 import { parseDate } from "../lib/dataParser";
 
 import "bulma/css/bulma.min.css";
@@ -105,6 +106,7 @@ const IndexPage = () => {
           </Panel>
         )}
       </Container>
+      <Footer />
     </Section>
   );
 };

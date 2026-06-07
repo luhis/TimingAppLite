@@ -1,4 +1,8 @@
 {
   "extends": ["config:base"],
-  "automerge": true
+  "automerge": true,
+  "postUpgradeTasks": {
+    "commands": ["yarn dedupe"],
+    "fileFilters": ["yarn.lock"]
+  }
 }
