@@ -13,6 +13,12 @@ const config: GatsbyConfig = {
   graphqlTypegen: true,
   plugins: [
     `gatsby-plugin-preact`,
+    {
+      resolve: `gatsby-plugin-google-gtag`,
+      options: {
+        trackingIds: ["G-W4H1SJZHT3"],
+      },
+    },
   ],
 };
 
