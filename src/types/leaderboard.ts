@@ -1,3 +1,5 @@
+type Override<T, U> = Omit<T, keyof U> & U;
+
 export enum CompetitionStatus {
   Live = "0",
   Scheduled = "1",
@@ -32,10 +34,12 @@ export type LeaderboardItemFromApi = {
   readonly classname: string;
 } & Record<string, string | number | undefined>;
 
-export type LeaderboardPayload = {
-  readonly columns: readonly LeaderboardColumn[];
-  readonly items: readonly LeaderboardItem[];
-};
+export type LeaderboardPayload = Override<
+  LeaderboardPayloadFromApi,
+  {
+    readonly items: readonly LeaderboardItem[];
+  }
+>;
 
 export type LeaderboardPayloadFromApi = {
   readonly columns: readonly LeaderboardColumn[];
