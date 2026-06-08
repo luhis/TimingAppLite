@@ -11,9 +11,9 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     : BackgroundService
 {
     private readonly TimeSpan _timerInterval = TimeSpan.FromSeconds(
-        configuration.GetValue<int>("LeaderboardService:PollIntervalSeconds", 60));
+        configuration.GetValue("LeaderboardService:PollIntervalSeconds", 60));
     private readonly bool _optimisePushUpdates =
-        configuration.GetValue<bool>("LeaderboardService:OptimisePushUpdates", true);
+        configuration.GetValue("LeaderboardService:OptimisePushUpdates", true);
 
     private readonly ConcurrentDictionary<(int competitionId, int leaderboardId), LeaderboardDto?> _previousResults = new();
     private readonly ConcurrentDictionary<string, ImmutableHashSet<(int competitionId, int leaderboardId)>> _connectionGroups = new();
@@ -49,13 +49,22 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         }
     }
 
-    public void Subscribe(string connectionId, (int competitionId, int leaderboardId) key)
-    {
+    public void Subscribe(string connectionId, (int competitionId, int leaderboardId) key) =>
         _connectionGroups.AddOrUpdate(connectionId, [key], (_, existing) => existing.Add(key));
-    }
 
-    public void Unsubscribe(string connectionId, (int competitionId, int leaderboardId) key) =>
-        RemoveConnection(connectionId, key);
+    public void Unsubscribe(string connectionId, (int competitionId, int leaderboardId) key)
+    {
+        if (!_connectionGroups.TryGetValue(connectionId, out var groups)) return;
+
+        var updated = groups.Remove(key);
+        if (updated.IsEmpty)
+            _connectionGroups.TryRemove(connectionId, out _);
+        else
+            _connectionGroups[connectionId] = updated;
+
+        if (!ActiveGroups.Contains(key))
+            _previousResults.TryRemove(key, out _);
+    }
 
     public void RemoveAllSubscriptions(string connectionId)
     {
@@ -65,51 +74,20 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
                     _previousResults.TryRemove(key, out _);
     }
 
-    // Compares two leaderboard rows (Dictionary<string, string>) by value equality
-    private sealed class ItemComparer : IEqualityComparer<Dictionary<string, string>>
-    {
-        internal static readonly ItemComparer Instance = new();
-        public bool Equals(Dictionary<string, string>? x, Dictionary<string, string>? y)
-        {
-            if (ReferenceEquals(x, y)) return true;
-            if (x is null || y is null || x.Count != y.Count) return false;
-            foreach (var (k, v) in x)
-                if (!y.TryGetValue(k, out var yv) || v != yv) return false;
-            return true;
-        }
-        public int GetHashCode(Dictionary<string, string> obj) => obj.Count;
-    }
-
-    private void RemoveConnection(string connectionId, (int competitionId, int leaderboardId) key)
-    {
-        if (_connectionGroups.TryGetValue(connectionId, out var groups))
-        {
-            var updated = groups.Remove(key);
-            if (updated.IsEmpty)
-                _connectionGroups.TryRemove(connectionId, out _);
-            else
-                _connectionGroups[connectionId] = updated;
-        }
-
-        // Clean up snapshot if no connection subscribes to this group anymore
-        if (!ActiveGroups.Contains(key))
-            _previousResults.TryRemove(key, out _);
-    }
-
     internal async Task PushChanges((int competitionId, int leaderboardId) key)
     {
-        logger.LogInformation($"{nameof(PushChanges)} {key.competitionId}, {key.leaderboardId}");
+        logger.LogInformation("{Method} {CompetitionId}, {LeaderboardId}", nameof(PushChanges), key.competitionId, key.leaderboardId);
         var values = await apiClient.GetResults(key.competitionId, key.leaderboardId, CancellationToken.None);
 
         for (var i = 0; i < values.Items.Count; i++)
             values.Items[i]["_index"] = i.ToString();
 
-        var prevSnapshot = _previousResults.GetValueOrDefault(key, null);
-        _previousResults.AddOrUpdate(key, values, (_, __) => values);
+        var prevSnapshot = _previousResults.GetValueOrDefault(key);
+        _previousResults[key] = values;
 
         var groupName = LeaderboardHub.GetCompetitionGroup(key.competitionId, key.leaderboardId);
 
-        if (!_optimisePushUpdates || prevSnapshot == null)
+        if (!_optimisePushUpdates || prevSnapshot is null)
         {
             await hubContext.Clients.Group(groupName)
                 .SendAsync("ReceiveRowUpdate", values.Items, CancellationToken.None);
@@ -123,7 +101,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             var changedRows = values.Items
                 .Where(row => row.ContainsKey("entry")
                     && (!prevByEntry.TryGetValue(row["entry"], out var prev)
-                        || !ItemComparer.Instance.Equals(row, prev)))
+                        || !RowsEqual(row, prev)))
                 .ToList();
 
             if (changedRows.Count > 0)
@@ -131,8 +109,16 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
                     .SendAsync("ReceiveRowUpdate", changedRows, CancellationToken.None);
         }
 
-        if (!_optimisePushUpdates || (prevSnapshot != null && prevSnapshot.Columns.Count != values.Columns.Count))
+        if (!_optimisePushUpdates || (prevSnapshot is not null && prevSnapshot.Columns.Count != values.Columns.Count))
             await hubContext.Clients.Group(groupName)
                 .SendAsync("ReceiveColumnUpdate", values.Columns, CancellationToken.None);
+    }
+
+    private static bool RowsEqual(Dictionary<string, string> x, Dictionary<string, string> y)
+    {
+        if (x.Count != y.Count) return false;
+        foreach (var (k, v) in x)
+            if (!y.TryGetValue(k, out var yv) || v != yv) return false;
+        return true;
     }
 }
