@@ -27,13 +27,8 @@ export const isSectionRow = (item: LeaderboardItem): boolean => {
 };
 
 const getEntryKey = (item: LeaderboardItem): string => {
-  const entry = item.entry;
-
-  if (entry === null || entry === undefined || entry === "") {
-    return "";
-  }
-
-  return String(entry);
+  const stringified = stringifyCell(item.entry);
+  return stringified === "-" ? "" : stringified;
 };
 
 export const mergeRowsByEntry = (
@@ -43,35 +38,20 @@ export const mergeRowsByEntry = (
   const incomingByKey = incomingRows.reduce<Record<string, LeaderboardItem>>(
     (allRows, row) => {
       const key = getEntryKey(row);
-
-      if (!key) {
-        return allRows;
-      }
-
-      return { ...allRows, [key]: row };
+      return key ? { ...allRows, [key]: row } : allRows;
     },
     {},
   );
 
   const mergedExistingRows = existingRows.map((row) => {
     const key = getEntryKey(row);
-
-    if (!key) {
-      return row;
-    }
-
-    return incomingByKey[key] ?? row;
+    return key ? (incomingByKey[key] ?? row) : row;
   });
 
   const existingKeys = mergedExistingRows.reduce<Record<string, true>>(
     (keys, row) => {
       const key = getEntryKey(row);
-
-      if (!key) {
-        return keys;
-      }
-
-      return { ...keys, [key]: true };
+      return key ? { ...keys, [key]: true } : keys;
     },
     {},
   );
@@ -81,5 +61,11 @@ export const mergeRowsByEntry = (
     return Boolean(key) && !existingKeys[key];
   });
 
-  return [...mergedExistingRows, ...appendedRows];
+  return [...mergedExistingRows, ...appendedRows].sort((a, b) => {
+    const indexA =
+      typeof a._index === "number" ? a._index : Number.MAX_SAFE_INTEGER;
+    const indexB =
+      typeof b._index === "number" ? b._index : Number.MAX_SAFE_INTEGER;
+    return indexA - indexB;
+  });
 };

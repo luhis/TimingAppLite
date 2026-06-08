@@ -101,6 +101,9 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         logger.LogInformation($"{nameof(PushChanges)} {key.competitionId}, {key.leaderboardId}");
         var values = await apiClient.GetResults(key.competitionId, key.leaderboardId, CancellationToken.None);
 
+        for (var i = 0; i < values.Items.Count; i++)
+            values.Items[i]["_index"] = i.ToString();
+
         var prevSnapshot = _previousResults.GetValueOrDefault(key, null);
         _previousResults.AddOrUpdate(key, values, (_, __) => values);
 

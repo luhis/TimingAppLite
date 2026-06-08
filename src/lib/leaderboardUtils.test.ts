@@ -80,4 +80,24 @@ describe("mergeRowsByEntry", () => {
 
     expect(result).toEqual([{ entry: "1", driver: "Alice", time: "1:30" }]);
   });
+
+  test("sorts result by _index property", () => {
+    const existing: readonly LeaderboardItem[] = [
+      { entry: "1", driver: "Alice", time: "1:30", _index: 0 },
+      { entry: "3", driver: "Charlie", time: "2:00", _index: 2 },
+    ];
+
+    const incoming: readonly LeaderboardItem[] = [
+      { entry: "2", driver: "Bob", time: "1:45", _index: 1 },
+      { entry: "1", driver: "Alice", time: "1:25", _index: 0 },
+    ];
+
+    const result = mergeRowsByEntry(existing, incoming);
+
+    expect(result).toEqual([
+      { entry: "1", driver: "Alice", time: "1:25", _index: 0 },
+      { entry: "2", driver: "Bob", time: "1:45", _index: 1 },
+      { entry: "3", driver: "Charlie", time: "2:00", _index: 2 },
+    ]);
+  });
 });

@@ -154,7 +154,14 @@ const CompetitionPage = ({
         );
 
         if (!controller.signal.aborted) {
-          setLeaderboard(data);
+          const indexedData = {
+            ...data,
+            items: data.items.map((item, index) => ({
+              ...item,
+              _index: index,
+            })),
+          };
+          setLeaderboard(indexedData);
           setLoadingResults(false);
         }
       } catch (fetchError) {

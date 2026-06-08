@@ -1,3 +1,5 @@
+import { Color } from "react-bulma-components/src/components";
+
 import { CompetitionStatus } from "../types/leaderboard";
 
 export const competitionStatusLabel = (
@@ -20,7 +22,7 @@ export const competitionStatusLabel = (
 
 export const competitionStatusColor = (
   status: CompetitionStatus | undefined,
-): string => {
+): Color => {
   switch (status) {
     case CompetitionStatus.Live:
       return "success";
