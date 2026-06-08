@@ -21,13 +21,10 @@ import {
   competitionStatusLabel,
 } from "../lib/competitionStatus";
 
-type AsyncData<T> =
-  | { readonly status: "loading" }
-  | { readonly status: "error"; readonly error: string }
-  | { readonly status: "success"; readonly data: T };
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Footer } from "../components/Footer";
 import { parseDate } from "../lib/dataParser";
+import { AsyncData } from "../types/asyncData";
 
 import "bulma/css/bulma.min.css";
 

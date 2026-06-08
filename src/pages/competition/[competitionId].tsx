@@ -19,6 +19,7 @@ import {
   type LeaderboardPayload,
   type LeaderboardSummary,
 } from "../../types/leaderboard";
+import type { AsyncData } from "../../types/asyncData";
 import {
   isSectionRow,
   mergeRowsByEntry,
@@ -48,17 +49,14 @@ const CompetitionPage = ({
   const competitionId = params.competitionId;
 
   const [competition, setCompetition] = useState<Competition | null>(null);
-  const [leaderboards, setLeaderboards] = useState<
-    readonly LeaderboardSummary[]
-  >([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardPayload | null>(
-    null,
-  );
+  const [leaderboardsState, setLeaderboardsState] = useState<
+    AsyncData<readonly LeaderboardSummary[]>
+  >({ status: "loading" });
+  const [leaderboardState, setLeaderboardState] = useState<
+    AsyncData<LeaderboardPayload>
+  >({ status: "idle" });
   const [leaderboardId, setLeaderboardId] = useState("");
   const [filters, setFilters] = useState<FilterState>(initialFilters);
-  const [loadingLeaderboards, setLoadingLeaderboards] = useState(false);
-  const [loadingResults, setLoadingResults] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
   const [streamResults, setStreamResults] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
@@ -97,14 +95,13 @@ const CompetitionPage = ({
     const controller = new AbortController();
 
     const loadLeaderboards = async () => {
-      setLoadingLeaderboards(true);
-      setError(null);
+      setLeaderboardsState({ status: "loading" });
 
       try {
         const data = await fetchLeaderboards(competitionId, controller.signal);
 
         if (!controller.signal.aborted) {
-          setLeaderboards(data);
+          setLeaderboardsState({ status: "success", data });
           setLeaderboardId((currentLeaderboardId) => {
             const preferredLeaderboard =
               data.find((item) => String(item.id) === currentLeaderboardId) ??
@@ -112,18 +109,19 @@ const CompetitionPage = ({
               data[0];
 
             if (!preferredLeaderboard) {
-              setLeaderboard(null);
+              setLeaderboardState({ status: "idle" });
               return "";
             }
 
             return String(preferredLeaderboard.id);
           });
-          setLoadingLeaderboards(false);
         }
       } catch (fetchError) {
         if (!controller.signal.aborted && !isAbortError(fetchError)) {
-          setError(getErrorMessage(fetchError, "Unable to load leaderboards"));
-          setLoadingLeaderboards(false);
+          setLeaderboardsState({
+            status: "error",
+            error: getErrorMessage(fetchError, "Unable to load leaderboards"),
+          });
         }
       }
     };
@@ -143,8 +141,7 @@ const CompetitionPage = ({
     const controller = new AbortController();
 
     const loadLeaderboard = async () => {
-      setLoadingResults(true);
-      setError(null);
+      setLeaderboardState({ status: "loading" });
 
       try {
         const data = await fetchLeaderboard(
@@ -161,13 +158,14 @@ const CompetitionPage = ({
               _index: index,
             })),
           };
-          setLeaderboard(indexedData);
-          setLoadingResults(false);
+          setLeaderboardState({ status: "success", data: indexedData });
         }
       } catch (fetchError) {
         if (!controller.signal.aborted && !isAbortError(fetchError)) {
-          setError(getErrorMessage(fetchError, "Unable to load results"));
-          setLoadingResults(false);
+          setLeaderboardState({
+            status: "error",
+            error: getErrorMessage(fetchError, "Unable to load results"),
+          });
         }
       }
     };
@@ -181,9 +179,15 @@ const CompetitionPage = ({
 
   const handleRowUpdate = useCallback((rows: readonly LeaderboardItem[]) => {
     setLastUpdateTime(new Date());
-    setLeaderboard((current) =>
-      current
-        ? { ...current, items: mergeRowsByEntry(current.items, rows) }
+    setLeaderboardState((current) =>
+      current.status === "success"
+        ? {
+            ...current,
+            data: {
+              ...current.data,
+              items: mergeRowsByEntry(current.data.items, rows),
+            },
+          }
         : current,
     );
   }, []);
@@ -191,8 +195,10 @@ const CompetitionPage = ({
   const handleColumnUpdate = useCallback(
     (columns: readonly LeaderboardColumn[]) => {
       setLastUpdateTime(new Date());
-      setLeaderboard((current) =>
-        current ? { ...current, columns: [...columns] } : current,
+      setLeaderboardState((current) =>
+        current.status === "success"
+          ? { ...current, data: { ...current.data, columns: [...columns] } }
+          : current,
       );
     },
     [],
@@ -206,13 +212,18 @@ const CompetitionPage = ({
     handleColumnUpdate,
   );
 
+  const leaderboards =
+    leaderboardsState.status === "success" ? leaderboardsState.data : [];
+
   const selectedLeaderboard =
     leaderboards.find((item) => String(item.id) === leaderboardId) ?? null;
 
   const visibleRows = useMemo(() => {
-    if (!leaderboard) {
+    if (leaderboardState.status !== "success") {
       return [];
     }
+
+    const leaderboard = leaderboardState.data;
 
     const query = filters.query.trim().toLowerCase();
     const driver = filters.driver.trim().toLowerCase();
@@ -231,12 +242,14 @@ const CompetitionPage = ({
 
       return matchesQuery && matchesDriver && matchesClass;
     });
-  }, [filters, leaderboard]);
+  }, [filters, leaderboardState]);
 
   const classOptions = useMemo(() => {
-    if (!leaderboard) {
+    if (leaderboardState.status !== "success") {
       return [];
     }
+
+    const leaderboard = leaderboardState.data;
 
     const classes = leaderboard.items
       .filter((item) => item.entry !== undefined)
@@ -246,19 +259,28 @@ const CompetitionPage = ({
     return Array.from(new Set(classes)).sort((left, right) =>
       left.localeCompare(right),
     );
-  }, [leaderboard]);
+  }, [leaderboardState]);
 
   const sectionCount = useMemo(
     () => visibleRows.filter(isSectionRow).length,
     [visibleRows],
   );
   const dataRowCount = visibleRows.length - sectionCount;
+  const loadingLeaderboards = leaderboardsState.status === "loading";
+  const loadingResults = leaderboardState.status === "loading";
   const isBusy = loadingLeaderboards || loadingResults;
-  const resultColumns = leaderboard?.columns ?? [];
+  const error =
+    leaderboardsState.status === "error"
+      ? leaderboardsState.error
+      : leaderboardState.status === "error"
+        ? leaderboardState.error
+        : null;
+  const resultColumns =
+    leaderboardState.status === "success" ? leaderboardState.data.columns : [];
 
   const handleLeaderboardChange = (value: string) => {
     setLeaderboardId(value);
-    setLeaderboard(null);
+    setLeaderboardState({ status: "idle" });
   };
 
   const handleFilterChange =
@@ -318,7 +340,7 @@ const CompetitionPage = ({
               lastUpdateTime={lastUpdateTime}
               columns={resultColumns}
               visibleRows={visibleRows}
-              leaderboardLoaded={leaderboard !== null}
+              leaderboardLoaded={leaderboardState.status === "success"}
             />
           </Columns.Column>
         </Columns>
