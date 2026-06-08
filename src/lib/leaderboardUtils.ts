@@ -2,29 +2,15 @@ import type { LeaderboardItem } from "../types/leaderboard";
 
 export const stringifyCell = (
   value: string | number | null | undefined,
-): string => {
-  if (value === null || value === undefined || value === "") {
-    return "-";
-  }
-
-  return String(value).trim();
-};
+): string => (!value && value !== 0 ? "" : String(value).trim());
 
 export const rowSearchText = (item: LeaderboardItem): string =>
   Object.values(item)
     .map((value) => stringifyCell(value).toLowerCase())
     .join(" ");
 
-export const isSectionRow = (item: LeaderboardItem): boolean => {
-  const meaningfulValues = Object.entries(item).filter(
-    ([, value]) => stringifyCell(value) !== "-",
-  );
-
-  return (
-    meaningfulValues.length === 2 &&
-    Object.prototype.hasOwnProperty.call(item, "classname")
-  );
-};
+export const isSectionRow = (item: LeaderboardItem): boolean =>
+  item.classname === "" || Object.keys(item).length === 2;
 
 const getEntryKey = (item: LeaderboardItem): string => {
   const stringified = stringifyCell(item.entry);
@@ -56,16 +42,11 @@ export const mergeRowsByEntry = (
     {},
   );
 
-  const appendedRows = incomingRows.filter((row) => {
-    const key = getEntryKey(row);
-    return Boolean(key) && !existingKeys[key];
-  });
+  const appendedRows = incomingRows.filter(
+    (row) => getEntryKey(row) && !existingKeys[getEntryKey(row)],
+  );
 
-  return [...mergedExistingRows, ...appendedRows].sort((a, b) => {
-    const indexA =
-      typeof a._index === "number" ? a._index : Number.MAX_SAFE_INTEGER;
-    const indexB =
-      typeof b._index === "number" ? b._index : Number.MAX_SAFE_INTEGER;
-    return indexA - indexB;
-  });
+  return [...mergedExistingRows, ...appendedRows].sort(
+    (a, b) => a._index - b._index,
+  );
 };

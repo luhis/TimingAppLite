@@ -2,8 +2,8 @@ import * as React from "react";
 import { Link, type HeadFC } from "gatsby";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLeaderboardStream } from "../../hooks/useLeaderboardStream";
-
 import { Columns, Container, Section } from "react-bulma-components";
+
 import {
   fetchAllCompetitions,
   fetchLeaderboard,

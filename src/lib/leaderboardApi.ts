@@ -1,6 +1,6 @@
 import type {
   Competition,
-  LeaderboardPayload,
+  LeaderboardPayloadFromApi,
   LeaderboardSummary,
 } from "../types/leaderboard";
 
@@ -48,7 +48,7 @@ export const fetchLeaderboard = async (
   leaderboardId: string,
   signal?: AbortSignal,
 ) =>
-  getJson<LeaderboardPayload>(
+  getJson<LeaderboardPayloadFromApi>(
     `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/Leaderboards/${encodeURIComponent(leaderboardId)}`,
     "Unable to load results",
     signal,

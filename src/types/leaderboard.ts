@@ -24,14 +24,22 @@ export type LeaderboardColumn = {
   readonly label: string;
 };
 
-export type LeaderboardItem = Record<
-  string,
-  string | number | null | undefined
->;
+export type LeaderboardItem = LeaderboardItemFromApi & {
+  readonly _index: number;
+};
+
+export type LeaderboardItemFromApi = {
+  readonly classname: string;
+} & Record<string, string | number | undefined>;
 
 export type LeaderboardPayload = {
   readonly columns: readonly LeaderboardColumn[];
   readonly items: readonly LeaderboardItem[];
+};
+
+export type LeaderboardPayloadFromApi = {
+  readonly columns: readonly LeaderboardColumn[];
+  readonly items: readonly LeaderboardItemFromApi[];
 };
 
 export type FilterState = {
