@@ -21,7 +21,7 @@ export const isSectionRow = (item: LeaderboardItem): boolean => {
   );
 
   return (
-    meaningfulValues.length === 1 &&
+    meaningfulValues.length === 2 &&
     Object.prototype.hasOwnProperty.call(item, "classname")
   );
 };
