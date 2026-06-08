@@ -6647,6 +6647,17 @@ gatsby-plugin-google-gtag@^5.16.0:
     "@babel/runtime" "^7.20.13"
     minimatch "^3.1.2"
 
+gatsby-plugin-manifest@^5.16.0:
+  version "5.16.0"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-manifest/-/gatsby-plugin-manifest-5.16.0.tgz#5462f503d3eb5121c4d8ac751bc706829b51a840"
+  integrity sha512-2lGnuA0Vg09yOKJIF2edTkXmtUhXNupWFDV2OIk2j2dP52P0Ezg4pLYYtM4UdtGpgqirMvwHRhgVxH/LElKHUg==
+  dependencies:
+    "@babel/runtime" "^7.20.13"
+    gatsby-core-utils "^4.16.0"
+    gatsby-plugin-utils "^4.16.0"
+    semver "^7.5.3"
+    sharp "^0.32.6"
+
 gatsby-plugin-page-creator@^5.16.0:
   version "5.16.0"
   resolved "https://registry.yarnpkg.com/gatsby-plugin-page-creator/-/gatsby-plugin-page-creator-5.16.0.tgz#cc0c85a3988ee09027d5a535593148b780805172"

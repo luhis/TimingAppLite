@@ -19,6 +19,15 @@ const config: GatsbyConfig = {
         trackingIds: ["G-W4H1SJZHT3"],
       },
     },
+    {
+      resolve: `gatsby-plugin-manifest`,
+      options: {
+        name: "Timing App Lite",
+        short_name: "Timing App",
+        start_url: "/",
+        icon: "static/favicon.svg",
+      },
+    },
   ],
 };
 
