@@ -20,6 +20,11 @@ import {
   competitionStatusColor,
   competitionStatusLabel,
 } from "../lib/competitionStatus";
+
+type AsyncData<T> =
+  | { readonly status: "loading" }
+  | { readonly status: "error"; readonly error: string }
+  | { readonly status: "success"; readonly data: T };
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Footer } from "../components/Footer";
 import { parseDate } from "../lib/dataParser";
@@ -27,27 +32,27 @@ import { parseDate } from "../lib/dataParser";
 import "bulma/css/bulma.min.css";
 
 const IndexPage = () => {
-  const [competitions, setCompetitions] = useState<readonly Competition[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<AsyncData<readonly Competition[]>>({
+    status: "loading",
+  });
 
   useEffect(() => {
     const controller = new AbortController();
 
     const loadCompetitions = async () => {
-      setLoading(true);
-      setError(null);
+      setState({ status: "loading" });
 
       try {
         const data = await fetchAllCompetitions(controller.signal);
         if (!controller.signal.aborted) {
-          setCompetitions(data);
-          setLoading(false);
+          setState({ status: "success", data });
         }
       } catch (fetchError) {
         if (!controller.signal.aborted && !isAbortError(fetchError)) {
-          setError(getErrorMessage(fetchError, "Unable to load competitions"));
-          setLoading(false);
+          setState({
+            status: "error",
+            error: getErrorMessage(fetchError, "Unable to load competitions"),
+          });
         }
       }
     };
@@ -74,15 +79,19 @@ const IndexPage = () => {
           </Hero.Body>
         </Hero>
 
-        {loading && <p className="has-text-grey">Loading competitions…</p>}
-        {error && <p className="has-text-danger">{error}</p>}
-        {!loading && !error && competitions.length === 0 && (
+        {state.status === "loading" && (
+          <p className="has-text-grey">Loading competitions…</p>
+        )}
+        {state.status === "error" && (
+          <p className="has-text-danger">{state.error}</p>
+        )}
+        {state.status === "success" && state.data.length === 0 && (
           <p className="has-text-grey">No competitions found.</p>
         )}
 
-        {competitions.length > 0 && (
+        {state.status === "success" && state.data.length > 0 && (
           <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
-            {competitions.map((competition) => (
+            {state.data.map((competition) => (
               <Panel.Block
                 key={competition.id}
                 renderAs={Link}
