@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Link, type HeadFC } from "gatsby";
-import { useEffect, useState } from "react";
+import { graphql, Link, type HeadFC } from "gatsby";
+import { useEffect, useMemo, useState } from "react";
 import {
   Container,
   Heading,
@@ -11,12 +11,8 @@ import {
 } from "react-bulma-components";
 import { newValidDate } from "ts-date";
 
-import {
-  fetchAllCompetitions,
-  isAbortError,
-  getErrorMessage,
-} from "../lib/leaderboardApi";
-import { type Competition } from "../types/leaderboard";
+import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
+import { type Competition, CompetitionStatus } from "../types/leaderboard";
 import {
   competitionStatusColor,
   competitionStatusLabel,
@@ -25,43 +21,64 @@ import {
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Footer } from "../components/Footer";
 import { parseDate } from "../lib/dataParser";
-import { AsyncData } from "../types/asyncData";
 
 import "bulma/css/bulma.min.css";
 
-const IndexPage = () => {
-  const [state, setState] = useState<AsyncData<readonly Competition[]>>({
-    status: "loading",
-  });
+type IndexPageData = {
+  readonly allCompetition: {
+    readonly nodes: readonly {
+      readonly id: string;
+      readonly name: string;
+      readonly dateddmmyyyy: string;
+      readonly active: string;
+      readonly provisional: string | null;
+      readonly finalised: string | null;
+    }[];
+  };
+};
+
+const IndexPage = ({ data }: { readonly data: IndexPageData }) => {
+  const initialCompetitions = useMemo<readonly Competition[]>(
+    () =>
+      data.allCompetition.nodes.map(
+        (node: IndexPageData["allCompetition"]["nodes"][number]) => ({
+          id: node.id,
+          name: node.name,
+          dateddmmyyyy: parseDate(node.dateddmmyyyy) || newValidDate(),
+          active: node.active as CompetitionStatus,
+          provisional: node.provisional,
+          finalised: node.finalised,
+        }),
+      ),
+    [data],
+  );
+
+  const [competitions, setCompetitions] =
+    useState<readonly Competition[]>(initialCompetitions);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    const loadCompetitions = async () => {
-      setState({ status: "loading" });
-
+    const refreshCompetitions = async () => {
       try {
-        const data = await fetchAllCompetitions(controller.signal);
+        const freshData = await fetchAllCompetitions(controller.signal);
         if (!controller.signal.aborted) {
-          setState({
-            status: "success",
-            data: data.map((d) => ({
+          setCompetitions(
+            freshData.map((d) => ({
               ...d,
               dateddmmyyyy: parseDate(d.dateddmmyyyy) || newValidDate(),
             })),
-          });
+          );
         }
       } catch (fetchError) {
+        // Keep existing data on error
         if (!controller.signal.aborted && !isAbortError(fetchError)) {
-          setState({
-            status: "error",
-            error: getErrorMessage(fetchError, "Unable to load competitions"),
-          });
+          console.warn("Failed to refresh competitions:", fetchError);
         }
       }
     };
 
-    void loadCompetitions();
+    void refreshCompetitions();
 
     return () => {
       controller.abort();
@@ -83,19 +100,11 @@ const IndexPage = () => {
           </Hero.Body>
         </Hero>
 
-        {state.status === "loading" && (
-          <p className="has-text-grey">Loading competitions…</p>
-        )}
-        {state.status === "error" && (
-          <p className="has-text-danger">{state.error}</p>
-        )}
-        {state.status === "success" && state.data.length === 0 && (
+        {competitions.length === 0 ? (
           <p className="has-text-grey">No competitions found.</p>
-        )}
-
-        {state.status === "success" && state.data.length > 0 && (
+        ) : (
           <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
-            {state.data.map((competition) => (
+            {competitions.map((competition) => (
               <Panel.Block
                 key={competition.id}
                 renderAs={Link}
@@ -125,6 +134,21 @@ const IndexPage = () => {
 };
 
 export default IndexPage;
+
+export const query = graphql`
+  query {
+    allCompetition {
+      nodes {
+        id
+        name
+        dateddmmyyyy
+        active
+        provisional
+        finalised
+      }
+    }
+  }
+`;
 
 export const Head: HeadFC = () => (
   <>
