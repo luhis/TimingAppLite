@@ -125,22 +125,18 @@ export const ControlsPanel = ({
       </Form.Control>
     </Form.Field>
 
-    <Form.Field kind="group">
-      <Form.Control>
-        <Button color="light" type="button" onClick={onResetFilters}>
-          Reset filters
-        </Button>
-      </Form.Control>
-      <Form.Control>
-        <Button
-          color="link"
-          type="button"
-          onClick={onRefresh}
-          disabled={!leaderboardId || isBusy}
-        >
-          Refresh now
-        </Button>
-      </Form.Control>
-    </Form.Field>
+    <Button.Group>
+      <Button color="light" type="button" onClick={onResetFilters}>
+        Reset filters
+      </Button>
+      <Button
+        color="link"
+        type="button"
+        onClick={onRefresh}
+        disabled={!leaderboardId || isBusy}
+      >
+        Refresh now
+      </Button>
+    </Button.Group>
   </Box>
 );
