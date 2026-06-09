@@ -9,10 +9,8 @@ import {
   Section,
   Tag,
 } from "react-bulma-components";
-import { newValidDate } from "ts-date";
-
 import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
-import { type Competition, CompetitionStatus } from "../types/leaderboard";
+import { type Competition, CompetitionFromApi } from "../types/leaderboard";
 import {
   competitionStatusColor,
   competitionStatusLabel,
@@ -20,20 +18,13 @@ import {
 
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Footer } from "../components/Footer";
-import { parseDate } from "../lib/dataParser";
+import { parseCompetitionDate } from "../lib/dataParser";
 
 import "bulma/css/bulma.min.css";
 
 type IndexPageData = {
   readonly allCompetition: {
-    readonly nodes: readonly {
-      readonly id: string;
-      readonly name: string;
-      readonly dateddmmyyyy: string;
-      readonly active: string;
-      readonly provisional: string | null;
-      readonly finalised: string | null;
-    }[];
+    readonly nodes: readonly CompetitionFromApi[];
   };
 };
 
@@ -42,10 +33,10 @@ const IndexPage = ({ data }: { readonly data: IndexPageData }) => {
     () =>
       data.allCompetition.nodes.map(
         (node: IndexPageData["allCompetition"]["nodes"][number]) => ({
+          ...parseCompetitionDate(node),
           id: node.id,
           name: node.name,
-          dateddmmyyyy: parseDate(node.dateddmmyyyy) || newValidDate(),
-          active: node.active as CompetitionStatus,
+          active: node.active,
           provisional: node.provisional,
           finalised: node.finalised,
         }),
@@ -63,12 +54,7 @@ const IndexPage = ({ data }: { readonly data: IndexPageData }) => {
       try {
         const freshData = await fetchAllCompetitions(controller.signal);
         if (!controller.signal.aborted) {
-          setCompetitions(
-            freshData.map((d) => ({
-              ...d,
-              dateddmmyyyy: parseDate(d.dateddmmyyyy) || newValidDate(),
-            })),
-          );
+          setCompetitions(freshData.map(parseCompetitionDate));
         }
       } catch (fetchError) {
         // Keep existing data on error

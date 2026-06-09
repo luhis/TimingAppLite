@@ -3,7 +3,6 @@ import { Link, type HeadFC } from "gatsby";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLeaderboardStream } from "../../hooks/useLeaderboardStream";
 import { Columns, Container, Section } from "react-bulma-components";
-import { newValidDate } from "ts-date";
 
 import {
   fetchAllCompetitions,
@@ -31,9 +30,9 @@ import { ControlsPanel } from "../../components/ControlsPanel";
 import { Footer } from "../../components/Footer";
 import { HeroPanel } from "../../components/HeroPanel";
 import { ResultsPanel } from "../../components/ResultsPanel";
+import { parseCompetitionDate } from "../../lib/dataParser";
 
 import "bulma/css/bulma.min.css";
-import { parseDate } from "../../lib/dataParser";
 
 const initialFilters: FilterState = {
   query: "",
@@ -74,10 +73,7 @@ const CompetitionPage = ({
     const loadCompetition = async () => {
       try {
         const data = await fetchAllCompetitions(controller.signal);
-        const parsed = data.map((d) => ({
-          ...d,
-          dateddmmyyyy: parseDate(d.dateddmmyyyy) || newValidDate(),
-        }));
+        const parsed = data.map(parseCompetitionDate);
         if (!controller.signal.aborted) {
           setCompetition(parsed.find((c) => c.id === competitionId) ?? null);
         }
