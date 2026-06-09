@@ -1,9 +1,7 @@
 {
   "extends": ["config:base"],
   "automerge": true,
-  "allowedPostUpgradeCommands": ["yarn dedupe"],
-  "postUpgradeTasks": {
-    "commands": ["yarn dedupe"],
-    "fileFilters": ["yarn.lock"]
-  }
+  "automergeType": "branch",
+  "schedule": ["after 1am and before 2am"],
+  "postUpdateOptions": ["yarnDedupeHighest"]
 }
