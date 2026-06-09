@@ -1,3 +1,5 @@
+import { ValidDate } from "ts-date";
+
 type Override<T, U> = Omit<T, keyof U> & U;
 
 export enum CompetitionStatus {
@@ -7,7 +9,7 @@ export enum CompetitionStatus {
   Provisional = "3",
 }
 
-export type Competition = {
+export type CompetitionFromApi = {
   readonly id: string;
   readonly active: CompetitionStatus;
   readonly name: string;
@@ -15,6 +17,11 @@ export type Competition = {
   readonly provisional: string | null;
   readonly finalised: string | null;
 };
+
+export type Competition = Override<
+  CompetitionFromApi,
+  { readonly dateddmmyyyy: ValidDate }
+>;
 
 export type LeaderboardSummary = {
   readonly id: string | number;

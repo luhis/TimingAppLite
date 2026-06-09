@@ -9,6 +9,7 @@ import {
   Section,
   Tag,
 } from "react-bulma-components";
+import { newValidDate } from "ts-date";
 
 import {
   fetchAllCompetitions,
@@ -42,7 +43,13 @@ const IndexPage = () => {
       try {
         const data = await fetchAllCompetitions(controller.signal);
         if (!controller.signal.aborted) {
-          setState({ status: "success", data });
+          setState({
+            status: "success",
+            data: data.map((d) => ({
+              ...d,
+              dateddmmyyyy: parseDate(d.dateddmmyyyy) || newValidDate(),
+            })),
+          });
         }
       } catch (fetchError) {
         if (!controller.signal.aborted && !isAbortError(fetchError)) {
@@ -102,10 +109,10 @@ const IndexPage = () => {
                 </span>
                 <span>
                   &nbsp;
-                  <CompetitionDate date={parseDate(competition.dateddmmyyyy)} />
+                  <CompetitionDate date={competition.dateddmmyyyy} />
                 </span>
                 <span className="has-text-grey is-size-7 ml-auto">
-                  {competition.dateddmmyyyy}
+                  {competition.dateddmmyyyy.toLocaleDateString("en-gb")}
                 </span>
               </Panel.Block>
             ))}

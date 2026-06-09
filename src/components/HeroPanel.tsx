@@ -19,7 +19,7 @@ const formatMeta = (competition: Competition | null): string => {
     return `Provisional ${competition.provisional}`;
   }
 
-  return `🏎️ ${competition.dateddmmyyyy} 🏁 event feed`;
+  return `${competition.dateddmmyyyy.toLocaleDateString("en-gb")} event feed`;
 };
 
 type HeroPanelProps = {
@@ -35,7 +35,7 @@ export const HeroPanel = ({ selectedCompetition }: HeroPanelProps) => (
       <Heading renderAs="h2" size={3} className="mb-2">
         {selectedCompetition?.name ?? "Loading current event"}
       </Heading>
-      <p>{formatMeta(selectedCompetition)}</p>
+      <p>🏎️ {formatMeta(selectedCompetition)} 🏁</p>
     </Hero.Body>
   </Hero>
 );

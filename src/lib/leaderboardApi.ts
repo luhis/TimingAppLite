@@ -1,5 +1,5 @@
 import type {
-  Competition,
+  CompetitionFromApi,
   LeaderboardPayloadFromApi,
   LeaderboardSummary,
 } from "../types/leaderboard";
@@ -27,7 +27,7 @@ const getJson = async <T>(
 };
 
 export const fetchAllCompetitions = async (signal?: AbortSignal) =>
-  getJson<readonly Competition[]>(
+  getJson<readonly CompetitionFromApi[]>(
     `${API_BASE}/LiveAllCompetitions`,
     "Unable to load competitions",
     signal,
