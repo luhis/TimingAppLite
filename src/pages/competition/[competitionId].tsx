@@ -137,7 +137,7 @@ const CompetitionPage = ({
     return () => {
       controller.abort();
     };
-  }, [competitionId, requestedLeaderboardId, refreshTick]);
+  }, [competitionId, requestedLeaderboardId]);
 
   useEffect(() => {
     if (!competitionId || !leaderboardId) {
