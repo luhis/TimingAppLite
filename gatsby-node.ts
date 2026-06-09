@@ -38,7 +38,7 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
     console.log(`✅ Fetched ${competitions.length} competitions`);
 
     competitions.forEach((competition) => {
-      createNode({
+      void createNode({
         ...competition,
         id: createNodeId(`Competition-${competition.id}`),
         parent: null,
