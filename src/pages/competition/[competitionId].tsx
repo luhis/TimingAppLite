@@ -13,6 +13,7 @@ import {
 } from "../../lib/leaderboardApi";
 import {
   type Competition,
+  CompetitionStatus,
   type FilterState,
   type LeaderboardColumn,
   type LeaderboardItem,
@@ -204,10 +205,14 @@ const CompetitionPage = ({
     [],
   );
 
+  // Only enable SignalR streaming if the competition is live
+  const isCompetitionLive = competition?.active === CompetitionStatus.Live;
+  const enableStreaming = streamResults && isCompetitionLive;
+
   useLeaderboardStream(
     competitionId,
     leaderboardId,
-    streamResults,
+    enableStreaming,
     handleRowUpdate,
     handleColumnUpdate,
   );
