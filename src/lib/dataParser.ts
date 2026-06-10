@@ -1,4 +1,5 @@
 import { newValidDate } from "ts-date";
+
 import { Competition, CompetitionFromApi } from "../types/leaderboard";
 
 export const parseDate = (date: string) => {

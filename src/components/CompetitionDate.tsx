@@ -1,6 +1,6 @@
+import * as React from "react";
 import { Icon } from "react-bulma-components";
 import { newValidDate, type ValidDate } from "ts-date";
-import * as React from "react";
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 

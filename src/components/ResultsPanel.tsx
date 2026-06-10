@@ -1,7 +1,8 @@
 import * as React from "react";
 import { Box, Heading, Notification, Table } from "react-bulma-components";
-import type { LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
+
 import { isSectionRow, stringifyCell } from "../lib/leaderboardUtils";
+import type { LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
 
 type ResultsPanelProps = {
   readonly selectedLeaderboardName: string | undefined;
