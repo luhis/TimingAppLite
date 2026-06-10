@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
 import { graphql, Link, type HeadFC } from "gatsby";
+import { useEffect, useMemo, useState } from "react";
 import {
   Container,
   Heading,
@@ -10,7 +10,6 @@ import {
   Tag,
 } from "react-bulma-components";
 import { diffDate, newValidDate } from "ts-date";
-import "bulma/css/bulma.min.css";
 
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Footer } from "../components/Footer";
@@ -22,17 +21,23 @@ import { parseCompetitionDate } from "../lib/dataParser";
 import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
 import { type Competition, CompetitionFromApi } from "../types/leaderboard";
 
-type IndexPageData = {
+import "bulma/css/bulma.min.css";
+
+type HistoricalEventsPageData = {
   readonly allCompetition: {
     readonly nodes: readonly CompetitionFromApi[];
   };
 };
 
-const IndexPage = ({ data }: { readonly data: IndexPageData }) => {
+const HistoricalEventsPage = ({
+  data,
+}: {
+  readonly data: HistoricalEventsPageData;
+}) => {
   const initialCompetitions = useMemo<readonly Competition[]>(
     () =>
       data.allCompetition.nodes.map(
-        (node: IndexPageData["allCompetition"]["nodes"][number]) =>
+        (node: HistoricalEventsPageData["allCompetition"]["nodes"][number]) =>
           parseCompetitionDate(node),
       ),
     [data],
@@ -65,39 +70,38 @@ const IndexPage = ({ data }: { readonly data: IndexPageData }) => {
     };
   }, []);
 
-  const currentCompetitions = useMemo(() => {
+  const historicalCompetitions = useMemo(() => {
     const today = newValidDate();
-    return competitions.filter(
-      (competition) => diffDate(competition.dateddmmyyyy, today) >= 0,
-    );
+    return competitions
+      .filter((competition) => diffDate(competition.dateddmmyyyy, today) < 0)
+      .sort((a, b) => b.dateddmmyyyy.getTime() - a.dateddmmyyyy.getTime());
   }, [competitions]);
 
   return (
     <Section>
       <Container>
+        <div className="mb-4">
+          <Link to="/" className="has-text-link is-size-6">
+            ← Current events
+          </Link>
+        </div>
         <Hero className="is-info is-small">
           <Hero.Body>
             <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7">
               Gatsby TypeScript leaderboard app
             </p>
             <Heading renderAs="h2" size={3} className="mb-2">
-              Live autotest results.
+              Historical events.
             </Heading>
-            <p>Select a competition below to view its leaderboards.</p>
+            <p>Browse past competition results.</p>
           </Hero.Body>
         </Hero>
 
-        <div className="mb-3">
-          <Link to="/historical-events" className="has-text-link is-size-6">
-            View historical events →
-          </Link>
-        </div>
-
-        {currentCompetitions.length === 0 ? (
-          <p className="has-text-grey">No current competitions found.</p>
+        {historicalCompetitions.length === 0 ? (
+          <p className="has-text-grey">No historical competitions found.</p>
         ) : (
           <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
-            {currentCompetitions.map((competition) => (
+            {historicalCompetitions.map((competition) => (
               <Panel.Block
                 key={competition.id}
                 renderAs={Link}
@@ -126,7 +130,7 @@ const IndexPage = ({ data }: { readonly data: IndexPageData }) => {
   );
 };
 
-export default IndexPage;
+export default HistoricalEventsPage;
 
 export const query = graphql`
   query {
@@ -145,10 +149,10 @@ export const query = graphql`
 
 export const Head: HeadFC = () => (
   <>
-    <title>Timing App Lite</title>
+    <title>Historical Events · Timing App Lite</title>
     <meta
       name="description"
-      content="Gatsby TypeScript leaderboard app powered by the Sapphire Solutions autotest API."
+      content="Browse past competition results from the Sapphire Solutions autotest API."
     />
   </>
 );
