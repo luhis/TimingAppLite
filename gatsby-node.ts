@@ -40,6 +40,7 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
     competitions.forEach((competition) => {
       void createNode({
         ...competition,
+        competitionId: competition.id, // Preserve original ID for reference
         id: createNodeId(`Competition-${competition.id}`),
         parent: null,
         children: [],
