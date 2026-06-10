@@ -21,8 +21,6 @@ import { parseCompetitionDate } from "../lib/dataParser";
 import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
 import { type Competition, CompetitionFromApi } from "../types/leaderboard";
 
-import "bulma/css/bulma.min.css";
-
 type HistoricalEventsPageData = {
   readonly allCompetition: {
     readonly nodes: readonly CompetitionFromApi[];

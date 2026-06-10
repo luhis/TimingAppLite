@@ -32,8 +32,6 @@ import { HeroPanel } from "../../components/HeroPanel";
 import { ResultsPanel } from "../../components/ResultsPanel";
 import { parseCompetitionDate } from "../../lib/dataParser";
 
-import "bulma/css/bulma.min.css";
-
 const initialFilters: FilterState = {
   query: "",
   driver: "",

@@ -10,7 +10,6 @@ import {
   Tag,
 } from "react-bulma-components";
 import { diffDate, newValidDate } from "ts-date";
-import "bulma/css/bulma.min.css";
 
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Footer } from "../components/Footer";
