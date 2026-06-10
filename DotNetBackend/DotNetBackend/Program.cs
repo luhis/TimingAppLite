@@ -35,7 +35,9 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowCredentials()));
 
-builder.Services.AddOpenApi();
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddOpenApi();
+
 builder.Services.AddHealthChecks();
 
 builder.Services.AddSignalR()
