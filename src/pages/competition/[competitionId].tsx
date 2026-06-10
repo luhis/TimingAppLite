@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, type HeadFC } from "gatsby";
 import { Columns, Container, Section } from "react-bulma-components";
 import { newValidDate } from "ts-date";
-import "bulma/css/bulma.min.css";
 
 import { ControlsPanel } from "../../components/ControlsPanel";
 import { Footer } from "../../components/Footer";
@@ -34,18 +33,6 @@ import {
   type LeaderboardPayload,
   type LeaderboardSummary,
 } from "../../types/leaderboard";
-import type { AsyncData } from "../../types/asyncData";
-import {
-  isSectionRow,
-  mergeRowsByEntry,
-  rowSearchText,
-  stringifyCell,
-} from "../../lib/leaderboardUtils";
-import { ControlsPanel } from "../../components/ControlsPanel";
-import { Footer } from "../../components/Footer";
-import { HeroPanel } from "../../components/HeroPanel";
-import { ResultsPanel } from "../../components/ResultsPanel";
-import { parseCompetitionDate } from "../../lib/dataParser";
 
 const initialFilters: FilterState = {
   query: "",
