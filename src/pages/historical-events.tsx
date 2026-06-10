@@ -1,8 +1,9 @@
 import * as React from "react";
-import { graphql, Link, type HeadFC } from "gatsby";
 import { useEffect, useMemo, useState } from "react";
+import { graphql, Link, PageProps, type HeadFC } from "gatsby";
 import {
   Container,
+  Footer,
   Heading,
   Hero,
   Panel,
@@ -12,32 +13,16 @@ import {
 import { diffDate, newValidDate } from "ts-date";
 
 import { CompetitionDate } from "../components/CompetitionDate";
-import { Footer } from "../components/Footer";
-import {
-  competitionStatusColor,
-  competitionStatusLabel,
-} from "../lib/competitionStatus";
-import { parseCompetitionDate } from "../lib/dataParser";
+import { Competition } from "../types/leaderboard";
+import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
 import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
-import { type Competition, CompetitionFromApi } from "../types/leaderboard";
+import { competitionStatusColor, competitionStatusLabel } from "../lib/competitionStatus";
 
-type HistoricalEventsPageData = {
-  readonly allCompetition: {
-    readonly nodes: readonly CompetitionFromApi[];
-  };
-};
-
-const HistoricalEventsPage = ({
-  data,
-}: {
-  readonly data: HistoricalEventsPageData;
-}) => {
+const HistoricalEventsPage: React.FC<
+  PageProps<Queries.HistoricalEventsPageQueryQuery>
+> = ({ data }) => {
   const initialCompetitions = useMemo<readonly Competition[]>(
-    () =>
-      data.allCompetition.nodes.map(
-        (node: HistoricalEventsPageData["allCompetition"]["nodes"][number]) =>
-          parseCompetitionDate(node),
-      ),
+    () => data.allCompetition.nodes.map(mapCompetitionNode),
     [data],
   );
 
@@ -131,10 +116,10 @@ const HistoricalEventsPage = ({
 export default HistoricalEventsPage;
 
 export const query = graphql`
-  query {
+  query HistoricalEventsPageQuery {
     allCompetition {
       nodes {
-        id
+        competitionId
         name
         dateddmmyyyy
         active

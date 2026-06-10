@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { graphql, Link, type HeadFC } from "gatsby";
+import { graphql, Link, PageProps, type HeadFC } from "gatsby";
 import {
   Container,
   Heading,
@@ -17,23 +17,15 @@ import {
   competitionStatusColor,
   competitionStatusLabel,
 } from "../lib/competitionStatus";
-import { parseCompetitionDate } from "../lib/dataParser";
+import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
 import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
-import { type Competition, CompetitionFromApi } from "../types/leaderboard";
+import { type Competition } from "../types/leaderboard";
 
-type IndexPageData = {
-  readonly allCompetition: {
-    readonly nodes: readonly CompetitionFromApi[];
-  };
-};
-
-const IndexPage = ({ data }: { readonly data: IndexPageData }) => {
+const IndexPage: React.FC<PageProps<Queries.IndexPageQueryQuery>> = ({
+  data,
+}) => {
   const initialCompetitions = useMemo<readonly Competition[]>(
-    () =>
-      data.allCompetition.nodes.map(
-        (node: IndexPageData["allCompetition"]["nodes"][number]) =>
-          parseCompetitionDate(node),
-      ),
+    () => data.allCompetition.nodes.map(mapCompetitionNode),
     [data],
   );
 
@@ -128,10 +120,10 @@ const IndexPage = ({ data }: { readonly data: IndexPageData }) => {
 export default IndexPage;
 
 export const query = graphql`
-  query {
-    allCompetition {
+  query IndexPageQuery {
+    allCompetition(filter: { competitionId: { ne: null } }) {
       nodes {
-        id
+        competitionId
         name
         dateddmmyyyy
         active
