@@ -121,7 +121,7 @@ export default IndexPage;
 
 export const query = graphql`
   query IndexPageQuery {
-    allCompetition(filter: { competitionId: { ne: null } }) {
+    allCompetition {
       nodes {
         competitionId
         name
