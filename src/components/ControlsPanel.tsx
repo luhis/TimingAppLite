@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Box, Button, Form, Heading } from "react-bulma-components";
+
 import { signalRHubUrl } from "../hooks/useLeaderboardStream";
 import type { FilterState, LeaderboardSummary } from "../types/leaderboard";
 

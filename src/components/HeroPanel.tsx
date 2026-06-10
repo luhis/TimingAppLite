@@ -1,10 +1,11 @@
 import * as React from "react";
 import { Heading, Hero, Tag } from "react-bulma-components";
-import { type Competition } from "../types/leaderboard";
+
 import {
   competitionStatusColor,
   competitionStatusLabel,
 } from "../lib/competitionStatus";
+import { type Competition } from "../types/leaderboard";
 
 const formatMeta = (competition: Competition | null): string => {
   if (!competition) {

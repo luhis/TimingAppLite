@@ -1,9 +1,16 @@
 import * as React from "react";
-import { Link, type HeadFC } from "gatsby";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLeaderboardStream } from "../../hooks/useLeaderboardStream";
+import { Link, type HeadFC } from "gatsby";
 import { Columns, Container, Section } from "react-bulma-components";
+import { newValidDate } from "ts-date";
+import "bulma/css/bulma.min.css";
 
+import { ControlsPanel } from "../../components/ControlsPanel";
+import { Footer } from "../../components/Footer";
+import { HeroPanel } from "../../components/HeroPanel";
+import { ResultsPanel } from "../../components/ResultsPanel";
+import { useLeaderboardStream } from "../../hooks/useLeaderboardStream";
+import { parseCompetitionDate } from "../../lib/dataParser";
 import {
   fetchAllCompetitions,
   fetchLeaderboard,
@@ -11,6 +18,13 @@ import {
   isAbortError,
   getErrorMessage,
 } from "../../lib/leaderboardApi";
+import {
+  isSectionRow,
+  mergeRowsByEntry,
+  rowSearchText,
+  stringifyCell,
+} from "../../lib/leaderboardUtils";
+import type { AsyncData } from "../../types/asyncData";
 import {
   type Competition,
   CompetitionStatus,
@@ -205,9 +219,12 @@ const CompetitionPage = ({
     [],
   );
 
-  // Only enable SignalR streaming if the competition is live
+  // Only enable SignalR streaming if the competition is live and happening today
   const isCompetitionLive = competition?.active === CompetitionStatus.Live;
-  const enableStreaming = streamResults && isCompetitionLive;
+  const isToday = competition?.dateddmmyyyy
+    ? competition.dateddmmyyyy.toDateString() === newValidDate().toDateString()
+    : false;
+  const enableStreaming = streamResults && isCompetitionLive && isToday;
 
   useLeaderboardStream(
     competitionId,
