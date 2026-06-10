@@ -499,5 +499,5 @@ MigrationBackup/
 node_modules/
 .cache/
 public
-src/gatsby-types.d.ts
+#src/gatsby-types.d.ts
 >>>>>>> 0a369b2 (initial commit)
