@@ -39,7 +39,7 @@ jobs:
           dockerfilePath: Dockerfile
           registryUrl: ghcr.io
           registryUsername: ${{ github.actor }}
-          registryPassword: ${{ secrets.GITHUB_TOKEN }}
+          registryPassword: ${{ secrets.PAT_TOKEN }}
           containerAppName: timingapplite
           resourceGroup: AutoTest
           imageToBuild: ghcr.io/${{ github.repository_owner }}/timingapplite:${{ github.sha }}
