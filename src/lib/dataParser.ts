@@ -6,7 +6,7 @@ export const parseDate = (date: string) => {
 };
 
 export const parseCompetitionDate = (
-  item: CompetitionFromApi
+  item: CompetitionFromApi,
 ): Competition => ({
   ...item,
   dateddmmyyyy: parseDate(item.dateddmmyyyy) || newValidDate(),
