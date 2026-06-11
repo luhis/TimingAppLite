@@ -3,8 +3,18 @@ name: DotNetBackend CI
 on:
   push:
     branches: ['**']
+    paths:
+      - 'DotNetBackend/**'
+      - '.github/workflows/dotnetbackend-ci.yml'
   pull_request:
     branches: ['**']
+    paths:
+      - 'DotNetBackend/**'
+      - '.github/workflows/dotnetbackend-ci.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
