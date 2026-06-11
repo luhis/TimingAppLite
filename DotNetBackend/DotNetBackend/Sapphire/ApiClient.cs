@@ -1,7 +1,6 @@
 using DotNetBackend.Dto;
 using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
-using System.Text.Json;
 
 namespace DotNetBackend.Sapphire;
 
@@ -10,25 +9,14 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
     private const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk/API/1";
     private readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(
         configuration.GetValue<int>("ApiClient:CacheDurationSeconds", 30));
-    private static readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        Converters = { new ForgivingDictionaryConverter() },
-        TypeInfoResolver = AppJsonContext.Default,
-    };
-
     async Task<LeaderboardDto> IApiClient.GetResults(int competitionId, int leaderboardId, CancellationToken ct)
     {
         var client = httpClientFactory.CreateClient();
         var url = LeaderboardsUrl(competitionId, leaderboardId);
         using var resp = await client.GetAsync(url, ct);
         resp.EnsureSuccessStatusCode();
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
-#pragma warning disable IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
-        return await resp.Content.ReadFromJsonAsync<LeaderboardDto>(_jsonOptions, ct)
+        return await resp.Content.ReadFromJsonAsync(AppJsonContext.Default.LeaderboardDto, ct)
             ?? throw new InvalidOperationException($"Empty response from {url}");
-#pragma warning restore IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
     }
 
     async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
