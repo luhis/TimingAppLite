@@ -100,11 +100,9 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQueryQuery>> = ({
                 <span className="has-text-weight-medium">
                   {competition.name}
                 </span>
-                <span>
-                  &nbsp;
-                  <CompetitionDate date={competition.dateddmmyyyy} />
-                </span>
                 <span className="has-text-grey is-size-7 ml-auto">
+                  <CompetitionDate date={competition.dateddmmyyyy} />
+                  &nbsp;
                   {competition.dateddmmyyyy.toLocaleDateString("en-gb")}
                 </span>
               </Panel.Block>
