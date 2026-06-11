@@ -40,6 +40,8 @@ const initialFilters: FilterState = {
   className: "",
 };
 
+const classNamesToAlwaysInclude = ["Autosolo", "Autotest", "PCA", " "];
+
 const CompetitionPage = ({
   params,
   location,
@@ -238,8 +240,6 @@ const CompetitionPage = ({
     const driver = filters.driver.trim().toLowerCase();
     const className = filters.className.trim().toLowerCase();
 
-    const classNamesToAlwaysInclude = ["Autosolo", "Autotest", "PCA", " "];
-
     return leaderboard.items.filter((item) => {
       const matchesQuery = !query || rowSearchText(item).includes(query);
       const matchesDriver =
@@ -270,11 +270,7 @@ const CompetitionPage = ({
     );
   }, [leaderboardState]);
 
-  const sectionCount = useMemo(
-    () => visibleRows.filter(isSectionRow).length,
-    [visibleRows],
-  );
-  const dataRowCount = visibleRows.length - sectionCount;
+  const dataRowCount = visibleRows.length - visibleRows.filter(isSectionRow).length;
   const loadingLeaderboards = leaderboardsState.status === "loading";
   const loadingResults = leaderboardState.status === "loading";
   const isBusy = loadingLeaderboards || loadingResults;
@@ -301,11 +297,6 @@ const CompetitionPage = ({
   const handleClassChange = (value: string) => {
     setFilters((current) => ({ ...current, className: value }));
   };
-
-  const handleStreamResultsChange = (checked: boolean) =>
-    setStreamResults(checked);
-
-  const resetFilters = () => setFilters(initialFilters);
 
   const refreshCurrentSelection = () => {
     if (competitionId && leaderboardId && !isBusy) {
@@ -335,8 +326,8 @@ const CompetitionPage = ({
               onLeaderboardChange={handleLeaderboardChange}
               onFilterChange={handleFilterChange}
               onClassChange={handleClassChange}
-              onStreamResultsChange={handleStreamResultsChange}
-              onResetFilters={resetFilters}
+              onStreamResultsChange={setStreamResults}
+              onResetFilters={() => setFilters(initialFilters)}
               onRefresh={refreshCurrentSelection}
             />
           </Columns.Column>
