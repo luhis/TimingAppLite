@@ -2,6 +2,11 @@
 
 Timing App Lite is a Gatsby TypeScript app that reads the live Sapphire Solutions autotest leaderboard API and renders a searchable results list.
 
+## Project Structure
+
+- `frontend/` - Gatsby TypeScript frontend application
+- `DotNetBackend/` - .NET backend API
+
 ## What it does
 
 - Loads live competitions from `https://autotest.sapphire-solutions.co.uk/API/1/LiveCompetitions/`
@@ -12,6 +17,7 @@ Timing App Lite is a Gatsby TypeScript app that reads the live Sapphire Solution
 ## Development
 
 ```powershell
+cd frontend
 yarn install
 yarn run develop
 ```
@@ -21,13 +27,14 @@ The site will be available at `http://localhost:8000`.
 ## Validation
 
 ```powershell
+cd frontend
 yarn run typecheck
 yarn run build
 ```
 
 ## Settings
 
-Create a `.env` file with:
+Create a `frontend/.env` file with:
 
 ```sh
 GATSBY_BACKEND_URL=http://localhost:5167
