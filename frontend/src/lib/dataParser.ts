@@ -1,6 +1,10 @@
 import { newValidDate } from "ts-date";
 
-import { Competition, CompetitionFromApi, CompetitionStatus } from "../types/leaderboard";
+import {
+  Competition,
+  CompetitionFromApi,
+  CompetitionStatus,
+} from "../types/leaderboard";
 
 export const parseDate = (date: string) => {
   return newValidDate(date.replace(/(st|nd|rd|th)/, ""));

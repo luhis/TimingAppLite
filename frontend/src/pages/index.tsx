@@ -13,6 +13,7 @@ import { diffDate, newValidDate } from "ts-date";
 
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Footer } from "../components/Footer";
+import { SeoHead } from "../components/SeoHead";
 import {
   competitionStatusColor,
   competitionStatusLabel,
@@ -133,11 +134,9 @@ export const query = graphql`
 `;
 
 export const Head: HeadFC = () => (
-  <>
-    <title>Timing App Lite</title>
-    <meta
-      name="description"
-      content="Gatsby TypeScript leaderboard app powered by the Sapphire Solutions autotest API."
-    />
-  </>
+  <SeoHead
+    title="Timing App Lite"
+    description="Gatsby TypeScript leaderboard app powered by the Sapphire Solutions autotest API."
+    path="/"
+  />
 );

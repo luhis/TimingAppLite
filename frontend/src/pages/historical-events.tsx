@@ -13,10 +13,14 @@ import {
 import { diffDate, newValidDate } from "ts-date";
 
 import { CompetitionDate } from "../components/CompetitionDate";
+import { SeoHead } from "../components/SeoHead";
 import { Competition } from "../types/leaderboard";
 import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
 import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
-import { competitionStatusColor, competitionStatusLabel } from "../lib/competitionStatus";
+import {
+  competitionStatusColor,
+  competitionStatusLabel,
+} from "../lib/competitionStatus";
 
 const HistoricalEventsPage: React.FC<
   PageProps<Queries.HistoricalEventsPageQueryQuery>
@@ -131,11 +135,9 @@ export const query = graphql`
 `;
 
 export const Head: HeadFC = () => (
-  <>
-    <title>Historical Events · Timing App Lite</title>
-    <meta
-      name="description"
-      content="Browse past competition results from the Sapphire Solutions autotest API."
-    />
-  </>
+  <SeoHead
+    title="Historical Events · Timing App Lite"
+    description="Browse past competition results from the Sapphire Solutions autotest API."
+    path="/historical-events"
+  />
 );

@@ -29,7 +29,7 @@ const stickyHeaderStyle = {
 
 const stickyHeaderNonStickyStyle = {
   position: "sticky" as const,
-  top: 0,  
+  top: 0,
   background: "var(--bulma-scheme-main)",
   zIndex: 2,
 };

@@ -8,6 +8,7 @@ import { ControlsPanel } from "../../components/ControlsPanel";
 import { Footer } from "../../components/Footer";
 import { HeroPanel } from "../../components/HeroPanel";
 import { ResultsPanel } from "../../components/ResultsPanel";
+import { SeoHead } from "../../components/SeoHead";
 import { useLeaderboardStream } from "../../hooks/useLeaderboardStream";
 import { parseCompetitionDate } from "../../lib/dataParser";
 import {
@@ -270,7 +271,8 @@ const CompetitionPage = ({
     );
   }, [leaderboardState]);
 
-  const dataRowCount = visibleRows.length - visibleRows.filter(isSectionRow).length;
+  const dataRowCount =
+    visibleRows.length - visibleRows.filter(isSectionRow).length;
   const loadingLeaderboards = leaderboardsState.status === "loading";
   const loadingResults = leaderboardState.status === "loading";
   const isBusy = loadingLeaderboards || loadingResults;
@@ -353,11 +355,9 @@ const CompetitionPage = ({
 export default CompetitionPage;
 
 export const Head: HeadFC<object, { competitionId: string }> = ({ params }) => (
-  <>
-    <title>Competition {params.competitionId} · Timing App Lite</title>
-    <meta
-      name="description"
-      content="Gatsby TypeScript leaderboard app powered by the Sapphire Solutions autotest API."
-    />
-  </>
+  <SeoHead
+    title={`Competition ${params.competitionId} · Timing App Lite`}
+    description="Gatsby TypeScript leaderboard app powered by the Sapphire Solutions autotest API."
+    path={`/competition/${params.competitionId}`}
+  />
 );
