@@ -21,26 +21,26 @@ const stickyHeaderStyle = {
   position: "sticky" as const,
   top: 0,
   left: 0,
-  background: "white",
+  background: "var(--bulma-scheme-main)",
   zIndex: 4,
-  borderRight: "1px solid rgba(0,0,0,0.06)",
-  boxShadow: "2px 0 6px rgba(0,0,0,0.06)",
+  borderRight: "1px solid var(--bulma-border)",
+  boxShadow: "2px 0 6px var(--bulma-shadow)",
 };
 
 const stickyHeaderNonStickyStyle = {
   position: "sticky" as const,
-  top: 0,
-  background: "white",
+  top: 0,  
+  background: "var(--bulma-scheme-main)",
   zIndex: 2,
 };
 
 const stickyCellStyle = {
   position: "sticky" as const,
   left: 0,
-  background: "white",
+  background: "var(--bulma-scheme-main)",
   zIndex: 1,
-  borderRight: "1px solid rgba(0,0,0,0.06)",
-  boxShadow: "2px 0 6px rgba(0,0,0,0.06)",
+  borderRight: "1px solid var(--bulma-border)",
+  boxShadow: "2px 0 6px var(--bulma-shadow)",
 };
 
 export const ResultsPanel = ({
@@ -117,18 +117,18 @@ export const ResultsPanel = ({
                 <tr
                   key={`${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`}
                 >
-                  {columns.map((column) => (
-                    <td
-                      key={column.name}
-                      style={
-                        column.name === stickyColumnHeader
-                          ? stickyCellStyle
-                          : undefined
-                      }
-                    >
-                      {stringifyCell(item[column.name])}
-                    </td>
-                  ))}
+                  {columns.map((column) => {
+                    const isSticky = column.name === stickyColumnHeader;
+                    const Cell = isSticky ? "th" : "td";
+                    return (
+                      <Cell
+                        key={column.name}
+                        style={isSticky ? stickyCellStyle : undefined}
+                      >
+                        {stringifyCell(item[column.name])}
+                      </Cell>
+                    );
+                  })}
                 </tr>
               );
             })
