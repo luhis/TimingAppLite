@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Bits/">
+    <File Path="Dockerfile" />
+  </Folder>
   <Project Path="DotNetBackend.Tests/DotNetBackend.Tests.csproj" />
   <Project Path="DotNetBackend/DotNetBackend.csproj" />
 </Solution>
