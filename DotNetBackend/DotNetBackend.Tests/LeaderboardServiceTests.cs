@@ -159,7 +159,7 @@ public class PushChangesTests
         var items = new List<Dictionary<string, string>> { new() { ["entry"] = "1", ["pos"] = "1" } };
         var dto = new LeaderboardDto { Items = items };
 
-        apiClient.Setup(a => a.GetResults(1, 2, CancellationToken.None)).ReturnsAsync(dto);
+        apiClient.Setup(a => a.GetLeaderboard(1, 2, CancellationToken.None)).ReturnsAsync(dto);
         var clientProxy = SetupGroupClient(hubContext, groupName);
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.Is<object?[]>(a => a[0] == items), CancellationToken.None))
@@ -180,7 +180,7 @@ public class PushChangesTests
         var items = new List<Dictionary<string, string>> { new() { ["entry"] = "1", ["pos"] = "1" } };
         var dto = new LeaderboardDto { Items = items };
 
-        apiClient.Setup(a => a.GetResults(1, 2, CancellationToken.None)).ReturnsAsync(dto);
+        apiClient.Setup(a => a.GetLeaderboard(1, 2, CancellationToken.None)).ReturnsAsync(dto);
         var clientProxy = SetupGroupClient(hubContext, groupName);
         // Only the first call sends ReceiveRowUpdate
         clientProxy
@@ -207,7 +207,7 @@ public class PushChangesTests
         var first  = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }] };
         var second = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "2" }] };
 
-        apiClient.SetupSequence(a => a.GetResults(1, 2, CancellationToken.None))
+        apiClient.SetupSequence(a => a.GetLeaderboard(1, 2, CancellationToken.None))
             .ReturnsAsync(first)
             .ReturnsAsync(second);
         var clientProxy = SetupGroupClient(hubContext, groupName);
@@ -234,7 +234,7 @@ public class PushChangesTests
         var first  = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }] };
         var second = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }, new() { ["entry"] = "2", ["pos"] = "2" }] };
 
-        apiClient.SetupSequence(a => a.GetResults(1, 2, CancellationToken.None))
+        apiClient.SetupSequence(a => a.GetLeaderboard(1, 2, CancellationToken.None))
             .ReturnsAsync(first)
             .ReturnsAsync(second);
         var clientProxy = SetupGroupClient(hubContext, groupName);
@@ -263,7 +263,7 @@ public class PushChangesTests
         var first  = new LeaderboardDto { Items = [new() { ["pos"] = "1" }] };
         var second = new LeaderboardDto { Items = [new() { ["pos"] = "2" }] };
 
-        apiClient.SetupSequence(a => a.GetResults(1, 2, CancellationToken.None))
+        apiClient.SetupSequence(a => a.GetLeaderboard(1, 2, CancellationToken.None))
             .ReturnsAsync(first)
             .ReturnsAsync(second);
         var clientProxy = SetupGroupClient(hubContext, groupName);

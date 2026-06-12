@@ -116,7 +116,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(json, "application/json");
 
         var client = CreateClient(handler);
-        var result = await client.GetResults(1, 2, CancellationToken.None);
+        var result = await client.GetLeaderboard(1, 2, CancellationToken.None);
 
         result.Columns.Should().ContainSingle(c => c.Name == "Pos" && c.Label == "Position");
         result.Items.Should().ContainSingle(r => r["Pos"] == "1" && r["Driver"] == "Alice");
@@ -128,7 +128,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
-        var act = async () => await client.GetResults(1, 2, CancellationToken.None);
+        var act = async () => await client.GetLeaderboard(1, 2, CancellationToken.None);
 
         await act.Should().ThrowAsync<HttpRequestException>();
     }
@@ -140,7 +140,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(json), "application/json");
 
         var client = CreateClient(handler);
-        var result = await client.GetResults(1, 2, CancellationToken.None);
+        var result = await client.GetLeaderboard(1, 2, CancellationToken.None);
 
         result.Columns.Should().BeEmpty();
         result.Items.Should().BeEmpty();

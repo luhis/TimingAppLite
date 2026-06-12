@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DotNetBackend.Dto;
 using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
@@ -9,13 +10,17 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
     private const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk/API/1";
     private readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(
         configuration.GetValue<int>("ApiClient:CacheDurationSeconds", 30));
-    async Task<LeaderboardDto> IApiClient.GetResults(int competitionId, int leaderboardId, CancellationToken ct)
+    async Task<LeaderboardDto> IApiClient.GetLeaderboard(int competitionId, int leaderboardId, CancellationToken ct)
     {
         var client = httpClientFactory.CreateClient();
         var url = LeaderboardsUrl(competitionId, leaderboardId);
         using var resp = await client.GetAsync(url, ct);
         resp.EnsureSuccessStatusCode();
-        return await resp.Content.ReadFromJsonAsync(AppJsonContext.Default.LeaderboardDto, ct)
+        var bytes = await resp.Content.ReadAsByteArrayAsync(ct);
+        var contentType = resp.Content.Headers.ContentType?.ToString() ?? "application/json";
+        var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competitionId}:{leaderboardId}";
+        cache.Set(cacheKey, (bytes, contentType), _cacheDuration);
+        return JsonSerializer.Deserialize(bytes.AsSpan(), AppJsonContext.Default.LeaderboardDto)
             ?? throw new InvalidOperationException($"Empty response from {url}");
     }
 

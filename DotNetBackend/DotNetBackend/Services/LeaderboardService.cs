@@ -77,7 +77,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     internal async Task PushChanges((int competitionId, int leaderboardId) key)
     {
         logger.LogInformation("{Method} {CompetitionId}, {LeaderboardId}", nameof(PushChanges), key.competitionId, key.leaderboardId);
-        var values = await apiClient.GetResults(key.competitionId, key.leaderboardId, CancellationToken.None);
+        var values = await apiClient.GetLeaderboard(key.competitionId, key.leaderboardId, CancellationToken.None);
 
         for (var i = 0; i < values.Items.Count; i++)
             values.Items[i]["_index"] = i.ToString();
