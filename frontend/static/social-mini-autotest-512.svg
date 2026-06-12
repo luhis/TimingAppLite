@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Cartoon classic mini-style car in a grass autotest</title>
+  <desc id="desc">A red cartoon compact rally car weaving between cones on a grassy autotest field.</desc>
+
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9ed8ff"/>
+      <stop offset="100%" stop-color="#dff5ff"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#74c95a"/>
+      <stop offset="100%" stop-color="#459d36"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#143a14" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#sky)"/>
+
+  <g opacity="0.45">
+    <circle cx="430" cy="78" r="36" fill="#fff"/>
+    <circle cx="454" cy="96" r="26" fill="#fff"/>
+    <circle cx="404" cy="98" r="24" fill="#fff"/>
+  </g>
+
+  <rect y="258" width="512" height="254" fill="url(#grass)"/>
+
+  <g stroke="#6bb14f" stroke-width="2" opacity="0.35">
+    <path d="M0 300 C90 286, 160 322, 256 302 C338 286, 420 328, 512 308" fill="none"/>
+    <path d="M0 336 C96 320, 170 356, 256 338 C344 320, 430 358, 512 340" fill="none"/>
+    <path d="M0 372 C98 356, 170 396, 256 376 C344 354, 430 398, 512 380" fill="none"/>
+  </g>
+
+  <g transform="translate(80 178)" filter="url(#shadow)">
+    <ellipse cx="180" cy="218" rx="142" ry="26" fill="#1d3b1b" opacity="0.35"/>
+
+    <path d="M42 146 C42 111, 71 88, 108 88 L203 88 C231 88, 252 101, 270 120 L312 120 C332 120, 346 133, 346 151 L346 184 C346 200, 333 212, 317 212 L67 212 C53 212, 42 201, 42 187 Z"
+      fill="#d92323" stroke="#9b1212" stroke-width="6"/>
+
+    <path d="M117 96 C138 76, 181 74, 208 95 L247 124 L112 124 Z"
+      fill="#d92323" stroke="#9b1212" stroke-width="6"/>
+
+    <path d="M124 104 C143 89, 176 88, 198 103 L220 121 L122 121 Z"
+      fill="#9fe4ff" stroke="#37758f" stroke-width="4"/>
+
+    <rect x="77" y="150" width="38" height="20" rx="8" fill="#ffe8a8" stroke="#c79f46" stroke-width="3"/>
+    <rect x="282" y="152" width="34" height="18" rx="8" fill="#ffd7da" stroke="#a1282f" stroke-width="3"/>
+
+    <path d="M142 88 L168 88 L152 66 Z" fill="#222"/>
+    <circle cx="157" cy="65" r="8" fill="#ffd54a" stroke="#9c7712" stroke-width="3"/>
+
+    <g>
+      <circle cx="121" cy="212" r="37" fill="#222"/>
+      <circle cx="121" cy="212" r="20" fill="#cdd4da"/>
+      <circle cx="121" cy="212" r="8" fill="#909aa3"/>
+    </g>
+
+    <g>
+      <circle cx="282" cy="212" r="37" fill="#222"/>
+      <circle cx="282" cy="212" r="20" fill="#cdd4da"/>
+      <circle cx="282" cy="212" r="8" fill="#909aa3"/>
+    </g>
+
+    <rect x="161" y="139" width="66" height="10" rx="5" fill="#fff" opacity="0.85"/>
+    <path d="M76 170 Q194 130 322 170" fill="none" stroke="#ffffff" stroke-width="5" opacity="0.35"/>
+  </g>
+
+  <g transform="translate(28 286)">
+    <path d="M0 134 C82 100, 150 74, 215 46" fill="none" stroke="#875b3d" stroke-width="8" stroke-dasharray="12 10" opacity="0.65"/>
+    <path d="M230 38 C300 2, 372 -2, 476 20" fill="none" stroke="#875b3d" stroke-width="8" stroke-dasharray="12 10" opacity="0.65"/>
+  </g>
+
+  <g transform="translate(60 300)">
+    <g transform="translate(16 78) rotate(-9)">
+      <rect x="0" y="0" width="30" height="84" fill="#ffffff"/>
+      <path d="M0 0 L30 0 L15 -32 Z" fill="#ff7a00"/>
+      <rect x="2" y="46" width="26" height="9" fill="#ff7a00"/>
+    </g>
+    <g transform="translate(350 26) rotate(8)">
+      <rect x="0" y="0" width="30" height="84" fill="#ffffff"/>
+      <path d="M0 0 L30 0 L15 -32 Z" fill="#ff7a00"/>
+      <rect x="2" y="46" width="26" height="9" fill="#ff7a00"/>
+    </g>
+  </g>
+
+  <text x="24" y="42" font-family="Verdana, Geneva, sans-serif" font-size="24" font-weight="700" fill="#11456a">Timing App Lite</text>
+  <text x="24" y="70" font-family="Verdana, Geneva, sans-serif" font-size="16" fill="#1a5f2a">Grass Autotest</text>
+</svg>

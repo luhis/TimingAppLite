@@ -18,7 +18,7 @@ export type SeoMetadata = {
 
 const siteName = "Timing App Lite";
 const siteUrl = "https://timingapplite.mccorry.dev";
-const socialImagePath = "/icons/icon-512x512.png";
+const socialImagePath = "/social-mini-autotest-512.svg";
 
 export const getSeoMetadata = ({
   description,
@@ -28,7 +28,7 @@ export const getSeoMetadata = ({
 }: SeoOptions): SeoMetadata => ({
   canonicalUrl: new URL(path, siteUrl).toString(),
   description,
-  imageAlt: `${siteName} icon`,
+  imageAlt: `${siteName} cartoon mini grass autotest illustration`,
   imageUrl: new URL(socialImagePath, siteUrl).toString(),
   siteName,
   title,
