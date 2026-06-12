@@ -17,30 +17,23 @@ type ResultsPanelProps = {
 
 const stickyColumnHeader = "entry";
 
-const stickyHeaderStyle = {
+const stickyBaseStyle = {
   position: "sticky" as const,
-  top: 0,
   left: 0,
   background: "var(--bulma-scheme-main)",
-  zIndex: 4,
   borderRight: "1px solid var(--bulma-border)",
   boxShadow: "2px 0 6px var(--bulma-shadow)",
 };
 
-const stickyHeaderNonStickyStyle = {
-  position: "sticky" as const,
+const stickyHeaderStyle = {
+  ...stickyBaseStyle,
   top: 0,
-  background: "var(--bulma-scheme-main)",
-  zIndex: 2,
+  zIndex: 4,
 };
 
 const stickyCellStyle = {
-  position: "sticky" as const,
-  left: 0,
-  background: "var(--bulma-scheme-main)",
+  ...stickyBaseStyle,
   zIndex: 1,
-  borderRight: "1px solid var(--bulma-border)",
-  boxShadow: "2px 0 6px var(--bulma-shadow)",
 };
 
 export const ResultsPanel = ({
@@ -92,7 +85,7 @@ export const ResultsPanel = ({
                 style={
                   column.name === stickyColumnHeader
                     ? stickyHeaderStyle
-                    : stickyHeaderNonStickyStyle
+                    : {}
                 }
               >
                 {column.label}
