@@ -21,8 +21,16 @@ const stickyBaseStyle = {
   position: "sticky" as const,
   left: 0,
   background: "var(--bulma-scheme-main)",
-  borderRight: "1px solid var(--bulma-border)",
+  outline: "1px solid var(--bulma-border)",
   boxShadow: "2px 0 6px var(--bulma-shadow)",
+};
+
+const stickyHeaderNonStickyStyle = {
+  position: "sticky" as const,
+  top: 0,
+  background: "var(--bulma-scheme-main)",
+  outline: "1px solid var(--bulma-border)",
+  zIndex: 2,
 };
 
 const stickyHeaderStyle = {
@@ -85,7 +93,7 @@ export const ResultsPanel = ({
                 style={
                   column.name === stickyColumnHeader
                     ? stickyHeaderStyle
-                    : {}
+                    : stickyHeaderNonStickyStyle
                 }
               >
                 {column.label}
