@@ -24,7 +24,12 @@ const config: GatsbyConfig = {
       options: {
         name: "Timing App Lite",
         short_name: "Timing App",
+        description: "Install Timing App Lite for quick access to leaderboard results.",
         start_url: "/",
+        background_color: "#ffffff",
+        theme_color: "#1f2937",
+        display: "standalone",
+        orientation: "portrait",
         icon: "static/favicon.svg",
       },
     },
