@@ -39,36 +39,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - name: Build and deploy to Container App
+        uses: azure/container-apps-deploy-action@v2
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.PAT_TOKEN }}
-
-      - name: Build and push image
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: ${{ github.workspace }}/DotNetBackend
-          file: ${{ github.workspace }}/DotNetBackend/Dockerfile
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/timingapplite:${{ github.sha }}
-
-      - name: Ensure GHCR pull credentials on Container App
-        run: |
-          az containerapp registry set \
-            --name timingapplite \
-            --resource-group AutoTest \
-            --server ghcr.io \
-            --username ${{ github.actor }} \
-            --password ${{ secrets.PAT_TOKEN }}
-
-      - name: Deploy Container App using immutable digest
-        run: |
-          az containerapp update \
-            --name timingapplite \
-            --resource-group AutoTest \
-            --image ghcr.io/${{ github.repository_owner }}/timingapplite@${{ steps.build.outputs.digest }}
-
-
+          appSourcePath: ${{ github.workspace }}/DotNetBackend
+          dockerfilePath: Dockerfile
+          registryUrl: ghcr.io
+          registryUsername: ${{ github.actor }}
+          registryPassword: ${{ secrets.PAT_TOKEN }}
+          containerAppName: timingapplite
+          resourceGroup: AutoTest
+          imageToBuild: ghcr.io/${{ github.repository_owner }}/timingapplite:${{ github.sha }}
+        env:
+          DOCKER_BUILDKIT: 1
