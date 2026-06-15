@@ -1,9 +1,9 @@
 import * as React from "react";
-import { Footer as BulmaFooter } from "react-bulma-components";
+import { Footer as BulmaFooter, Content } from "react-bulma-components";
 
 export const Footer = () => (
-  <BulmaFooter className="has-background-light mt-6">
-    <div className="content has-text-centered">
+  <BulmaFooter className="mt-6">
+    <Content className="content has-text-centered">
       <p>
         <strong>Timing App Lite</strong> by Matt McCorry.{" "}
         <a
@@ -15,6 +15,6 @@ export const Footer = () => (
           View on GitHub
         </a>
       </p>
-    </div>
+    </Content>
   </BulmaFooter>
 );

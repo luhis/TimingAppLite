@@ -74,6 +74,7 @@ export const ControlsPanel = ({
       <Form.Label>Global search</Form.Label>
       <Form.Control>
         <Form.Input
+          type="search"
           value={filters.query}
           onChange={onFilterChange("query")}
           placeholder="Search any result field"
@@ -85,6 +86,7 @@ export const ControlsPanel = ({
       <Form.Label>Driver</Form.Label>
       <Form.Control>
         <Form.Input
+          type="search"
           value={filters.driver}
           onChange={onFilterChange("driver")}
           placeholder="Filter by driver"
