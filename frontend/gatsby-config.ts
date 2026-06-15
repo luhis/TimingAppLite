@@ -1,8 +1,7 @@
-import dotenv from "dotenv";
 import type { GatsbyConfig } from "gatsby";
 
-dotenv.config({ path: `.env.${process.env.NODE_ENV ?? "development"}` });
-dotenv.config();
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
+require("dotenv").config({ path: `.env.${process.env.NODE_ENV ?? "development"}` });
 
 const config: GatsbyConfig = {
   siteMetadata: {
