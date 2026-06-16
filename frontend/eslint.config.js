@@ -79,4 +79,22 @@ export default [
       '@typescript-eslint/explicit-function-return-type': 'off',
     },
   },
+  {
+    files: ['*.graphql'],
+    parser: '@graphql-eslint/eslint-plugin',
+    plugins: ['@graphql-eslint'],
+    rules: {
+      '@graphql-eslint/no-anonymous-operations': 'error',
+      '@graphql-eslint/naming-convention': [
+        'error',
+        {
+          OperationDefinition: {
+            style: 'PascalCase',
+            forbiddenPrefixes: ['Query', 'Mutation', 'Subscription', 'Get'],
+            forbiddenSuffixes: ['Query', 'Mutation', 'Subscription'],
+          },
+        },
+      ],
+    },
+  },
 ];
