@@ -105,13 +105,24 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
                 .ToList();
 
             if (changedRows.Count > 0)
+            {
+                logger.LogInformation("Result changes detected, updating. Comp: {competitionId} board: {leaderboardId} count: {Count}", key.competitionId, key.leaderboardId, changedRows.Count);
                 await hubContext.Clients.Group(groupName)
                     .SendAsync("ReceiveRowUpdate", changedRows, CancellationToken.None);
+
+            }
+            else
+            {
+                logger.LogInformation("No result changes detected. Comp: {competitionId} board: {leaderboardId}", key.competitionId, key.leaderboardId);
+            }
         }
 
         if (!_optimisePushUpdates || (prevSnapshot is not null && prevSnapshot.Columns.Count != values.Columns.Count))
+        {
+            logger.LogInformation("Columns have changed, updating. Comp: {competitionId} board: {leaderboardId} count: {Count}", key.competitionId, key.leaderboardId, values.Columns.Count);
             await hubContext.Clients.Group(groupName)
                 .SendAsync("ReceiveColumnUpdate", values.Columns, CancellationToken.None);
+        }
     }
 
     private static bool RowsEqual(Dictionary<string, string> x, Dictionary<string, string> y)
