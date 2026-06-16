@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { graphql, Link, PageProps, type HeadFC } from "gatsby";
 import {
   Container,
-  Footer,
   Heading,
   Hero,
   Panel,
@@ -21,6 +20,7 @@ import {
   competitionStatusColor,
   competitionStatusLabel,
 } from "../lib/competitionStatus";
+import { Footer } from "../components/Footer";
 
 const HistoricalEventsPage: React.FC<
   PageProps<Queries.HistoricalEventsPageQueryQuery>
@@ -67,11 +67,6 @@ const HistoricalEventsPage: React.FC<
   return (
     <Section>
       <Container>
-        <div className="mb-4">
-          <Link to="/" className="has-text-link is-size-6">
-            ← Current events
-          </Link>
-        </div>
         <Hero className="is-info is-small">
           <Hero.Body>
             <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7">
@@ -83,6 +78,12 @@ const HistoricalEventsPage: React.FC<
             <p>Browse past competition results.</p>
           </Hero.Body>
         </Hero>
+
+        <div className="mb-3">
+          <Link to="/" className="has-text-link is-size-6">
+            ← Current events
+          </Link>
+        </div>
 
         {historicalCompetitions.length === 0 ? (
           <p className="has-text-grey">No historical competitions found.</p>
