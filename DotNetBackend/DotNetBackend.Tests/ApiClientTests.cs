@@ -14,7 +14,7 @@ public class ApiClientTests
         IMemoryCache? cache = null,
         IConfiguration? configuration = null)
     {
-        var factory = new StubHttpClientFactory(new HttpClient(handler));
+        var factory = new StubHttpClientFactory(() => new HttpClient(handler));
         return new ApiClient(
             factory,
             cache ?? new MemoryCache(new MemoryCacheOptions()),
@@ -194,8 +194,8 @@ public class ApiClientTests
         }
     }
 
-    private sealed class StubHttpClientFactory(HttpClient client) : IHttpClientFactory
+    private sealed class StubHttpClientFactory(Func<HttpClient> client) : IHttpClientFactory
     {
-        public HttpClient CreateClient(string name) => client;
+        public HttpClient CreateClient(string name) => client();
     }
 }
