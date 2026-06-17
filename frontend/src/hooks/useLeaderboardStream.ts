@@ -5,7 +5,11 @@ import {
 } from "@microsoft/signalr";
 import { useEffect } from "react";
 
-import type { Competition, LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
+import type {
+  Competition,
+  LeaderboardColumn,
+  LeaderboardItem,
+} from "../types/leaderboard";
 
 export const signalRHubUrl =
   (process.env.GATSBY_BACKEND_URL ?? "") + "/hubs/leaderboard";
@@ -63,9 +67,12 @@ export const useLeaderboardStream = (
           }
         });
 
-        connection.on("ReceiveCompetitionUpdate", (competition: Competition) => {
+        connection.on(
+          "ReceiveCompetitionUpdate",
+          (competition: Competition) => {
             onCompetitionUpdate(competition);
-        });
+          },
+        );
 
         await connection.start();
 

@@ -226,7 +226,7 @@ const CompetitionPage = ({
     enableStreaming,
     handleRowUpdate,
     handleColumnUpdate,
-    handleCompetitionUpdate
+    handleCompetitionUpdate,
   );
 
   const leaderboards =

@@ -9,7 +9,7 @@ import {
   Section,
   Tag,
 } from "react-bulma-components";
-import { diffDate, newValidDate } from "ts-date";
+import { addMonth, diffDate, newValidDate } from "ts-date";
 
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Footer } from "../components/Footer";
@@ -59,9 +59,13 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQueryQuery>> = ({
 
   const currentCompetitions = useMemo(() => {
     const today = newValidDate();
-    return competitions.filter(
-      (competition) => diffDate(competition.dateddmmyyyy, today) >= 0,
-    ).sort((a, b) => diffDate(a.dateddmmyyyy, b.dateddmmyyyy));
+    return competitions
+      .filter(
+        (competition) =>
+          diffDate(competition.dateddmmyyyy, today) >= 0 &&
+          diffDate(competition.dateddmmyyyy, addMonth(today, 6)) <= 0,
+      )
+      .sort((a, b) => diffDate(a.dateddmmyyyy, b.dateddmmyyyy));
   }, [competitions]);
 
   return (
