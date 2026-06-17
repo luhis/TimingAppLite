@@ -41,7 +41,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         return Results.Bytes(cached.bytes, cached.contentType);
     }
 
-    async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
+    private async Task<(byte[] bytes, string contentType)> GetCompetitionBytesAsync(CancellationToken ct)
     {
         var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
@@ -55,25 +55,20 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
             );
             cache.Set(cacheKey, cached, _cacheDuration * 2);
         }
+        return cached;
+    }
+
+    async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
+    {
+        var cached = await GetCompetitionBytesAsync(ct);
         return Results.Bytes(cached.bytes, cached.contentType);
     }
+
     async Task<IReadOnlyList<CompetitionDto>> IApiClient.GetCompetitions(CancellationToken ct)
     {
-        var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
-        var url = LiveAllCompetitionsUrl();
-        if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
-        {
-            using var client = httpClientFactory.CreateClient();
-            using var resp = await client.GetAsync(url, ct);
-            resp.EnsureSuccessStatusCode();
-            cached = (
-                await resp.Content.ReadAsByteArrayAsync(ct),
-                resp.Content.Headers.ContentType?.ToString() ?? "application/json"
-            );
-            cache.Set(cacheKey, cached, _cacheDuration * 2);
-        }
+        var cached = await GetCompetitionBytesAsync(ct);
         return JsonSerializer.Deserialize(cached.bytes.AsSpan(), AppJsonContext.Default.ListCompetitionDto)
-            ?? throw new InvalidOperationException($"Empty response from {url}");
+            ?? throw new InvalidOperationException($"Empty response from {LiveAllCompetitionsUrl()}");
     }
 
     private static string LiveAllCompetitionsUrl() =>
