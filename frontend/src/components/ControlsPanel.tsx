@@ -41,9 +41,6 @@ export const ControlsPanel = ({
   onRefresh,
 }: ControlsPanelData & ControlsPanelCallbacks) => (
   <Box>
-    <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7 mb-3">
-      Controls
-    </p>
     <Heading renderAs="h2" size={4} className="mb-4">
       Refine the results.
     </Heading>

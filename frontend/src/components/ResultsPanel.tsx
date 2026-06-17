@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, Heading, Notification, Table } from "react-bulma-components";
+import { Heading, Notification, Table } from "react-bulma-components";
 
 import { isSectionRow, stringifyCell } from "../lib/leaderboardUtils";
 import type { LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
@@ -54,12 +54,9 @@ export const ResultsPanel = ({
   visibleRows,
   leaderboardLoaded,
 }: ResultsPanelProps) => (
-  <Box>
+  <>
     <div className="is-flex is-justify-content-space-between is-align-items-end is-flex-wrap-wrap mb-4">
       <div>
-        <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7 mb-2">
-          Results
-        </p>
         <Heading renderAs="h2" size={3} className="mb-0">
           {selectedLeaderboardName ?? "Leaderboard results"}
         </Heading>
@@ -148,5 +145,5 @@ export const ResultsPanel = ({
         </tbody>
       </Table>
     </Table.Container>
-  </Box>
+  </>
 );
