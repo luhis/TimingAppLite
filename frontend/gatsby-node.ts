@@ -1,4 +1,5 @@
 import type { GatsbyNode } from "gatsby";
+
 import type { CompetitionFromApi } from "./src/types/leaderboard";
 
 const API_BASE = process.env.GATSBY_BACKEND_URL

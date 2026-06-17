@@ -1,7 +1,13 @@
+// @ts-expect-error: TS2304: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node`.
+import dotenv from "dotenv";
+
 import type { GatsbyConfig } from "gatsby";
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
-require("dotenv").config({ path: `.env.${process.env.NODE_ENV ?? "development"}` });
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+dotenv.config({ path: `.env.${process.env.NODE_ENV ?? "development"}` });
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+dotenv.config();
 
 const config: GatsbyConfig = {
   siteMetadata: {
