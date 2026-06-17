@@ -24,23 +24,6 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
             ?? throw new InvalidOperationException($"Empty response from {url}");
     }
 
-    async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
-    {
-        var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
-        if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
-        {
-            using var client = httpClientFactory.CreateClient();
-            using var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
-            resp.EnsureSuccessStatusCode();
-            cached = (
-                await resp.Content.ReadAsByteArrayAsync(ct),
-                resp.Content.Headers.ContentType?.ToString() ?? "application/json"
-            );
-            cache.Set(cacheKey, cached, _cacheDuration);
-        }
-        return Results.Bytes(cached.bytes, cached.contentType);
-    }
-
     async Task<IResult> IApiClient.GetLeaderboards(int competionId, int? leaderboardId, CancellationToken ct)
     {
         var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competionId}:{leaderboardId}";
@@ -58,12 +41,22 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         return Results.Bytes(cached.bytes, cached.contentType);
     }
 
-    private static string LiveAllCompetitionsUrl() =>
-        $"{RemoteApiBase}/LiveAllCompetitions/";
-
-    private static string LeaderboardsUrl(int competitionId, int? leaderboardId) =>
-        $"{RemoteApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
-
+    async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
+    {
+        var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
+        if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
+        {
+            using var client = httpClientFactory.CreateClient();
+            using var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
+            resp.EnsureSuccessStatusCode();
+            cached = (
+                await resp.Content.ReadAsByteArrayAsync(ct),
+                resp.Content.Headers.ContentType?.ToString() ?? "application/json"
+            );
+            cache.Set(cacheKey, cached, _cacheDuration * 2);
+        }
+        return Results.Bytes(cached.bytes, cached.contentType);
+    }
     async Task<IReadOnlyList<CompetitionDto>> IApiClient.GetCompetitions(CancellationToken ct)
     {
         var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
@@ -77,9 +70,15 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
                 await resp.Content.ReadAsByteArrayAsync(ct),
                 resp.Content.Headers.ContentType?.ToString() ?? "application/json"
             );
-            cache.Set(cacheKey, cached, _cacheDuration);
+            cache.Set(cacheKey, cached, _cacheDuration * 2);
         }
         return JsonSerializer.Deserialize(cached.bytes.AsSpan(), AppJsonContext.Default.ListCompetitionDto)
             ?? throw new InvalidOperationException($"Empty response from {url}");
     }
+
+    private static string LiveAllCompetitionsUrl() =>
+        $"{RemoteApiBase}/LiveAllCompetitions/";
+
+    private static string LeaderboardsUrl(int competitionId, int? leaderboardId) =>
+        $"{RemoteApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
 }

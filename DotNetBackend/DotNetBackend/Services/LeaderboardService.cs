@@ -36,6 +36,10 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
                     {
                         await SafePushChanges(key);
                     }
+                    else
+                    {
+                        await PushCompetitionUpdate(key.competitionId, key.leaderboardId, comp, stoppingToken);
+                    }
                 }
             }
         }
@@ -44,6 +48,14 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         {
             logger.LogCritical(ex, "Leaderboard timer crashed — host will keep running");
         }
+    }
+
+    private async Task PushCompetitionUpdate(int competitionId, int leaderboardId, CompetitionDto competition, CancellationToken stoppingToken)
+    {
+        var toUpdate = ActiveGroups.Where(g => g.competitionId == competitionId);
+        var groupName = LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId);
+        await hubContext.Clients.Group(groupName)
+            .SendAsync("ReceiveCompetitionUpdate", competition, stoppingToken);
     }
 
     private async Task SafePushChanges((int competitionId, int leaderboardId) key)

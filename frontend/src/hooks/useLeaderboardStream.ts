@@ -5,7 +5,7 @@ import {
 } from "@microsoft/signalr";
 import { useEffect } from "react";
 
-import type { LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
+import type { Competition, LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
 
 export const signalRHubUrl =
   (process.env.GATSBY_BACKEND_URL ?? "") + "/hubs/leaderboard";
@@ -30,6 +30,7 @@ export const useLeaderboardStream = (
   enabled: boolean,
   onRowUpdate: (rows: readonly LeaderboardItem[]) => void,
   onColumnUpdate: (columns: readonly LeaderboardColumn[]) => void,
+  onCompetitionUpdate: (competition: Competition) => void,
 ) => {
   useEffect(() => {
     if (!competitionId || !leaderboardId || !signalRHubUrl || !enabled) {
@@ -60,6 +61,10 @@ export const useLeaderboardStream = (
           if (columns.length > 0) {
             onColumnUpdate(columns);
           }
+        });
+
+        connection.on("ReceiveCompetitionUpdate", (competition: Competition) => {
+            onCompetitionUpdate(competition);
         });
 
         await connection.start();
