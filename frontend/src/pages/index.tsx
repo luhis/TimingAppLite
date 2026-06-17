@@ -61,7 +61,7 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQueryQuery>> = ({
     const today = newValidDate();
     return competitions.filter(
       (competition) => diffDate(competition.dateddmmyyyy, today) >= 0,
-    );
+    ).sort((a, b) => diffDate(a.dateddmmyyyy, b.dateddmmyyyy));
   }, [competitions]);
 
   return (
