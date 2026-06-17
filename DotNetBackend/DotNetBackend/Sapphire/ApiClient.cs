@@ -12,7 +12,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         configuration.GetValue<int>("ApiClient:CacheDurationSeconds", 30));
     async Task<LeaderboardDto> IApiClient.GetLeaderboard(int competitionId, int leaderboardId, CancellationToken ct)
     {
-        var client = httpClientFactory.CreateClient();
+        using var client = httpClientFactory.CreateClient();
         var url = LeaderboardsUrl(competitionId, leaderboardId);
         using var resp = await client.GetAsync(url, ct);
         resp.EnsureSuccessStatusCode();
@@ -29,7 +29,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
-            var client = httpClientFactory.CreateClient();
+            using var client = httpClientFactory.CreateClient();
             var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
             resp.EnsureSuccessStatusCode();
             cached = (
@@ -46,7 +46,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competionId}:{leaderboardId}";
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
-            var client = httpClientFactory.CreateClient();
+            using var client = httpClientFactory.CreateClient();
             var resp = await client.GetAsync(LeaderboardsUrl(competionId, leaderboardId), ct);
             resp.EnsureSuccessStatusCode();
             cached = (
@@ -63,4 +63,23 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
 
     private static string LeaderboardsUrl(int competitionId, int? leaderboardId) =>
         $"{RemoteApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
+
+    async Task<IReadOnlyList<CompetitionDto>> IApiClient.GetCompetitions(CancellationToken ct)
+    {
+        var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
+        var url = LiveAllCompetitionsUrl();
+        if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
+        {
+            using var client = httpClientFactory.CreateClient();
+            var resp = await client.GetAsync(url, ct);
+            resp.EnsureSuccessStatusCode();
+            cached = (
+                await resp.Content.ReadAsByteArrayAsync(ct),
+                resp.Content.Headers.ContentType?.ToString() ?? "application/json"
+            );
+            cache.Set(cacheKey, cached, _cacheDuration);
+        }
+        return JsonSerializer.Deserialize(cached.bytes.AsSpan(), AppJsonContext.Default.ListCompetitionDto)
+            ?? throw new InvalidOperationException($"Empty response from {url}");
+    }
 }

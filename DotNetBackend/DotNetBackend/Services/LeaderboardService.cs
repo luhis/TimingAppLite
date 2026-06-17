@@ -27,8 +27,17 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         try
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
+            {
+                var competitons = await apiClient.GetCompetitions(stoppingToken);
                 foreach (var key in ActiveGroups)
-                    await SafePushChanges(key);
+                {
+                    var comp = competitons.Single(c => c.Id == key.competitionId.ToString());
+                    if (comp.Active == ActiveStatus.Live)
+                    {
+                        await SafePushChanges(key);
+                    }
+                }
+            }
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)

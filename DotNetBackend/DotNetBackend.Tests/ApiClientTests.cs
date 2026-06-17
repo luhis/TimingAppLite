@@ -146,6 +146,36 @@ public class ApiClientTests
         result.Items.Should().BeEmpty();
     }
 
+
+    [Fact]
+    public async Task GetCompetitions_DeserializesResponse_IntoCompetitonDto()
+    {
+        var json = """
+            [
+                {
+                    "id": "1428",
+                    "active": "2",
+                    "name": "TDC JPM Autotest",
+                    "dateddmmyyyy": "5th June 2026",
+                    "provisional": "5th June 2026 21:07",
+                    "finalised": null,
+                    "sponsorlogo1": "",
+                    "sponsorlink1": "",
+                    "sponsorlogo2": "",
+                    "sponsorlink2": "",
+                    "sponsorlogo3": "",
+                    "sponsorlink3": ""
+                }
+            ]
+            """u8.ToArray();
+        var handler = new StubHttpHandler(json, "application/json");
+
+        var client = CreateClient(handler);
+        var result = await client.GetCompetitions(CancellationToken.None);
+
+        result.Should().HaveCount(1);
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------

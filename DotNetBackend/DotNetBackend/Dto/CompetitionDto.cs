@@ -1,6 +1,11 @@
 namespace DotNetBackend.Dto;
 
-public sealed record CompetitionDto
+public record CompetitionDto
 {
-    public required IReadOnlyList<Dictionary<string, string>> Items { get; init; }
+    public string Id { get; set; } = string.Empty;
+    public string Active { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Dateddmmyyyy { get; set; } = string.Empty;
+    public string Provisional { get; set; } = string.Empty;
+    public string Finalised { get; set; } = string.Empty;
 }

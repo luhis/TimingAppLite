@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace DotNetBackend.Serialization;
 
+[JsonSerializable(typeof(List<CompetitionDto>))]
 [JsonSerializable(typeof(LeaderboardDto))]
 [JsonSerializable(typeof(List<ColumnDto>))]
 [JsonSerializable(typeof(List<Dictionary<string, string>>))]
