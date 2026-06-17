@@ -173,7 +173,7 @@ public class ApiClientTests
         var client = CreateClient(handler);
         var result = await client.GetCompetitions(CancellationToken.None);
 
-        result.Should().HaveCount(1);
+        result.Should().ContainSingle();
     }
 
     // -------------------------------------------------------------------------

@@ -30,7 +30,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
             using var client = httpClientFactory.CreateClient();
-            var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
+            using var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
             resp.EnsureSuccessStatusCode();
             cached = (
                 await resp.Content.ReadAsByteArrayAsync(ct),
@@ -47,7 +47,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
             using var client = httpClientFactory.CreateClient();
-            var resp = await client.GetAsync(LeaderboardsUrl(competionId, leaderboardId), ct);
+            using var resp = await client.GetAsync(LeaderboardsUrl(competionId, leaderboardId), ct);
             resp.EnsureSuccessStatusCode();
             cached = (
                 await resp.Content.ReadAsByteArrayAsync(ct),
@@ -71,7 +71,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
             using var client = httpClientFactory.CreateClient();
-            var resp = await client.GetAsync(url, ct);
+            using var resp = await client.GetAsync(url, ct);
             resp.EnsureSuccessStatusCode();
             cached = (
                 await resp.Content.ReadAsByteArrayAsync(ct),
