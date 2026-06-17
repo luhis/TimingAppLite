@@ -61,7 +61,7 @@ const HistoricalEventsPage: React.FC<
     const today = newValidDate();
     return competitions
       .filter((competition) => diffDate(competition.dateddmmyyyy, today) < 0)
-      .sort((a, b) => b.dateddmmyyyy.getTime() - a.dateddmmyyyy.getTime());
+      .sort((a, b) => diffDate(b.dateddmmyyyy, a.dateddmmyyyy));
   }, [competitions]);
 
   return (
