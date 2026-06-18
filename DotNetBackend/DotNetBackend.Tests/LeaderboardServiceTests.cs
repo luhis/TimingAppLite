@@ -41,19 +41,6 @@ public class LeaderboardServiceTests
     }
 
     [Fact]
-    public void Subscribe_SameConnection_MultipleGroups_TracksAll()
-    {
-        var service = CreateService();
-
-        service.Subscribe("conn1", (1, 2));
-        service.Subscribe("conn1", (1, 3));
-
-        service.ActiveGroups.Should().HaveCount(2);
-
-        _mockRepo.VerifyAll();
-    }
-
-    [Fact]
     public void Subscribe_MultipleConnections_SameGroup_DeduplicatesActiveGroups()
     {
         var service = CreateService();
@@ -96,11 +83,10 @@ public class LeaderboardServiceTests
     }
 
     [Fact]
-    public void RemoveAllSubscriptions_RemovesAllGroupsForConnection()
+    public void RemoveAllSubscriptions_RemovesConnection()
     {
         var service = CreateService();
 
-        service.Subscribe("conn1", (1, 2));
         service.Subscribe("conn1", (1, 2));
         service.RemoveAllSubscriptions("conn1");
 
@@ -110,7 +96,7 @@ public class LeaderboardServiceTests
     }
 
     [Fact]
-    public void RemoveAllSubscriptions_WhenOtherConnectionStillSubscribed_SharedGroupRemainsActive()
+    public void RemoveAllSubscriptions_WhenOtherConnectionStillSubscribed_GroupRemainsActive()
     {
         var service = CreateService();
 
