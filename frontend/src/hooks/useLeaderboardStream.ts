@@ -94,5 +94,12 @@ export const useLeaderboardStream = (
         })
         .catch(() => undefined);
     };
-  }, [competitionId, leaderboardId, enabled, onRowUpdate, onColumnUpdate]);
+  }, [
+    competitionId,
+    leaderboardId,
+    enabled,
+    onRowUpdate,
+    onColumnUpdate,
+    onCompetitionUpdate,
+  ]);
 };

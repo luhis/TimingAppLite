@@ -211,6 +211,14 @@ const CompetitionPage = ({
 
   const handleCompetitionUpdate = useCallback((newCompetition: Competition) => {
     setCompetition(newCompetition);
+    const isLive = newCompetition.active === CompetitionStatus.Live;
+    const isToday = newCompetition.dateddmmyyyy
+      ? newCompetition.dateddmmyyyy.toDateString() ===
+        newValidDate().toDateString()
+      : false;
+    if (!isLive || !isToday) {
+      setStreamResults(false);
+    }
   }, []);
 
   // Only enable SignalR streaming if the competition is live and happening today
@@ -330,6 +338,8 @@ const CompetitionPage = ({
               streamResults={streamResults}
               loadingLeaderboards={loadingLeaderboards}
               isBusy={isBusy}
+              isCompetitionLive={isCompetitionLive}
+              isCompetitionToday={isToday}
               onLeaderboardChange={handleLeaderboardChange}
               onFilterChange={handleFilterChange}
               onClassChange={handleClassChange}
