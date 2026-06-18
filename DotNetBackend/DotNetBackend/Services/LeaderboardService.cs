@@ -3,7 +3,6 @@ using DotNetBackend.Hubs;
 using DotNetBackend.Sapphire;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
-using System.Collections.Immutable;
 
 namespace DotNetBackend.Services;
 
@@ -16,10 +15,10 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         configuration.GetValue("LeaderboardService:OptimisePushUpdates", true);
 
     private readonly ConcurrentDictionary<(int competitionId, int leaderboardId), LeaderboardDto?> _previousResults = new();
-    private readonly ConcurrentDictionary<string, ImmutableHashSet<(int competitionId, int leaderboardId)>> _connectionGroups = new();
+    private readonly ConcurrentDictionary<string, (int competitionId, int leaderboardId)> _connectionGroups = new();
 
     internal IEnumerable<(int competitionId, int leaderboardId)> ActiveGroups =>
-        _connectionGroups.Values.SelectMany(g => g).Distinct();
+        _connectionGroups.Values.Distinct();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -52,7 +51,6 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
     private async Task PushCompetitionUpdate(int competitionId, int leaderboardId, CompetitionDto competition, CancellationToken stoppingToken)
     {
-        var toUpdate = ActiveGroups.Where(g => g.competitionId == competitionId);
         var groupName = LeaderboardHub.GetCompetitionGroup(competitionId, leaderboardId);
         await hubContext.Clients.Group(groupName)
             .SendAsync("ReceiveCompetitionUpdate", competition, stoppingToken);
@@ -71,17 +69,11 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     }
 
     public void Subscribe(string connectionId, (int competitionId, int leaderboardId) key) =>
-        _connectionGroups.AddOrUpdate(connectionId, [key], (_, existing) => existing.Add(key));
+        _connectionGroups[connectionId] = key;
 
     public void Unsubscribe(string connectionId, (int competitionId, int leaderboardId) key)
     {
-        if (!_connectionGroups.TryGetValue(connectionId, out var groups)) return;
-
-        var updated = groups.Remove(key);
-        if (updated.IsEmpty)
-            _connectionGroups.TryRemove(connectionId, out _);
-        else
-            _connectionGroups[connectionId] = updated;
+        if (!_connectionGroups.TryRemove(connectionId, out var removed) || removed != key) return;
 
         if (!ActiveGroups.Contains(key))
             _previousResults.TryRemove(key, out _);
@@ -89,10 +81,9 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
     public void RemoveAllSubscriptions(string connectionId)
     {
-        if (_connectionGroups.TryRemove(connectionId, out var groups))
-            foreach (var key in groups)
-                if (!ActiveGroups.Contains(key))
-                    _previousResults.TryRemove(key, out _);
+        if (_connectionGroups.TryRemove(connectionId, out var key))
+            if (!ActiveGroups.Contains(key))
+                _previousResults.TryRemove(key, out _);
     }
 
     internal async Task PushChanges((int competitionId, int leaderboardId) key)
