@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV DOTNET_NOLOGO=1
+
 RUN apk add --no-cache clang zlib-dev
 
 WORKDIR /src
