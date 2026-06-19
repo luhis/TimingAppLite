@@ -1,0 +1,13 @@
+**/.git
+**/.github
+**/bin
+**/obj
+**/node_modules
+**/.vs
+**/.vscode
+**/Dockerfile
+**/.dockerignore
+**/*.md
+**/LICENSE
+frontend/
+DotNetBackend/DotNetBackend.Tests/
