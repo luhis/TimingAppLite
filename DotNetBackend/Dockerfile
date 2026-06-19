@@ -4,10 +4,10 @@ RUN apk add --no-cache clang zlib-dev
 
 WORKDIR /src
 
-COPY DotNetBackend/DotNetBackend/DotNetBackend.csproj DotNetBackend/DotNetBackend/
-COPY DotNetBackend/DotNetBackend.Tests/DotNetBackend.Tests.csproj DotNetBackend/DotNetBackend.Tests/
-COPY DotNetBackend/Directory.Build.props DotNetBackend/
-COPY DotNetBackend/DotNetBackend.slnx DotNetBackend/
+COPY DotNetBackend/DotNetBackend.csproj DotNetBackend/
+COPY DotNetBackend.Tests/DotNetBackend.Tests.csproj DotNetBackend.Tests/
+COPY Directory.Build.props .
+COPY DotNetBackend.slnx .
 RUN dotnet restore DotNetBackend/DotNetBackend.csproj -r linux-musl-x64
 
 COPY . .

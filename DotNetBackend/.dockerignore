@@ -10,4 +10,4 @@
 **/*.md
 **/LICENSE
 frontend/
-DotNetBackend/DotNetBackend.Tests/
+DotNetBackend.Tests/
