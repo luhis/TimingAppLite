@@ -1,23 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
-	<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-	<WarningLevel>1</WarningLevel>
-	<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-	<NoWarn>1701;1702</NoWarn>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <WarningLevel>1</WarningLevel>
+    <NoWarn>1701;1702</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,5 +20,5 @@
       <_Parameter1>DotNetBackend.Tests</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-  
+
 </Project>
