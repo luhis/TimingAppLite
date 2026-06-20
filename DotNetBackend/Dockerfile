@@ -6,6 +6,12 @@ ENV DOTNET_NOLOGO=1
 RUN apk add --no-cache clang zlib-dev
 
 WORKDIR /src
+
+COPY DotNetBackend/DotNetBackend.csproj DotNetBackend/
+COPY Directory.Build.props .
+COPY DotNetBackend.slnx .
+RUN dotnet restore DotNetBackend/DotNetBackend.csproj -r linux-musl-x64
+
 COPY . .
 RUN dotnet publish DotNetBackend/DotNetBackend.csproj -c Release -r linux-musl-x64 --self-contained -o /app/publish
 
