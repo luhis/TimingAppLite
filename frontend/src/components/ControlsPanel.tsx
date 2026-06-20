@@ -84,7 +84,7 @@ export const ControlsPanel = ({
             }
             disabled={streamingDisabled}
           >
-            Stream results
+            Live stream results
           </Form.Checkbox>
           {streamingDisabled && (
             <span
