@@ -76,6 +76,28 @@ export const ControlsPanel = ({
       </Form.Field>
 
       <Form.Field>
+        <Form.Control>
+          <Form.Checkbox
+            checked={streamResults}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              onStreamResultsChange(event.target.checked)
+            }
+            disabled={streamingDisabled}
+          >
+            Stream results
+          </Form.Checkbox>
+          {streamingDisabled && (
+            <span
+              className="tooltip ml-2"
+              data-tooltip="Streaming is only available when the competition is live and happening today"
+            >
+              <Icon className="is-size-6">ℹ️</Icon>
+            </span>
+          )}
+        </Form.Control>
+      </Form.Field>
+
+      <Form.Field>
         <Form.Label>Global search</Form.Label>
         <Form.Control>
           <Form.Input
@@ -116,28 +138,6 @@ export const ControlsPanel = ({
               </option>
             ))}
           </Form.Select>
-        </Form.Control>
-      </Form.Field>
-
-      <Form.Field>
-        <Form.Control>
-          <Form.Checkbox
-            checked={streamResults}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-              onStreamResultsChange(event.target.checked)
-            }
-            disabled={streamingDisabled}
-          >
-            Stream results
-          </Form.Checkbox>
-          {streamingDisabled && (
-            <Icon
-              className="ml-2 has-text-grey is-size-6"
-              title="Streaming is only available when the competition is live and happening today"
-            >
-              ℹ️
-            </Icon>
-          )}
         </Form.Control>
       </Form.Field>
 
