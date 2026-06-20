@@ -1,0 +1,209 @@
+### TimingAppLive API - Test Requests
+### Base URL for the Sapphire Solutions autotest server
+### Usage: Install "REST Client" extension in VS Code, then click "Send Request" above any request block.
+### Variables are defined in the @host block below.
+
+@host = https://autotest.sapphire-solutions.co.uk
+
+###############################################################################
+# AUTHENTICATION
+###############################################################################
+
+### Login - Check Passcode
+# Returns site name and admin code for a valid passcode.
+# The site name is used in ALL subsequent requests.
+POST {{host}}/logincheck.php
+Content-Type: application/x-www-form-urlencoded
+
+code=123456
+
+> {% client.global.set("site", response.body.site); %}
+> {% client.global.set("admincode", response.body.admincode); %}
+> {%
+    client.log("Site: " + client.global.get("site"));
+    client.log("AdminCode: " + client.global.get("admincode"));
+%}
+
+### Login - Invalid Passcode (expect empty/fail response)
+POST {{host}}/logincheck.php
+Content-Type: application/x-www-form-urlencoded
+
+code=000000
+
+###############################################################################
+# SITE DATA
+###############################################################################
+
+### Get Translation Strings
+# Returns localisation strings for the logged-in site.
+POST {{host}}/translationlist.php
+Content-Type: application/x-www-form-urlencoded
+
+site={{site}}
+
+### Get All Entries for Site
+# Returns all entries across all competitions for this site.
+# WARNING: This can be a large dataset.
+POST {{host}}/entryselect.php
+Content-Type: application/x-www-form-urlencoded
+
+site={{site}}
+
+### Get Locations for Site
+# Returns location/stage names linked to competitions.
+POST {{host}}/locationselect.php
+Content-Type: application/x-www-form-urlencoded
+
+site={{site}}
+
+###############################################################################
+# COMPETITION / ENTRY QUERIES
+# After calling entryselect, you should have competition IDs and entry IDs
+# to use in the requests below. Set them as variables:
+#   client.global.set("competitionid", "123");
+#   client.global.set("entryid", "456");
+#   client.global.set("test_number", "1");
+###############################################################################
+
+### Check Run Count for Entry
+# Returns how many runs an entry has completed for a given test.
+POST {{host}}/checkruns.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&number={{test_number}}
+
+### Get Entries with Remaining Runs
+# Returns list of entries that still have runs left.
+POST {{host}}/runsleft.php
+Content-Type: application/x-www-form-urlencoded
+
+competitionid={{competitionid}}&number={{test_number}}
+
+### Select Existing Test Data for Entry
+# Returns existing timing data for an entry's test.
+POST {{host}}/testselect.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&number={{test_number}}
+
+### Get Only Started Entries (not yet finished)
+# Returns entry IDs that have started but not finished.
+POST {{host}}/startedonly.php
+Content-Type: application/x-www-form-urlencoded
+
+competitionid={{competitionid}}&number={{test_number}}
+
+###############################################################################
+# SUBMIT TIMING DATA
+# All timing submission endpoints accept the same parameters.
+# Times are milliseconds since midnight (e.g., 45321 = 0:00:45.321).
+###############################################################################
+
+### Submit Combined Start + Finish Time (testadd)
+POST {{host}}/testadd.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&number={{test_number}}&run=1&starttime=12345&finishtime=45678&seconds=33&cones=0&lines=0&extras=0&options=0&wt=0&datetime=2025-01-15T10:30:00
+
+### Submit Start Time Only (teststart)
+POST {{host}}/teststart.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&number={{test_number}}&run=1&starttime=12345&finishtime=0&seconds=0&cones=0&lines=0&extras=0&options=0&wt=0&datetime=2025-01-15T10:30:00
+
+### Submit Finish Time Only (testfinish)
+POST {{host}}/testfinish.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&number={{test_number}}&run=1&starttime=12345&finishtime=45678&seconds=33&cones=0&lines=0&extras=0&options=0&wt=0&datetime=2025-01-15T10:30:00
+
+### Update Existing Timing Data (testupdate)
+POST {{host}}/testupdate.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&number={{test_number}}&run=1&starttime=12345&finishtime=45678&seconds=33&cones=2&lines=0&extras=0&options=0&wt=0&datetime=2025-01-15T10:30:00
+
+###############################################################################
+# PENALTY MANAGEMENT
+###############################################################################
+
+### List All Runs for Entry
+# Returns all run records for penalty review.
+POST {{host}}/listruns.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&number={{test_number}}
+
+### Remove a Specific Run
+POST {{host}}/removerun.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&run=1
+
+### Update Penalty Data
+POST {{host}}/penaltyupdate.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&number={{test_number}}&run=1&cones=2&lines=0&extras=0&options=0
+
+###############################################################################
+# MARSHAL CHECKS
+###############################################################################
+
+### Update Entry Check Status (toggle scrutineering)
+# checked=1 = passed, checked=0 = not checked
+POST {{host}}/entryupdate.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&checked=1
+
+### Update Entry Check Status (uncheck)
+POST {{host}}/entryupdate.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid={{entryid}}&checked=0
+
+###############################################################################
+# LOCATION MANAGEMENT
+###############################################################################
+
+### Update Location Data
+POST {{host}}/locationupdate.php
+Content-Type: application/x-www-form-urlencoded
+
+locationid=1&competitionid={{competitionid}}&name=Stage+1
+
+###############################################################################
+# LEADERBOARDS
+###############################################################################
+
+### Get Leaderboard Definitions (REST API)
+# This is the only GET endpoint - returns list of leaderboards for a competition.
+GET {{host}}/API/1/Competitions/{{competitionid}}/Leaderboards/
+
+### Open Event List in Browser
+# Opens the event list page in a browser (not an API call, opens WebView).
+GET {{host}}/eventlist.php?sitename={{site}}
+
+### Send Leaderboard Email
+POST {{host}}/email.php
+Content-Type: application/x-www-form-urlencoded
+
+competitionid={{competitionid}}&To=test@example.com&server={{host}}&site={{site}}
+
+###############################################################################
+# ENDPOINTS WITH NO PARAMETERS (may return errors)
+# These are called by the app but may need valid IDs to test properly.
+###############################################################################
+
+### Check Runs (edge case - no entryid)
+POST {{host}}/checkruns.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid=0&number=1
+
+### Runs Left (edge case - no competition)
+POST {{host}}/runsleft.php
+Content-Type: application/x-www-form-urlencoded
+
+competitionid=0&number=1

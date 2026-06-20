@@ -1,0 +1,171 @@
+### TimingAppLive - Full Workflow Test
+### This file runs through the complete app flow step by step.
+### Use with VS Code REST Client extension.
+###
+### WORKFLOW:
+###   1. Login with passcode → get site name
+###   2. Fetch entries and locations
+###   3. Pick a competition
+###   4. Check runs
+###   5. Submit timing data
+###   6. View leaderboard
+###
+### INSTRUCTIONS:
+###   1. Set your passcode in the Login request below
+###   2. Send requests IN ORDER (top to bottom)
+###   3. After each request, check the response
+###   4. Variables are auto-set via > {% %} scripts
+
+@host = https://autotest.sapphire-solutions.co.uk
+
+###############################################################################
+# STEP 1: Login
+# Replace the passcode below with a valid one for your site.
+###############################################################################
+POST {{host}}/logincheck.php
+Content-Type: application/x-www-form-urlencoded
+
+code=123456
+
+> {%
+    client.global.set("site", response.body.site);
+    client.global.set("admincode", response.body.admincode);
+    client.log(">>> Logged in to site: " + response.body.site);
+    client.log(">>> Admin code: " + response.body.admincode);
+%}
+
+###############################################################################
+# STEP 2: Get Translations (optional - for localization)
+###############################################################################
+POST {{host}}/translationlist.php
+Content-Type: application/x-www-form-urlencoded
+
+site={{site}}
+
+###############################################################################
+# STEP 3: Get All Entries
+# Parse the response to find competition IDs and entry IDs.
+# The response is a JSON array. Pick an entry and note:
+#   - entryid
+#   - competitionname (used as competition filter)
+###############################################################################
+POST {{host}}/entryselect.php
+Content-Type: application/x-www-form-urlencoded
+
+site={{site}}
+
+> {%
+    // Try to auto-set first competition and entry from response
+    try {
+        var data = response.body;
+        if (Array.isArray(data) && data.length > 0) {
+            client.global.set("entryid", data[0].entryid);
+            client.global.set("competition_name", data[0].competitionname);
+            client.log(">>> First entry: " + data[0].entryid);
+            client.log(">>> Competition: " + data[0].competitionname);
+            client.log(">>> Driver: " + data[0].drivername);
+            client.log(">>> Car: " + data[0].carname);
+        }
+    } catch(e) {
+        client.log(">>> Could not auto-parse entries: " + e);
+    }
+%}
+
+###############################################################################
+# STEP 4: Get Locations
+###############################################################################
+POST {{host}}/locationselect.php
+Content-Type: application/x-www-form-urlencoded
+
+site={{site}}
+
+###############################################################################
+# STEP 5: Check Run Count for First Entry
+# Replace {{entryid}} with a real entry ID from Step 3.
+###############################################################################
+POST {{host}}/checkruns.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid=1&number=1
+
+###############################################################################
+# STEP 6: Get Entries with Remaining Runs
+# Replace {{competitionid}} with a real competition ID.
+# Note: The app uses competitionid from the competitions table, which may
+# differ from what you see in entryselect. You may need to query the
+# competitions table or try different IDs.
+###############################################################################
+POST {{host}}/runsleft.php
+Content-Type: application/x-www-form-urlencoded
+
+competitionid=1&number=1
+
+###############################################################################
+# STEP 7: Submit a Timing Run
+# Times in milliseconds since midnight:
+#   12345ms = 0:00:12.345
+#   45678ms = 0:00:45.678
+#   33000ms = 0:00:33.000
+###############################################################################
+POST {{host}}/testadd.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid=1&number=1&run=1&starttime=12345&finishtime=45678&seconds=33&cones=0&lines=0&extras=0&options=0&wt=0&datetime=2025-01-15T10:30:00
+
+###############################################################################
+# STEP 8: Verify the Run Was Saved
+###############################################################################
+POST {{host}}/testselect.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid=1&number=1
+
+###############################################################################
+# STEP 9: Submit a Second Run (with penalties)
+###############################################################################
+POST {{host}}/testadd.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid=1&number=1&run=2&starttime=15000&finishtime=50000&seconds=35&cones=2&lines=1&extras=0&options=0&wt=0&datetime=2025-01-15T10:35:00
+
+###############################################################################
+# STEP 10: List All Runs (check penalties show up)
+###############################################################################
+POST {{host}}/listruns.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid=1&number=1
+
+###############################################################################
+# STEP 11: Get Leaderboard Definitions
+###############################################################################
+GET {{host}}/API/1/Competitions/1/Leaderboards/
+
+###############################################################################
+# STEP 12: Check What's Started
+###############################################################################
+POST {{host}}/startedonly.php
+Content-Type: application/x-www-form-urlencoded
+
+competitionid=1&number=1
+
+###############################################################################
+# STEP 13: Send Leaderboard Email (test)
+###############################################################################
+POST {{host}}/email.php
+Content-Type: application/x-www-form-urlencoded
+
+competitionid=1&To=test@example.com&server=autotest.sapphire-solutions.co.uk&site={{site}}
+
+###############################################################################
+# CLEANUP: Remove test runs
+###############################################################################
+POST {{host}}/removerun.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid=1&run=1
+
+POST {{host}}/removerun.php
+Content-Type: application/x-www-form-urlencoded
+
+entryid=1&run=2
