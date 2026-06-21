@@ -7,7 +7,7 @@ export const Footer = () => (
       <p>
         <strong>Timing App Lite</strong> by{" "}
         <a
-          href="https://mattmccorry.com"
+          href="https://mccorry.dev"
           target="_blank"
           rel="noopener noreferrer"
           className="has-text-link"
