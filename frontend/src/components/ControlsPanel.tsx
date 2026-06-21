@@ -88,7 +88,7 @@ export const ControlsPanel = ({
           </Form.Checkbox>
           {streamingDisabled && (
             <span
-              className="tooltip ml-2"
+              className="tooltip ml-2 has-tooltip-multiline"
               data-tooltip="Streaming is only available when the competition is live and happening today"
             >
               <Icon className="is-size-6">ℹ️</Icon>
