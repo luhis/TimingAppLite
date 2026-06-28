@@ -2,7 +2,6 @@
   "extends": ["config:recommended"],
   "automerge": true,
   "automergeType": "branch",
-  "schedule": ["after 1am and before 2am"],
   "postUpdateOptions": ["yarnDedupeHighest"],
   "automergeSchedule": [
     "* 0-3 * * *"
