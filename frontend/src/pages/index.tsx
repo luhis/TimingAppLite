@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { graphql, Link, PageProps, type HeadFC } from "gatsby";
 import {
@@ -23,9 +22,8 @@ import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
 import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
 import { type Competition } from "../types/leaderboard";
 
-const IndexPage: React.FC<PageProps<Queries.IndexPageQueryQuery>> = ({
-  data,
-}) => {
+const IndexPage = (props: Readonly<PageProps<Queries.IndexPageQueryQuery>>) => {
+  const { data } = props;
   const initialCompetitions = useMemo<readonly Competition[]>(
     () => data.allCompetition.nodes.map(mapCompetitionNode),
     [data],

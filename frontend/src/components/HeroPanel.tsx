@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Heading, Hero, Tag } from "react-bulma-components";
 
 import {

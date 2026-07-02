@@ -2,12 +2,15 @@ import { ValidDate } from "ts-date";
 
 type Override<T, U> = Omit<T, keyof U> & U;
 
-export enum CompetitionStatus {
-  Live = "0",
-  Scheduled = "1",
-  Finalised = "2",
-  Provisional = "3",
-}
+export const CompetitionStatus = {
+  Live: "0",
+  Scheduled: "1",
+  Finalised: "2",
+  Provisional: "3",
+} as const;
+
+export type CompetitionStatus =
+  (typeof CompetitionStatus)[keyof typeof CompetitionStatus];
 
 export type CompetitionFromApi = {
   readonly id: string;

@@ -1,4 +1,4 @@
-import * as React from "react";
+import { type ChangeEvent } from "react";
 import { Box, Button, Form, Heading, Icon } from "react-bulma-components";
 
 import { signalRHubUrl } from "../hooks/useLeaderboardStream";
@@ -21,7 +21,7 @@ type ControlsPanelCallbacks = {
   readonly onLeaderboardChange: (value: string) => void;
   readonly onFilterChange: (
     field: keyof FilterState,
-  ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  ) => (event: ChangeEvent<HTMLInputElement>) => void;
   readonly onClassChange: (value: string) => void;
   readonly onStreamResultsChange: (checked: boolean) => void;
   readonly onResetFilters: () => void;
@@ -59,7 +59,7 @@ export const ControlsPanel = ({
         <Form.Control>
           <Form.Select
             value={leaderboardId}
-            onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+            onChange={(event: ChangeEvent<HTMLSelectElement>) =>
               onLeaderboardChange(event.target.value)
             }
             disabled={loadingLeaderboards || leaderboards.length === 0}
@@ -80,7 +80,7 @@ export const ControlsPanel = ({
         <Form.Control>
           <Form.Checkbox
             checked={streamResults}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
               onStreamResultsChange(event.target.checked)
             }
             disabled={streamingDisabled}
@@ -127,7 +127,7 @@ export const ControlsPanel = ({
         <Form.Control>
           <Form.Select
             value={filters.className}
-            onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+            onChange={(event: ChangeEvent<HTMLSelectElement>) =>
               onClassChange(event.target.value)
             }
             disabled={classOptions.length === 0}

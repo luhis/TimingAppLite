@@ -26,7 +26,9 @@ const getJson = async <T>(
   return (await response.json()) as T;
 };
 
-export const fetchAllCompetitions = async (signal?: AbortSignal) =>
+export const fetchAllCompetitions = async (
+  signal?: AbortSignal,
+): Promise<readonly CompetitionFromApi[]> =>
   getJson<readonly CompetitionFromApi[]>(
     `${API_BASE}/LiveAllCompetitions`,
     "Unable to load competitions",
@@ -36,7 +38,7 @@ export const fetchAllCompetitions = async (signal?: AbortSignal) =>
 export const fetchLeaderboards = async (
   competitionId: string,
   signal?: AbortSignal,
-) =>
+): Promise<readonly LeaderboardSummary[]> =>
   getJson<readonly LeaderboardSummary[]>(
     `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/LeaderBoards/`,
     "Unable to load leaderboard list",
@@ -47,7 +49,7 @@ export const fetchLeaderboard = async (
   competitionId: string,
   leaderboardId: string,
   signal?: AbortSignal,
-) =>
+): Promise<LeaderboardPayloadFromApi> =>
   getJson<LeaderboardPayloadFromApi>(
     `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/Leaderboards/${encodeURIComponent(leaderboardId)}`,
     "Unable to load results",
@@ -57,7 +59,9 @@ export const fetchLeaderboard = async (
 export const EVENT_COMPETITION_ID = "1435";
 export const EVENT_LEADERBOARD_ID = "99999";
 
-export const fetchEventLeaderboard = async (signal?: AbortSignal) =>
+export const fetchEventLeaderboard = async (
+  signal?: AbortSignal,
+): Promise<LeaderboardPayloadFromApi> =>
   getJson<LeaderboardPayloadFromApi>(
     `${API_BASE}/Competitions/${EVENT_COMPETITION_ID}/Leaderboards/${EVENT_LEADERBOARD_ID}`,
     "Unable to load event list",
