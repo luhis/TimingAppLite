@@ -21,6 +21,7 @@ import {
   getErrorMessage,
 } from "../../lib/leaderboardApi";
 import {
+  isSelectableLeaderboard,
   isSectionRow,
   mergeRowsByEntry,
   rowSearchText,
@@ -110,11 +111,15 @@ const CompetitionPage = ({
 
         if (!controller.signal.aborted) {
           setLeaderboardsState({ status: "success", data });
+
+          const selectableLeaderboards =
+            data.filter(isSelectableLeaderboard);
+
           setLeaderboardId((currentLeaderboardId) => {
             const preferredLeaderboard =
               data.find((item) => String(item.id) === currentLeaderboardId) ??
               data.find((item) => String(item.id) === requestedLeaderboardId) ??
-              data[0];
+              selectableLeaderboards[0];
 
             if (!preferredLeaderboard) {
               setLeaderboardState({ status: "idle" });

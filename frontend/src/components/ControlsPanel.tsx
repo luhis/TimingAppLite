@@ -2,6 +2,7 @@ import * as React from "react";
 import { Box, Button, Form, Heading, Icon } from "react-bulma-components";
 
 import { signalRHubUrl } from "../hooks/useLeaderboardStream";
+import { isSelectableLeaderboard } from "../lib/leaderboardUtils";
 import type { FilterState, LeaderboardSummary } from "../types/leaderboard";
 
 type ControlsPanelData = {
@@ -65,11 +66,7 @@ export const ControlsPanel = ({
           >
             <option value="">Select a leaderboard</option>
             {leaderboards
-              .filter(
-                (item) =>
-                  item.name !== "Event List" &&
-                  item.name.trim() !== "Event Notes",
-              )
+              .filter(isSelectableLeaderboard)
               .map((item) => (
                 <option key={item.id} value={String(item.id)}>
                   {item.name}
