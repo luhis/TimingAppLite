@@ -1,4 +1,4 @@
-import type { LeaderboardItem } from "../types/leaderboard";
+import type { LeaderboardItem, LeaderboardSummary } from "../types/leaderboard";
 
 export const stringifyCell = (
   value: string | number | null | undefined,
@@ -50,3 +50,8 @@ export const mergeRowsByEntry = (
     (a, b) => a._index - b._index,
   );
 };
+
+const HIDDEN_LEADERBOARD_NAMES = ["Event Notes", "Event List"];
+
+export const isSelectableLeaderboard = (item: LeaderboardSummary): boolean =>
+  !HIDDEN_LEADERBOARD_NAMES.includes(item.name.trim());
