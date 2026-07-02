@@ -5,6 +5,7 @@ import { Columns, Container, Section } from "react-bulma-components";
 import { newValidDate } from "ts-date";
 
 import { ControlsPanel } from "../../components/ControlsPanel";
+import { EventNotesPanel } from "../../components/EventNotesPanel";
 import { Footer } from "../../components/Footer";
 import { HeroPanel } from "../../components/HeroPanel";
 import { Navbar } from "../../components/Navbar";
@@ -65,6 +66,7 @@ const CompetitionPage = ({
   const [refreshTick, setRefreshTick] = useState(0);
   const [streamResults, setStreamResults] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
+  const [eventNotes, setEventNotes] = useState("");
 
   const requestedLeaderboardId = useMemo(
     () => new URLSearchParams(location.search).get("leaderboardid") ?? "",
@@ -182,6 +184,48 @@ const CompetitionPage = ({
       controller.abort();
     };
   }, [competitionId, leaderboardId, refreshTick]);
+
+  useEffect(() => {
+    if (!competitionId || leaderboardsState.status !== "success") {
+      return;
+    }
+
+    const notesLeaderboard = leaderboardsState.data.find(
+      (item) => item.name.trim() === "Event Notes",
+    );
+
+    if (!notesLeaderboard) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadEventNotes = async () => {
+      try {
+        const payload = await fetchLeaderboard(
+          competitionId,
+          String(notesLeaderboard.id),
+          controller.signal,
+        );
+
+        if (!controller.signal.aborted && payload.items.length > 0) {
+          const firstItem = payload.items[0];
+          const notesColumn = payload.columns[0]?.name;
+          if (notesColumn) {
+            setEventNotes(String(firstItem[notesColumn] ?? ""));
+          }
+        }
+      } catch {
+        // non-critical — event notes are supplementary
+      }
+    };
+
+    void loadEventNotes();
+
+    return () => {
+      controller.abort();
+    };
+  }, [competitionId, leaderboardsState]);
 
   const handleRowUpdate = useCallback((rows: readonly LeaderboardItem[]) => {
     setLastUpdateTime(new Date());
@@ -346,8 +390,9 @@ const CompetitionPage = ({
                 onRefresh={refreshCurrentSelection}
               />
             </Columns.Column>
-            <Columns.Column size={8}>
-              <ResultsPanel
+          <Columns.Column size={8}>
+            <EventNotesPanel notes={eventNotes} />
+            <ResultsPanel
                 selectedLeaderboardName={selectedLeaderboard?.name}
                 isBusy={isBusy}
                 error={error}

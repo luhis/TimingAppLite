@@ -65,7 +65,11 @@ export const ControlsPanel = ({
           >
             <option value="">Select a leaderboard</option>
             {leaderboards
-              .filter((item) => item.name !== "Event List")
+              .filter(
+                (item) =>
+                  item.name !== "Event List" &&
+                  item.name.trim() !== "Event Notes",
+              )
               .map((item) => (
                 <option key={item.id} value={String(item.id)}>
                   {item.name}
