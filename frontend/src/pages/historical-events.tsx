@@ -12,6 +12,7 @@ import {
 import { diffDate, newValidDate } from "ts-date";
 
 import { CompetitionDate } from "../components/CompetitionDate";
+import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
 import { Competition } from "../types/leaderboard";
 import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
@@ -65,56 +66,56 @@ const HistoricalEventsPage: React.FC<
   }, [competitions]);
 
   return (
-    <Section>
-      <Container>
-        <Hero className="is-info is-small">
-          <Hero.Body>
-            <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7">
-              Gatsby TypeScript leaderboard app
-            </p>
-            <Heading renderAs="h2" size={3} className="mb-2">
-              Historical events.
-            </Heading>
-            <p>Browse past competition results.</p>
-          </Hero.Body>
-        </Hero>
+    <>
+      <Navbar />
+      <Section>
+        <Container>
+          <Hero className="is-info is-small">
+            <Hero.Body>
+              <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7">
+                Gatsby TypeScript leaderboard app
+              </p>
+              <Heading renderAs="h2" size={3} className="mb-2">
+                Historical events.
+              </Heading>
+              <p>Browse past competition results.</p>
+            </Hero.Body>
+          </Hero>
 
-        <div className="mb-3">
-          <Link to="/" className="has-text-link is-size-6">
-            ← Current events
-          </Link>
-        </div>
-
-        {historicalCompetitions.length === 0 ? (
-          <p className="has-text-grey">No historical competitions found.</p>
-        ) : (
-          <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
-            {historicalCompetitions.map((competition) => (
-              <Panel.Block
-                key={competition.id}
-                renderAs={Link}
-                to={`/competition/${competition.id}`}
-              >
-                <Tag color={competitionStatusColor(competition.active)} mr={3}>
-                  {competitionStatusLabel(competition.active)}
-                </Tag>
-                <span className="has-text-weight-medium">
-                  {competition.name}
-                </span>
-                <span>
-                  &nbsp;
-                  <CompetitionDate date={competition.dateddmmyyyy} />
-                </span>
-                <span className="has-text-grey is-size-7 ml-auto">
-                  {competition.dateddmmyyyy.toLocaleDateString("en-gb")}
-                </span>
-              </Panel.Block>
-            ))}
-          </Panel>
-        )}
-      </Container>
-      <Footer />
-    </Section>
+          {historicalCompetitions.length === 0 ? (
+            <p className="has-text-grey">No historical competitions found.</p>
+          ) : (
+            <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
+              {historicalCompetitions.map((competition) => (
+                <Panel.Block
+                  key={competition.id}
+                  renderAs={Link}
+                  to={`/competition/${competition.id}`}
+                >
+                  <Tag
+                    color={competitionStatusColor(competition.active)}
+                    mr={3}
+                  >
+                    {competitionStatusLabel(competition.active)}
+                  </Tag>
+                  <span className="has-text-weight-medium">
+                    {competition.name}
+                  </span>
+                  <span>
+                    &nbsp;
+                    <CompetitionDate date={competition.dateddmmyyyy} />
+                  </span>
+                  <span className="has-text-grey is-size-7 ml-auto">
+                    {competition.dateddmmyyyy.toLocaleDateString("en-gb")}
+                  </span>
+                </Panel.Block>
+              ))}
+            </Panel>
+          )}
+        </Container>
+        <Footer />
+      </Section>
+    </>
   );
 };
 

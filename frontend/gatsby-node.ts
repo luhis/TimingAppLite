@@ -1,10 +1,7 @@
 import type { GatsbyNode } from "gatsby";
 
-import type { CompetitionFromApi } from "./src/types/leaderboard";
+import { EVENT_COMPETITION_ID, EVENT_LEADERBOARD_ID, fetchAllCompetitions, fetchEventLeaderboard  } from "./src/lib/leaderboardApi";
 
-const API_BASE = process.env.GATSBY_BACKEND_URL
-  ? `${process.env.GATSBY_BACKEND_URL}/API/1`
-  : "";
 
 export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
   actions,
@@ -13,7 +10,7 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
 }) => {
   const { createNode } = actions;
 
-  if (!API_BASE) {
+  if (!process.env.GATSBY_BACKEND_URL) {
     console.warn(
       "⚠️  GATSBY_BACKEND_URL is not set. Skipping competition data fetch.",
     );
@@ -23,25 +20,15 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
     return;
   }
 
-  console.log(`📡 Fetching competitions from: ${API_BASE}/LiveAllCompetitions`);
-
   try {
-    const response = await fetch(`${API_BASE}/LiveAllCompetitions`);
-
-    if (!response.ok) {
-      console.error(`❌ Failed to fetch competitions: ${response.status}`);
-      return;
-    }
-
-    const competitions =
-      (await response.json()) as readonly CompetitionFromApi[];
-
+    console.log("📡 Fetching competitions…");
+    const competitions = await fetchAllCompetitions();
     console.log(`✅ Fetched ${competitions.length} competitions`);
 
     competitions.forEach((competition) => {
       void createNode({
         ...competition,
-        competitionId: competition.id, // Preserve original ID for reference
+        competitionId: competition.id,
         id: createNodeId(`Competition-${competition.id}`),
         parent: null,
         children: [],
@@ -53,5 +40,26 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
     });
   } catch (error) {
     console.error("❌ Error fetching competitions:", error);
+  }
+
+  try {
+    console.log("📡 Fetching event list…");
+    const payload = await fetchEventLeaderboard();
+    console.log(`✅ Fetched ${payload.items.length} events`);
+
+    void createNode({
+      eventId: `${EVENT_COMPETITION_ID}-${EVENT_LEADERBOARD_ID}`,
+      columns: payload.columns,
+      items: payload.items,
+      id: createNodeId(`EventList-${EVENT_COMPETITION_ID}-${EVENT_LEADERBOARD_ID}`),
+      parent: null,
+      children: [],
+      internal: {
+        type: "EventList",
+        contentDigest: createContentDigest(payload),
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching event list:", error);
   }
 };

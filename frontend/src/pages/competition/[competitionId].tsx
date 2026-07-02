@@ -1,12 +1,13 @@
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, type HeadFC } from "gatsby";
+import { type HeadFC } from "gatsby";
 import { Columns, Container, Section } from "react-bulma-components";
 import { newValidDate } from "ts-date";
 
 import { ControlsPanel } from "../../components/ControlsPanel";
 import { Footer } from "../../components/Footer";
 import { HeroPanel } from "../../components/HeroPanel";
+import { Navbar } from "../../components/Navbar";
 import { ResultsPanel } from "../../components/ResultsPanel";
 import { SeoHead } from "../../components/SeoHead";
 import { useLeaderboardStream } from "../../hooks/useLeaderboardStream";
@@ -320,50 +321,48 @@ const CompetitionPage = ({
   };
 
   return (
-    <Section>
-      <Container>
-        <div className="mb-4">
-          <Link to="/" className="has-text-link is-size-6">
-            ← All competitions
-          </Link>
-        </div>
-        <HeroPanel selectedCompetition={competition} />
-        <Columns>
-          <Columns.Column size={4}>
-            <ControlsPanel
-              leaderboards={leaderboards}
-              leaderboardId={leaderboardId}
-              filters={filters}
-              classOptions={classOptions}
-              streamResults={streamResults}
-              loadingLeaderboards={loadingLeaderboards}
-              isBusy={isBusy}
-              isCompetitionLive={isCompetitionLive}
-              isCompetitionToday={isToday}
-              onLeaderboardChange={handleLeaderboardChange}
-              onFilterChange={handleFilterChange}
-              onClassChange={handleClassChange}
-              onStreamResultsChange={setStreamResults}
-              onResetFilters={() => setFilters(initialFilters)}
-              onRefresh={refreshCurrentSelection}
-            />
-          </Columns.Column>
-          <Columns.Column size={8}>
-            <ResultsPanel
-              selectedLeaderboardName={selectedLeaderboard?.name}
-              isBusy={isBusy}
-              error={error}
-              dataRowCount={dataRowCount}
-              lastUpdateTime={lastUpdateTime}
-              columns={resultColumns}
-              visibleRows={visibleRows}
-              leaderboardLoaded={leaderboardState.status === "success"}
-            />
-          </Columns.Column>
-        </Columns>
-      </Container>
-      <Footer />
-    </Section>
+    <>
+      <Navbar />
+      <Section>
+        <Container>
+          <HeroPanel selectedCompetition={competition} />
+          <Columns>
+            <Columns.Column size={4}>
+              <ControlsPanel
+                leaderboards={leaderboards}
+                leaderboardId={leaderboardId}
+                filters={filters}
+                classOptions={classOptions}
+                streamResults={streamResults}
+                loadingLeaderboards={loadingLeaderboards}
+                isBusy={isBusy}
+                isCompetitionLive={isCompetitionLive}
+                isCompetitionToday={isToday}
+                onLeaderboardChange={handleLeaderboardChange}
+                onFilterChange={handleFilterChange}
+                onClassChange={handleClassChange}
+                onStreamResultsChange={setStreamResults}
+                onResetFilters={() => setFilters(initialFilters)}
+                onRefresh={refreshCurrentSelection}
+              />
+            </Columns.Column>
+            <Columns.Column size={8}>
+              <ResultsPanel
+                selectedLeaderboardName={selectedLeaderboard?.name}
+                isBusy={isBusy}
+                error={error}
+                dataRowCount={dataRowCount}
+                lastUpdateTime={lastUpdateTime}
+                columns={resultColumns}
+                visibleRows={visibleRows}
+                leaderboardLoaded={leaderboardState.status === "success"}
+              />
+            </Columns.Column>
+          </Columns>
+        </Container>
+        <Footer />
+      </Section>
+    </>
   );
 };
 
