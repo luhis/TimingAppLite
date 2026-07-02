@@ -13,6 +13,7 @@ import { addMonth, diffDate, newValidDate } from "ts-date";
 
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Footer } from "../components/Footer";
+import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
 import {
   competitionStatusColor,
@@ -69,54 +70,54 @@ const IndexPage: React.FC<PageProps<Queries.IndexPageQueryQuery>> = ({
   }, [competitions]);
 
   return (
-    <Section>
-      <Container>
-        <Hero className="is-info is-small">
-          <Hero.Body>
-            <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7">
-              Gatsby TypeScript leaderboard app
-            </p>
-            <Heading renderAs="h2" size={3} className="mb-2">
-              Live autotest results.
-            </Heading>
-            <p>Select a competition below to view its leaderboards.</p>
-          </Hero.Body>
-        </Hero>
+    <>
+      <Navbar />
+      <Section>
+        <Container>
+          <Hero className="is-info is-small">
+            <Hero.Body>
+              <p className="has-text-uppercase has-text-weight-semibold has-text-link-dark is-size-7">
+                Gatsby TypeScript leaderboard app
+              </p>
+              <Heading renderAs="h2" size={3} className="mb-2">
+                Live autotest results.
+              </Heading>
+              <p>Select a competition below to view its leaderboards.</p>
+            </Hero.Body>
+          </Hero>
 
-        <div className="mb-3">
-          <Link to="/historical-events" className="has-text-link is-size-6">
-            View historical events →
-          </Link>
-        </div>
-
-        {currentCompetitions.length === 0 ? (
-          <p className="has-text-grey">No current competitions found.</p>
-        ) : (
-          <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
-            {currentCompetitions.map((competition) => (
-              <Panel.Block
-                key={competition.id}
-                renderAs={Link}
-                to={`/competition/${competition.id}`}
-              >
-                <Tag color={competitionStatusColor(competition.active)} mr={3}>
-                  {competitionStatusLabel(competition.active)}
-                </Tag>
-                <span className="has-text-weight-medium">
-                  {competition.name}
-                </span>
-                <span className="has-text-grey is-size-7 ml-auto">
-                  <CompetitionDate date={competition.dateddmmyyyy} />
-                  &nbsp;
-                  {competition.dateddmmyyyy.toLocaleDateString("en-gb")}
-                </span>
-              </Panel.Block>
-            ))}
-          </Panel>
-        )}
-      </Container>
-      <Footer />
-    </Section>
+          {currentCompetitions.length === 0 ? (
+            <p className="has-text-grey">No current competitions found.</p>
+          ) : (
+            <Panel style={{ maxHeight: "60vh", overflowY: "auto" }}>
+              {currentCompetitions.map((competition) => (
+                <Panel.Block
+                  key={competition.id}
+                  renderAs={Link}
+                  to={`/competition/${competition.id}`}
+                >
+                  <Tag
+                    color={competitionStatusColor(competition.active)}
+                    mr={3}
+                  >
+                    {competitionStatusLabel(competition.active)}
+                  </Tag>
+                  <span className="has-text-weight-medium">
+                    {competition.name}
+                  </span>
+                  <span className="has-text-grey is-size-7 ml-auto">
+                    <CompetitionDate date={competition.dateddmmyyyy} />
+                    &nbsp;
+                    {competition.dateddmmyyyy.toLocaleDateString("en-gb")}
+                  </span>
+                </Panel.Block>
+              ))}
+            </Panel>
+          )}
+        </Container>
+        <Footer />
+      </Section>
+    </>
   );
 };
 

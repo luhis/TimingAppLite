@@ -505,6 +505,184 @@ type DirectorySortInput = {
   readonly uid: InputMaybe<SortOrderEnum>;
 };
 
+type EventList = Node & {
+  readonly children: ReadonlyArray<Node>;
+  readonly columns: Maybe<ReadonlyArray<Maybe<EventListColumns>>>;
+  readonly eventId: Maybe<Scalars['String']>;
+  readonly id: Scalars['ID'];
+  readonly internal: Internal;
+  readonly items: Maybe<ReadonlyArray<Maybe<EventListItems>>>;
+  readonly parent: Maybe<Node>;
+};
+
+type EventListColumns = {
+  readonly label: Maybe<Scalars['String']>;
+  readonly name: Maybe<Scalars['String']>;
+};
+
+type EventListColumnsFieldSelector = {
+  readonly label: InputMaybe<FieldSelectorEnum>;
+  readonly name: InputMaybe<FieldSelectorEnum>;
+};
+
+type EventListColumnsFilterInput = {
+  readonly label: InputMaybe<StringQueryOperatorInput>;
+  readonly name: InputMaybe<StringQueryOperatorInput>;
+};
+
+type EventListColumnsFilterListInput = {
+  readonly elemMatch: InputMaybe<EventListColumnsFilterInput>;
+};
+
+type EventListColumnsSortInput = {
+  readonly label: InputMaybe<SortOrderEnum>;
+  readonly name: InputMaybe<SortOrderEnum>;
+};
+
+type EventListConnection = {
+  readonly distinct: ReadonlyArray<Scalars['String']>;
+  readonly edges: ReadonlyArray<EventListEdge>;
+  readonly group: ReadonlyArray<EventListGroupConnection>;
+  readonly max: Maybe<Scalars['Float']>;
+  readonly min: Maybe<Scalars['Float']>;
+  readonly nodes: ReadonlyArray<EventList>;
+  readonly pageInfo: PageInfo;
+  readonly sum: Maybe<Scalars['Float']>;
+  readonly totalCount: Scalars['Int'];
+};
+
+
+type EventListConnection_distinctArgs = {
+  field: EventListFieldSelector;
+};
+
+
+type EventListConnection_groupArgs = {
+  field: EventListFieldSelector;
+  limit: InputMaybe<Scalars['Int']>;
+  skip: InputMaybe<Scalars['Int']>;
+};
+
+
+type EventListConnection_maxArgs = {
+  field: EventListFieldSelector;
+};
+
+
+type EventListConnection_minArgs = {
+  field: EventListFieldSelector;
+};
+
+
+type EventListConnection_sumArgs = {
+  field: EventListFieldSelector;
+};
+
+type EventListEdge = {
+  readonly next: Maybe<EventList>;
+  readonly node: EventList;
+  readonly previous: Maybe<EventList>;
+};
+
+type EventListFieldSelector = {
+  readonly children: InputMaybe<NodeFieldSelector>;
+  readonly columns: InputMaybe<EventListColumnsFieldSelector>;
+  readonly eventId: InputMaybe<FieldSelectorEnum>;
+  readonly id: InputMaybe<FieldSelectorEnum>;
+  readonly internal: InputMaybe<InternalFieldSelector>;
+  readonly items: InputMaybe<EventListItemsFieldSelector>;
+  readonly parent: InputMaybe<NodeFieldSelector>;
+};
+
+type EventListFilterInput = {
+  readonly children: InputMaybe<NodeFilterListInput>;
+  readonly columns: InputMaybe<EventListColumnsFilterListInput>;
+  readonly eventId: InputMaybe<StringQueryOperatorInput>;
+  readonly id: InputMaybe<StringQueryOperatorInput>;
+  readonly internal: InputMaybe<InternalFilterInput>;
+  readonly items: InputMaybe<EventListItemsFilterListInput>;
+  readonly parent: InputMaybe<NodeFilterInput>;
+};
+
+type EventListGroupConnection = {
+  readonly distinct: ReadonlyArray<Scalars['String']>;
+  readonly edges: ReadonlyArray<EventListEdge>;
+  readonly field: Scalars['String'];
+  readonly fieldValue: Maybe<Scalars['String']>;
+  readonly group: ReadonlyArray<EventListGroupConnection>;
+  readonly max: Maybe<Scalars['Float']>;
+  readonly min: Maybe<Scalars['Float']>;
+  readonly nodes: ReadonlyArray<EventList>;
+  readonly pageInfo: PageInfo;
+  readonly sum: Maybe<Scalars['Float']>;
+  readonly totalCount: Scalars['Int'];
+};
+
+
+type EventListGroupConnection_distinctArgs = {
+  field: EventListFieldSelector;
+};
+
+
+type EventListGroupConnection_groupArgs = {
+  field: EventListFieldSelector;
+  limit: InputMaybe<Scalars['Int']>;
+  skip: InputMaybe<Scalars['Int']>;
+};
+
+
+type EventListGroupConnection_maxArgs = {
+  field: EventListFieldSelector;
+};
+
+
+type EventListGroupConnection_minArgs = {
+  field: EventListFieldSelector;
+};
+
+
+type EventListGroupConnection_sumArgs = {
+  field: EventListFieldSelector;
+};
+
+type EventListItems = {
+  readonly date: Maybe<Scalars['String']>;
+  readonly entries: Maybe<Scalars['String']>;
+  readonly name: Maybe<Scalars['String']>;
+};
+
+type EventListItemsFieldSelector = {
+  readonly date: InputMaybe<FieldSelectorEnum>;
+  readonly entries: InputMaybe<FieldSelectorEnum>;
+  readonly name: InputMaybe<FieldSelectorEnum>;
+};
+
+type EventListItemsFilterInput = {
+  readonly date: InputMaybe<StringQueryOperatorInput>;
+  readonly entries: InputMaybe<StringQueryOperatorInput>;
+  readonly name: InputMaybe<StringQueryOperatorInput>;
+};
+
+type EventListItemsFilterListInput = {
+  readonly elemMatch: InputMaybe<EventListItemsFilterInput>;
+};
+
+type EventListItemsSortInput = {
+  readonly date: InputMaybe<SortOrderEnum>;
+  readonly entries: InputMaybe<SortOrderEnum>;
+  readonly name: InputMaybe<SortOrderEnum>;
+};
+
+type EventListSortInput = {
+  readonly children: InputMaybe<NodeSortInput>;
+  readonly columns: InputMaybe<EventListColumnsSortInput>;
+  readonly eventId: InputMaybe<SortOrderEnum>;
+  readonly id: InputMaybe<SortOrderEnum>;
+  readonly internal: InputMaybe<InternalSortInput>;
+  readonly items: InputMaybe<EventListItemsSortInput>;
+  readonly parent: InputMaybe<NodeSortInput>;
+};
+
 type FieldSelectorEnum =
   | 'SELECT';
 
@@ -929,6 +1107,7 @@ type PageInfo = {
 type Query = {
   readonly allCompetition: CompetitionConnection;
   readonly allDirectory: DirectoryConnection;
+  readonly allEventList: EventListConnection;
   readonly allFile: FileConnection;
   readonly allSite: SiteConnection;
   readonly allSiteBuildMetadata: SiteBuildMetadataConnection;
@@ -937,6 +1116,7 @@ type Query = {
   readonly allSitePlugin: SitePluginConnection;
   readonly competition: Maybe<Competition>;
   readonly directory: Maybe<Directory>;
+  readonly eventList: Maybe<EventList>;
   readonly file: Maybe<File>;
   readonly site: Maybe<Site>;
   readonly siteBuildMetadata: Maybe<SiteBuildMetadata>;
@@ -959,6 +1139,14 @@ type Query_allDirectoryArgs = {
   limit: InputMaybe<Scalars['Int']>;
   skip: InputMaybe<Scalars['Int']>;
   sort: InputMaybe<ReadonlyArray<InputMaybe<DirectorySortInput>>>;
+};
+
+
+type Query_allEventListArgs = {
+  filter: InputMaybe<EventListFilterInput>;
+  limit: InputMaybe<Scalars['Int']>;
+  skip: InputMaybe<Scalars['Int']>;
+  sort: InputMaybe<ReadonlyArray<InputMaybe<EventListSortInput>>>;
 };
 
 
@@ -1066,6 +1254,17 @@ type Query_directoryArgs = {
   size: InputMaybe<IntQueryOperatorInput>;
   sourceInstanceName: InputMaybe<StringQueryOperatorInput>;
   uid: InputMaybe<IntQueryOperatorInput>;
+};
+
+
+type Query_eventListArgs = {
+  children: InputMaybe<NodeFilterListInput>;
+  columns: InputMaybe<EventListColumnsFilterListInput>;
+  eventId: InputMaybe<StringQueryOperatorInput>;
+  id: InputMaybe<StringQueryOperatorInput>;
+  internal: InputMaybe<InternalFilterInput>;
+  items: InputMaybe<EventListItemsFilterListInput>;
+  parent: InputMaybe<NodeFilterInput>;
 };
 
 
@@ -1958,6 +2157,11 @@ type StringQueryOperatorInput = {
   readonly nin: InputMaybe<ReadonlyArray<InputMaybe<Scalars['String']>>>;
   readonly regex: InputMaybe<Scalars['String']>;
 };
+
+type EventListPageQueryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type EventListPageQueryQuery = { readonly eventList: { readonly columns: ReadonlyArray<{ readonly name: string | null, readonly label: string | null } | null> | null, readonly items: ReadonlyArray<{ readonly name: string | null, readonly entries: string | null, readonly date: string | null } | null> | null } | null };
 
 type HistoricalEventsPageQueryQueryVariables = Exact<{ [key: string]: never; }>;
 

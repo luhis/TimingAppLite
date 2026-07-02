@@ -53,3 +53,13 @@ export const fetchLeaderboard = async (
     "Unable to load results",
     signal,
   );
+
+export const EVENT_COMPETITION_ID = "1435";
+export const EVENT_LEADERBOARD_ID = "99999";
+
+export const fetchEventLeaderboard = async (signal?: AbortSignal) =>
+  getJson<LeaderboardPayloadFromApi>(
+    `${API_BASE}/Competitions/${EVENT_COMPETITION_ID}/Leaderboards/${EVENT_LEADERBOARD_ID}`,
+    "Unable to load event list",
+    signal,
+  );

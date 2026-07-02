@@ -24,7 +24,10 @@ export const Footer = () => (
           View on GitHub
         </a>
       </p>
-      <p>App is currently in Beta and may experience ~20sec backend server boot times due to cost constraints.</p>
+      <p>
+        App is currently in Beta and may experience ~20sec backend server boot
+        times due to cost constraints.
+      </p>
     </Content>
   </BulmaFooter>
 );
