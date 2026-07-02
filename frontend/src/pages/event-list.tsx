@@ -36,7 +36,7 @@ const EventListPage: React.FC<PageProps<Queries.EventListPageQueryQuery>> = ({
   data,
 }) => {
   const initialData = useMemo<EventListData>(
-    () => mapEventListNode(data.eventList),
+    () => mapEventListNode(data.eventList ?? {}),
     [data],
   );
 
