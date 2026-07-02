@@ -7,7 +7,7 @@ const NotFoundPage: React.FC<PageProps> = () => {
       <div className="container">
         <h1 className="title">Page not found</h1>
         <p className="subtitle">
-          Sorry, we couldn't find what you were looking for.
+          Sorry, we couldn&apos;t find what you were looking for.
         </p>
         <Link to="/" className="button is-primary">
           Go home
