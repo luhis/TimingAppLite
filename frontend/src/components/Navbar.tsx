@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useState } from "react";
 import { Link } from "gatsby";
 import { Navbar as BulmaNavbar } from "react-bulma-components";

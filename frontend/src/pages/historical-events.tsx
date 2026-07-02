@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { graphql, Link, PageProps, type HeadFC } from "gatsby";
 import {
@@ -14,7 +13,7 @@ import { diffDate, newValidDate } from "ts-date";
 import { CompetitionDate } from "../components/CompetitionDate";
 import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
-import { Competition } from "../types/leaderboard";
+import type { Competition } from "../types/leaderboard";
 import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
 import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
 import {
@@ -23,9 +22,10 @@ import {
 } from "../lib/competitionStatus";
 import { Footer } from "../components/Footer";
 
-const HistoricalEventsPage: React.FC<
-  PageProps<Queries.HistoricalEventsPageQueryQuery>
-> = ({ data }) => {
+const HistoricalEventsPage = (
+  props: Readonly<PageProps<Queries.HistoricalEventsPageQueryQuery>>,
+) => {
+  const { data } = props;
   const initialCompetitions = useMemo<readonly Competition[]>(
     () => data.allCompetition.nodes.map(mapCompetitionNode),
     [data],

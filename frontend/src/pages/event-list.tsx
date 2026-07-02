@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { graphql, PageProps, type HeadFC } from "gatsby";
 import {
@@ -32,9 +31,10 @@ const mapEventListNode = (node: {
   items: (node.items as readonly LeaderboardItemFromApi[]) ?? [],
 });
 
-const EventListPage: React.FC<PageProps<Queries.EventListPageQueryQuery>> = ({
-  data,
-}) => {
+const EventListPage = (
+  props: Readonly<PageProps<Queries.EventListPageQueryQuery>>,
+) => {
+  const { data } = props;
   const initialData = useMemo<EventListData>(
     () => mapEventListNode(data.eventList ?? {}),
     [data],

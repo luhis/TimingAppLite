@@ -1,5 +1,4 @@
-import * as React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { type HeadFC } from "gatsby";
 import { Columns, Container, Section } from "react-bulma-components";
 import { newValidDate } from "ts-date";
@@ -355,7 +354,7 @@ const CompetitionPage = ({
 
   const handleFilterChange =
     (field: keyof FilterState) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       setFilters((current) => ({ ...current, [field]: event.target.value }));
     };
 
