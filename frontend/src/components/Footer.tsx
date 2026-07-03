@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Footer as BulmaFooter, Content } from "react-bulma-components";
 
 export const Footer = () => (
