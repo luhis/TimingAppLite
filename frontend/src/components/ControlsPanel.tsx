@@ -1,3 +1,4 @@
+import * as React from "react";
 import { type ChangeEvent } from "react";
 import { Box, Button, Form, Heading, Icon } from "react-bulma-components";
 

@@ -1,3 +1,4 @@
+import * as React from "react";
 import { type ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { type HeadFC } from "gatsby";
 import { Columns, Container, Section } from "react-bulma-components";

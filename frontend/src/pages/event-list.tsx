@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { graphql, PageProps, type HeadFC } from "gatsby";
 import {

@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Heading, Notification, Table } from "react-bulma-components";
 
 import { isSectionRow, stringifyCell } from "../lib/leaderboardUtils";
