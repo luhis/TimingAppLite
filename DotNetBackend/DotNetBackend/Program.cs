@@ -54,7 +54,7 @@ app.UseCors("AllowedOrigins");
 app.MapHealthChecks("/healthz");
 app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
 app.MapGet("/API/1/LiveAllCompetitions", (IApiClient api, CancellationToken ct) => api.GetLiveAllCompetitions(ct));
-app.MapGet("/API/1/Competitions/{competionId:int}/LeaderBoards/{leaderboardId:int?}", (IApiClient api, int competionId, int? leaderboardId, CancellationToken ct) => api.GetLeaderboards(competionId, leaderboardId, ct));
+app.MapGet("/API/1/Competitions/{competitionId:int}/LeaderBoards/{leaderboardId:int?}", (IApiClient api, int competitionId, int? leaderboardId, CancellationToken ct) => api.GetLeaderboards(competitionId, leaderboardId, ct));
 
 Console.WriteLine("Starting DotNetBackend...");
 app.Run();

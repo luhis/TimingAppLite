@@ -7,5 +7,5 @@ public interface IApiClient
     Task<LeaderboardDto> GetLeaderboard(int competitionId, int leaderboardId, CancellationToken ct);
     Task<IReadOnlyList<CompetitionDto>> GetCompetitions(CancellationToken ct);
     Task<IResult> GetLiveAllCompetitions(CancellationToken ct = default);
-    Task<IResult> GetLeaderboards(int competionId, int? leaderboardId, CancellationToken ct = default);
+    Task<IResult> GetLeaderboards(int competitionId, int? leaderboardId, CancellationToken ct = default);
 }

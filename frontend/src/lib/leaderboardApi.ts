@@ -56,6 +56,7 @@ export const fetchLeaderboard = async (
     signal,
   );
 
+// Well-known event competition/leaderboard IDs for the event list feed
 export const EVENT_COMPETITION_ID = "1435";
 export const EVENT_LEADERBOARD_ID = "99999";
 

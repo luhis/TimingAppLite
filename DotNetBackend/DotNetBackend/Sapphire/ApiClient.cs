@@ -24,13 +24,13 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
             ?? throw new InvalidOperationException($"Empty response from {url}");
     }
 
-    async Task<IResult> IApiClient.GetLeaderboards(int competionId, int? leaderboardId, CancellationToken ct)
+    async Task<IResult> IApiClient.GetLeaderboards(int competitionId, int? leaderboardId, CancellationToken ct)
     {
-        var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competionId}:{leaderboardId}";
+        var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competitionId}:{leaderboardId}";
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
             using var client = httpClientFactory.CreateClient();
-            using var resp = await client.GetAsync(LeaderboardsUrl(competionId, leaderboardId), ct);
+            using var resp = await client.GetAsync(LeaderboardsUrl(competitionId, leaderboardId), ct);
             resp.EnsureSuccessStatusCode();
             cached = (
                 await resp.Content.ReadAsByteArrayAsync(ct),

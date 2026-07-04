@@ -17,6 +17,7 @@ export type SeoMetadata = {
 };
 
 const siteName = "Timing App Lite";
+// Keep in sync with siteMetadata.siteUrl in gatsby-config.ts
 const siteUrl = "https://timingapplite.mccorry.dev";
 const socialImagePath = "/social-mini-autotest-512.svg";
 
