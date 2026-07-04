@@ -17,7 +17,12 @@ type ResultsPanelProps = {
 
 const stickyColumnHeader = "entry";
 
+const boardered = {
+  outline: "1px solid var(--bulma-border)"
+};
+
 const stickyBaseStyle = {
+  ...boardered,
   position: "sticky" as const,
   left: 0,
   background: "var(--bulma-scheme-main)",
@@ -80,7 +85,7 @@ export const ResultsPanel = ({
       </Notification>
     )}
 
-    <Table.Container style={{ maxHeight: "80vh", overflow: "auto" }}>
+    <Table.Container style={{ maxHeight: "80vh", overflow: "auto", ...boardered }} bordered>
       <Table striped hoverable narrow bordered className="is-fullwidth">
         <thead>
           <tr>
