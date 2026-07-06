@@ -1,5 +1,11 @@
 import * as React from "react";
-import { type ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type ChangeEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { type HeadFC } from "gatsby";
 import { Columns, Container, Section } from "react-bulma-components";
 import { newValidDate } from "ts-date";
@@ -21,6 +27,7 @@ import {
   getErrorMessage,
 } from "../../lib/leaderboardApi";
 import {
+  extractNotesText,
   isSelectableLeaderboard,
   isSectionRow,
   mergeRowsByEntry,
@@ -112,8 +119,7 @@ const CompetitionPage = ({
         if (!controller.signal.aborted) {
           setLeaderboardsState({ status: "success", data });
 
-          const selectableLeaderboards =
-            data.filter(isSelectableLeaderboard);
+          const selectableLeaderboards = data.filter(isSelectableLeaderboard);
 
           setLeaderboardId((currentLeaderboardId) => {
             const preferredLeaderboard =
@@ -214,11 +220,7 @@ const CompetitionPage = ({
         );
 
         if (!controller.signal.aborted && payload.items.length > 0) {
-          const firstItem = payload.items[0];
-          const notesColumn = payload.columns[0]?.name;
-          if (notesColumn) {
-            setEventNotes(String(firstItem[notesColumn] ?? ""));
-          }
+          setEventNotes(extractNotesText(payload));
         }
       } catch {
         // non-critical — event notes are supplementary
@@ -354,8 +356,7 @@ const CompetitionPage = ({
   };
 
   const handleFilterChange =
-    (field: keyof FilterState) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
+    (field: keyof FilterState) => (event: ChangeEvent<HTMLInputElement>) => {
       setFilters((current) => ({ ...current, [field]: event.target.value }));
     };
 
@@ -395,9 +396,9 @@ const CompetitionPage = ({
                 onRefresh={refreshCurrentSelection}
               />
             </Columns.Column>
-          <Columns.Column size={8}>
-            <EventNotesPanel notes={eventNotes} />
-            <ResultsPanel
+            <Columns.Column size={8}>
+              <EventNotesPanel notes={eventNotes} />
+              <ResultsPanel
                 selectedLeaderboardName={selectedLeaderboard?.name}
                 isBusy={isBusy}
                 error={error}

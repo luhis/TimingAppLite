@@ -30,9 +30,10 @@ export const mapCompetitionNode = (node: {
   readonly finalised?: string | null;
 }): Competition => ({
   id: node.competitionId || "",
-  active: node.active != null && CompetitionStatusValues.has(node.active)
-    ? (node.active as CompetitionStatus)
-    : CompetitionStatus.Scheduled,
+  active:
+    node.active != null && CompetitionStatusValues.has(node.active)
+      ? (node.active as CompetitionStatus)
+      : CompetitionStatus.Scheduled,
   name: node.name || "",
   dateddmmyyyy: parseDate(node.dateddmmyyyy || "") || newValidDate(),
   provisional: node.provisional || "",

@@ -66,13 +66,11 @@ export const ControlsPanel = ({
             disabled={loadingLeaderboards || leaderboards.length === 0}
           >
             <option value="">Select a leaderboard</option>
-            {leaderboards
-              .filter(isSelectableLeaderboard)
-              .map((item) => (
-                <option key={item.id} value={String(item.id)}>
-                  {item.name}
-                </option>
-              ))}
+            {leaderboards.filter(isSelectableLeaderboard).map((item) => (
+              <option key={item.id} value={String(item.id)}>
+                {item.name}
+              </option>
+            ))}
           </Form.Select>
         </Form.Control>
       </Form.Field>

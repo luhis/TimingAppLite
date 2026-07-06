@@ -2,12 +2,7 @@ import * as React from "react";
 
 import { getSeoMetadata, type SeoOptions } from "../lib/seo";
 
-export const SeoHead = ({
-  description,
-  path,
-  title,
-  type,
-}: SeoOptions) => {
+export const SeoHead = ({ description, path, title, type }: SeoOptions) => {
   const seo = getSeoMetadata({
     description,
     path,

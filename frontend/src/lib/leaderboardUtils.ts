@@ -1,4 +1,8 @@
-import type { LeaderboardItem, LeaderboardSummary } from "../types/leaderboard";
+import type {
+  LeaderboardItem,
+  LeaderboardPayloadFromApi,
+  LeaderboardSummary,
+} from "../types/leaderboard";
 
 export const stringifyCell = (
   value: string | number | null | undefined,
@@ -49,6 +53,17 @@ export const mergeRowsByEntry = (
   return [...mergedExistingRows, ...appendedRows].sort(
     (a, b) => a._index - b._index,
   );
+};
+
+export const extractNotesText = (
+  payload: LeaderboardPayloadFromApi,
+): string => {
+  const firstItem = payload.items[0];
+  const notesColumn = payload.columns[0]?.name;
+  if (!firstItem || !notesColumn) {
+    return "";
+  }
+  return String(firstItem[notesColumn] ?? "");
 };
 
 const HIDDEN_LEADERBOARD_NAMES = ["Event Notes", "Event List"];
