@@ -8,7 +8,7 @@ describe("parseDate", () => {
       newValidDate("2026-05-24T00:00:00.000Z")?.toDateString(),
     );
   });
-  test("", () => {
+  test("returns null for empty string", () => {
     expect(parseDate("")).toBeNull();
   });
 });

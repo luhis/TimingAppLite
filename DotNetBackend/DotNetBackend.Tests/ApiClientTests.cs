@@ -113,6 +113,20 @@ public class ApiClientTests
     }
 
     [Fact]
+    public async Task GetLeaderboard_SharesCache_WithGetLeaderboards()
+    {
+        var body = """{"columns":[{"name":"Pos","label":"Position"}],"items":[{"Pos":"1"}]}"""u8.ToArray();
+        var handler = new StubHttpHandler(body, "application/json");
+
+        var client = CreateClient(handler);
+
+        await client.GetLeaderboard(1, 2, TestContext.Current.CancellationToken);
+        await client.GetLeaderboards(1, 2, TestContext.Current.CancellationToken);
+
+        handler.CallCount.Should().Be(1, "GetLeaderboard and GetLeaderboards should share the same cache");
+    }
+
+    [Fact]
     public async Task GetLiveAllCompetitions_ThrowsHttpRequestException_OnNonSuccessStatus()
     {
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
@@ -169,9 +183,8 @@ public class ApiClientTests
         result.Items.Should().BeEmpty();
     }
 
-
     [Fact]
-    public async Task GetCompetitions_DeserializesResponse_IntoCompetitonDto()
+    public async Task GetCompetitions_DeserializesResponse_IntoCompetitionDto()
     {
         var json = """
             [

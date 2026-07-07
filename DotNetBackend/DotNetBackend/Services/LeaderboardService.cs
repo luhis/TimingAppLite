@@ -27,10 +27,10 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                var competitons = await apiClient.GetCompetitions(stoppingToken);
+                var competitions = await apiClient.GetCompetitions(stoppingToken);
                 foreach (var key in ActiveGroups)
                 {
-                    var comp = competitons.Single(c => c.Id == key.competitionId.ToString());
+                    var comp = competitions.Single(c => c.Id == key.competitionId.ToString());
                     if (comp.Active == ActiveStatus.Live)
                     {
                         await SafePushChanges(key);
