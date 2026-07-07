@@ -1,9 +1,77 @@
 {
-  "extends": ["config:recommended"],
-  "automerge": true,
-  "automergeType": "branch",
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
   "postUpdateOptions": ["yarnDedupeHighest"],
-  "automergeSchedule": [
-    "* 0-3 * * *"
+  "schedule": ["before 6am on Monday"],
+  "timezone": "Europe/London",
+  "labels": ["dependencies"],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"]
+  },
+  "packageRules": [
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "labels": ["dependencies", "github-actions"]
+    },
+    {
+      "description": "Group NuGet minor and patch updates",
+      "matchManagers": ["nuget"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "NuGet minor/patch",
+      "automerge": true
+    },
+    {
+      "description": "NuGet major updates require manual review",
+      "matchManagers": ["nuget"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "Group npm minor and patch updates",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm minor/patch",
+      "automerge": true
+    },
+    {
+      "description": "npm major updates require manual review",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "Docker updates require manual review",
+      "matchManagers": ["dockerfile"],
+      "automerge": false,
+      "labels": ["dependencies", "docker"]
+    },
+    {
+      "description": "Group test dependencies",
+      "matchPackagePrefixes": ["xunit", "Moq", "AwesomeAssertions", "coverlet"],
+      "groupName": "Test dependencies",
+      "automerge": true
+    },
+    {
+      "description": "Group Gatsby ecosystem packages",
+      "matchPackagePrefixes": ["gatsby"],
+      "groupName": "Gatsby"
+    },
+    {
+      "description": "Group React ecosystem packages",
+      "matchPackageNames": ["react", "react-dom", "preact"],
+      "groupName": "React/Preact"
+    },
+    {
+      "description": "Group linting and formatting packages",
+      "matchPackagePrefixes": ["eslint", "prettier"],
+      "groupName": "Linting/Formatting",
+      "automerge": true
+    }
   ]
 }
