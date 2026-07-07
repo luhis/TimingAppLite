@@ -2,7 +2,14 @@ import type {
   LeaderboardItem,
   LeaderboardPayloadFromApi,
 } from "../types/leaderboard";
-import { extractNotesText, mergeRowsByEntry } from "./leaderboardUtils";
+import {
+  extractNotesText,
+  isSectionRow,
+  isSelectableLeaderboard,
+  mergeRowsByEntry,
+  rowSearchText,
+  stringifyCell,
+} from "./leaderboardUtils";
 
 describe("mergeRowsByEntry", () => {
   test("updates existing rows with matching entry", () => {
@@ -332,5 +339,104 @@ describe("extractNotesText", () => {
     );
 
     expect(extractNotesText(payload)).toBe("Line 1\nLine 2\nLine 3");
+  });
+});
+
+describe("stringifyCell", () => {
+  test("returns empty string for null", () => {
+    expect(stringifyCell(null)).toBe("");
+  });
+
+  test("returns empty string for undefined", () => {
+    expect(stringifyCell(undefined)).toBe("");
+  });
+
+  test("returns 0 as string for zero", () => {
+    expect(stringifyCell(0)).toBe("0");
+  });
+
+  test("trims whitespace from strings", () => {
+    expect(stringifyCell("  hello  ")).toBe("hello");
+  });
+
+  test("converts number to string", () => {
+    expect(stringifyCell(42)).toBe("42");
+  });
+
+  test("returns trimmed string as-is", () => {
+    expect(stringifyCell("abc")).toBe("abc");
+  });
+});
+
+describe("rowSearchText", () => {
+  test("joins all values as lowercase", () => {
+    const item = {
+      _index: 0,
+      classname: "Class A",
+      entry: "1",
+      driver: "Alice",
+      time: "1:30",
+    } as LeaderboardItem;
+
+    expect(rowSearchText(item)).toBe("0 class a 1 alice 1:30");
+  });
+
+  test("skips empty values", () => {
+    const item = {
+      _index: 0,
+      classname: "Class A",
+      entry: "1",
+      driver: "",
+    } as LeaderboardItem;
+
+    expect(rowSearchText(item)).toBe("0 class a 1 ");
+  });
+});
+
+describe("isSectionRow", () => {
+  test("returns true when classname is empty", () => {
+    const item = {
+      _index: 0,
+      classname: "",
+    } as LeaderboardItem;
+
+    expect(isSectionRow(item)).toBe(true);
+  });
+
+  test("returns true when item has only 2 keys", () => {
+    const item = { _index: 0, classname: "A" } as LeaderboardItem;
+
+    expect(isSectionRow(item)).toBe(true);
+  });
+
+  test("returns false for normal row", () => {
+    const item = {
+      _index: 0,
+      classname: "Class A",
+      entry: "1",
+      driver: "Alice",
+    } as LeaderboardItem;
+
+    expect(isSectionRow(item)).toBe(false);
+  });
+});
+
+describe("isSelectableLeaderboard", () => {
+  test("returns false for Event Notes", () => {
+    expect(isSelectableLeaderboard({ id: 1, name: "Event Notes" })).toBe(false);
+  });
+
+  test("returns false for Event List", () => {
+    expect(isSelectableLeaderboard({ id: 2, name: "Event List" })).toBe(false);
+  });
+
+  test("trims whitespace before comparing", () => {
+    expect(isSelectableLeaderboard({ id: 3, name: "  Event Notes  " })).toBe(
+      false,
+    );
+  });
+
+  test("returns true for normal leaderboard", () => {
+    expect(isSelectableLeaderboard({ id: 4, name: "Sprint Race" })).toBe(true);
   });
 });
