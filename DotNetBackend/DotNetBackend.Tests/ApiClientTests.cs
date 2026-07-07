@@ -51,7 +51,30 @@ public class ApiClientTests
     [Fact]
     public async Task GetLeaderboards_ReturnsBytes_FromUpstream()
     {
-        var body = """{"id":1}"""u8.ToArray();
+        var body = """
+            [            
+                {
+                    "id": "525",
+                    "name": "Class Results Full"
+                },
+                {
+                    "id": "337",
+                    "name": "Detailed"
+                },
+                {
+                    "id": "339",
+                    "name": "Minimum"
+                },
+                {
+                    "id": "338",
+                    "name": "Overall"
+                },
+                {
+                    "id": 99999,
+                    "name": "Event List"
+                }
+            ]
+            """u8.ToArray();
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
