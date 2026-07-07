@@ -28,7 +28,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var result = await client.GetLiveAllCompetitions();
+        var result = await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
 
         result.Should().NotBeNull();
         handler.CallCount.Should().Be(1);
@@ -42,8 +42,8 @@ public class ApiClientTests
 
         var client = CreateClient(handler);
 
-        await client.GetLiveAllCompetitions();
-        await client.GetLiveAllCompetitions();
+        await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
+        await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
 
         handler.CallCount.Should().Be(1, "second call should be served from cache");
     }
@@ -55,7 +55,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(body, "application/json");
 
         var client = CreateClient(handler);
-        var result = await client.GetLeaderboards(1, null);
+        var result = await client.GetLeaderboards(1, null, TestContext.Current.CancellationToken);
 
         result.Should().NotBeNull();
         handler.CallCount.Should().Be(1);
@@ -69,8 +69,8 @@ public class ApiClientTests
 
         var client = CreateClient(handler);
 
-        await client.GetLeaderboards(1, 2);
-        await client.GetLeaderboards(1, 2);
+        await client.GetLeaderboards(1, 2, TestContext.Current.CancellationToken);
+        await client.GetLeaderboards(1, 2, TestContext.Current.CancellationToken);
 
         handler.CallCount.Should().Be(1, "same key should be served from cache");
     }
@@ -83,8 +83,8 @@ public class ApiClientTests
 
         var client = CreateClient(handler);
 
-        await client.GetLeaderboards(1, 2);
-        await client.GetLeaderboards(1, 3);
+        await client.GetLeaderboards(1, 2, TestContext.Current.CancellationToken);
+        await client.GetLeaderboards(1, 3, TestContext.Current.CancellationToken);
 
         handler.CallCount.Should().Be(2, "different leaderboard IDs are different cache keys");
     }
@@ -95,7 +95,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
-        var act = async () => await client.GetLiveAllCompetitions();
+        var act = async () => await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<HttpRequestException>();
     }
@@ -116,7 +116,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(json, "application/json");
 
         var client = CreateClient(handler);
-        var result = await client.GetLeaderboard(1, 2, CancellationToken.None);
+        var result = await client.GetLeaderboard(1, 2, TestContext.Current.CancellationToken);
 
         result.Columns.Should().ContainSingle(c => c.Name == "Pos" && c.Label == "Position");
         result.Items.Should().ContainSingle(r => r["Pos"] == "1" && r["Driver"] == "Alice");
@@ -128,7 +128,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
-        var act = async () => await client.GetLeaderboard(1, 2, CancellationToken.None);
+        var act = async () => await client.GetLeaderboard(1, 2, TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<HttpRequestException>();
     }
@@ -140,7 +140,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(json), "application/json");
 
         var client = CreateClient(handler);
-        var result = await client.GetLeaderboard(1, 2, CancellationToken.None);
+        var result = await client.GetLeaderboard(1, 2, TestContext.Current.CancellationToken);
 
         result.Columns.Should().BeEmpty();
         result.Items.Should().BeEmpty();
@@ -171,7 +171,7 @@ public class ApiClientTests
         var handler = new StubHttpHandler(json, "application/json");
 
         var client = CreateClient(handler);
-        var result = await client.GetCompetitions(CancellationToken.None);
+        var result = await client.GetCompetitions(TestContext.Current.CancellationToken);
 
         result.Should().ContainSingle();
     }

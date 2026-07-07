@@ -31,7 +31,7 @@ public class AppStartupTests
     {
         var client = CreateClient(_ => { }, out var mockRepo);
 
-        var response = await client.GetAsync("/openapi/v1.json");
+        var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
         mockRepo.VerifyAll();
@@ -45,7 +45,7 @@ public class AppStartupTests
                 .ReturnsAsync(Results.Ok(new { items = Array.Empty<object>() })),
             out var mockRepo);
 
-        var response = await client.GetAsync("/API/1/LiveAllCompetitions");
+        var response = await client.GetAsync("/API/1/LiveAllCompetitions", TestContext.Current.CancellationToken);
 
         response.IsSuccessStatusCode.Should().BeTrue();
         mockRepo.VerifyAll();
@@ -59,7 +59,7 @@ public class AppStartupTests
                 .ReturnsAsync(Results.Ok(new { items = Array.Empty<object>() })),
             out var mockRepo);
 
-        var response = await client.GetAsync("/API/1/Competitions/1/LeaderBoards");
+        var response = await client.GetAsync("/API/1/Competitions/1/LeaderBoards", TestContext.Current.CancellationToken);
 
         response.IsSuccessStatusCode.Should().BeTrue();
         mockRepo.VerifyAll();
@@ -73,7 +73,7 @@ public class AppStartupTests
                 .ReturnsAsync(Results.Ok(new { items = Array.Empty<object>() })),
             out var mockRepo);
 
-        var response = await client.GetAsync("/API/1/Competitions/1/LeaderBoards/2");
+        var response = await client.GetAsync("/API/1/Competitions/1/LeaderBoards/2", TestContext.Current.CancellationToken);
 
         response.IsSuccessStatusCode.Should().BeTrue();
         mockRepo.VerifyAll();
