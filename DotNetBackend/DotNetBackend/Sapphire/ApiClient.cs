@@ -1,13 +1,17 @@
-using System.Text.Json;
 using DotNetBackend.Dto;
 using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace DotNetBackend.Sapphire;
 
 public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration) : IApiClient
 {
-    private const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk/API/1";
+    private const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk";
+    private const string ApiBase = $"{RemoteApiBase}/API/1";
+    private const string EventListBase = $"{RemoteApiBase}/eventlist.php";
+    private static readonly Regex SiteNameRegex = new(@"sitename=([^""&]+)", RegexOptions.Compiled);
     private readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(
         configuration.GetValue<int>("ApiClient:CacheDurationSeconds", 30));
     async Task<LeaderboardDto> IApiClient.GetLeaderboard(int competitionId, int leaderboardId, CancellationToken ct)
@@ -70,10 +74,31 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         return JsonSerializer.Deserialize(cached.bytes.AsSpan(), AppJsonContext.Default.ListCompetitionDto)
             ?? throw new InvalidOperationException($"Empty response from {LiveAllCompetitionsUrl()}");
     }
-
     private static string LiveAllCompetitionsUrl() =>
-        $"{RemoteApiBase}/LiveAllCompetitions/";
+        $"{ApiBase}/LiveAllCompetitions/";
 
     private static string LeaderboardsUrl(int competitionId, int? leaderboardId) =>
-        $"{RemoteApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
+        $"{ApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
+
+    private static string EventListUrl(int competitionId) =>
+        $"{EventListBase}?event={competitionId}";
+
+    async Task<string> IApiClient.GetSiteName(int competitionId, CancellationToken ct)
+    {
+        var cacheKey = $"{nameof(IApiClient.GetSiteName)}:{competitionId}";
+        if (cache.TryGetValue(cacheKey, out string? cached) && cached is not null)
+            return cached;
+
+        using var client = httpClientFactory.CreateClient();
+        using var resp = await client.GetAsync(EventListUrl(competitionId), ct);
+        resp.EnsureSuccessStatusCode();
+        var html = await resp.Content.ReadAsStringAsync(ct);
+        var match = SiteNameRegex.Match(html);
+        if (!match.Success)
+            throw new InvalidOperationException("sitename not found in event list");
+
+        cached = match.Groups[1].Value;
+        cache.Set(cacheKey, cached, TimeSpan.FromHours(24));
+        return cached;
+    }
 }

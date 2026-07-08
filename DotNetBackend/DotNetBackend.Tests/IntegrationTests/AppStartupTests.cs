@@ -78,4 +78,20 @@ public class AppStartupTests
         response.IsSuccessStatusCode.Should().BeTrue();
         mockRepo.VerifyAll();
     }
+
+    [Fact]
+    public async Task SiteName_ReturnsSuccess()
+    {
+        var client = CreateClient(mock =>
+            mock.Setup(c => c.GetSiteName(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync("TestTrack"),
+            out var mockRepo);
+
+        var response = await client.GetAsync("/API/1/Competitions/1/SiteName", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        content.Should().Be("TestTrack");
+        mockRepo.VerifyAll();
+    }
 }

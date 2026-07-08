@@ -213,6 +213,51 @@ public class ApiClientTests
     }
 
     // -------------------------------------------------------------------------
+    // GetSiteName
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetSiteName_ExtractsSiteName_FromHtml()
+    {
+        var html = """<a href="https://example.com/somepage?sitename=MyRaceTrack&other=123">Link</a>""";
+        var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(html), "text/html");
+
+        var client = CreateClient(handler);
+        var result = await client.GetSiteName(1, TestContext.Current.CancellationToken);
+
+        result.Should().Be("MyRaceTrack");
+    }
+
+    [Fact]
+    public async Task GetSiteName_ThrowsWhenSiteNameNotFound()
+    {
+        var html = """<html><body>No sitename here</body></html>""";
+        var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(html), "text/html");
+
+        var client = CreateClient(handler);
+        var act = async () => await client.GetSiteName(1, TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*sitename not found*");
+    }
+
+    [Fact]
+    public async Task GetSiteName_ReturnsCachedResponse_OnSecondCall()
+    {
+        var html = """<a href="https://example.com/page?sitename=TestTrack&other=1">Link</a>""";
+        var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(html), "text/html");
+
+        var client = CreateClient(handler);
+
+        var first = await client.GetSiteName(1, TestContext.Current.CancellationToken);
+        var second = await client.GetSiteName(1, TestContext.Current.CancellationToken);
+
+        first.Should().Be("TestTrack");
+        second.Should().Be("TestTrack");
+        handler.CallCount.Should().Be(1, "second call should be served from cache");
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
