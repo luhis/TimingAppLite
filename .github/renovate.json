@@ -53,14 +53,21 @@
     },
     {
       "description": "Group test dependencies",
-      "matchPackagePrefixes": ["xunit", "Moq", "AwesomeAssertions", "coverlet"],
       "groupName": "Test dependencies",
-      "automerge": true
+      "automerge": true,
+      "matchPackageNames": [
+        "xunit{/,}**",
+        "Moq{/,}**",
+        "AwesomeAssertions{/,}**",
+        "coverlet{/,}**"
+      ]
     },
     {
       "description": "Group Gatsby ecosystem packages",
-      "matchPackagePrefixes": ["gatsby"],
-      "groupName": "Gatsby"
+      "groupName": "Gatsby",
+      "matchPackageNames": [
+        "gatsby{/,}**"
+      ]
     },
     {
       "description": "Group React ecosystem packages",
@@ -69,9 +76,12 @@
     },
     {
       "description": "Group linting and formatting packages",
-      "matchPackagePrefixes": ["eslint", "prettier"],
       "groupName": "Linting/Formatting",
-      "automerge": true
+      "automerge": true,
+      "matchPackageNames": [
+        "eslint{/,}**",
+        "prettier{/,}**"
+      ]
     }
   ]
 }
