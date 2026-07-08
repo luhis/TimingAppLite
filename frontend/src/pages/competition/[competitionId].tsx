@@ -23,6 +23,7 @@ import {
   fetchAllCompetitions,
   fetchLeaderboard,
   fetchLeaderboards,
+  fetchSiteName,
   isAbortError,
   getErrorMessage,
 } from "../../lib/leaderboardApi";
@@ -75,6 +76,7 @@ const CompetitionPage = ({
   const [streamResults, setStreamResults] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
   const [eventNotes, setEventNotes] = useState("");
+  const [siteName, setSiteName] = useState<string | null>(null);
 
   const requestedLeaderboardId = useMemo(
     () => new URLSearchParams(location.search).get("leaderboardid") ?? "",
@@ -97,6 +99,31 @@ const CompetitionPage = ({
     };
 
     void loadCompetition();
+
+    return () => {
+      controller.abort();
+    };
+  }, [competitionId]);
+
+  useEffect(() => {
+    if (!competitionId) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadSiteName = async () => {
+      try {
+        const name = await fetchSiteName(competitionId, controller.signal);
+        if (!controller.signal.aborted) {
+          setSiteName(name);
+        }
+      } catch {
+        // non-critical — enter button simply won't appear
+      }
+    };
+
+    void loadSiteName();
 
     return () => {
       controller.abort();
@@ -375,7 +402,7 @@ const CompetitionPage = ({
       <Navbar />
       <Section>
         <Container>
-          <HeroPanel selectedCompetition={competition} />
+          <HeroPanel selectedCompetition={competition} siteName={siteName} />
           <Columns>
             <Columns.Column size={4}>
               <ControlsPanel

@@ -1,6 +1,6 @@
 import type { GatsbyNode } from "gatsby";
 
-import { EVENT_COMPETITION_ID, EVENT_LEADERBOARD_ID, fetchAllCompetitions, fetchEventLeaderboard  } from "./src/lib/leaderboardApi";
+import { EVENT_COMPETITION_ID, EVENT_LEADERBOARD_ID, fetchAllCompetitions, fetchEventLeaderboard } from "./src/lib/leaderboardApi";
 
 
 export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
@@ -20,12 +20,17 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
     return;
   }
 
-  try {
-    console.log("📡 Fetching competitions…");
-    const competitions = await fetchAllCompetitions();
-    console.log(`✅ Fetched ${competitions.length} competitions`);
+  console.log("📡 Fetching competitions and event list…");
 
-    competitions.forEach((competition) => {
+  const [compResult, eventResult] = await Promise.allSettled([
+    fetchAllCompetitions(),
+    fetchEventLeaderboard(),
+  ]);
+
+  if (compResult.status === "fulfilled") {
+    console.log(`✅ Fetched ${compResult.value.length} competitions`);
+
+    compResult.value.forEach((competition) => {
       void createNode({
         ...competition,
         competitionId: competition.id,
@@ -38,28 +43,26 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
         },
       });
     });
-  } catch (error) {
-    console.error("❌ Error fetching competitions:", error);
+  } else {
+    console.error("❌ Error fetching competitions:", compResult.reason);
   }
 
-  try {
-    console.log("📡 Fetching event list…");
-    const payload = await fetchEventLeaderboard();
-    console.log(`✅ Fetched ${payload.items.length} events`);
+  if (eventResult.status === "fulfilled") {
+    console.log(`✅ Fetched ${eventResult.value.items.length} events`);
 
     void createNode({
       eventId: `${EVENT_COMPETITION_ID}-${EVENT_LEADERBOARD_ID}`,
-      columns: payload.columns,
-      items: payload.items,
+      columns: eventResult.value.columns,
+      items: eventResult.value.items,
       id: createNodeId(`EventList-${EVENT_COMPETITION_ID}-${EVENT_LEADERBOARD_ID}`),
       parent: null,
       children: [],
       internal: {
         type: "EventList",
-        contentDigest: createContentDigest(payload),
+        contentDigest: createContentDigest(eventResult.value),
       },
     });
-  } catch (error) {
-    console.error("❌ Error fetching event list:", error);
+  } else {
+    console.error("❌ Error fetching event list:", eventResult.reason);
   }
 };

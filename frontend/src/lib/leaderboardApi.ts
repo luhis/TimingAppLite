@@ -26,6 +26,20 @@ const getJson = async <T>(
   return (await response.json()) as T;
 };
 
+const getText = async (
+  url: string,
+  errorPrefix: string,
+  signal?: AbortSignal,
+): Promise<string> => {
+  const response = await fetch(url, { signal });
+
+  if (!response.ok) {
+    throw new Error(`${errorPrefix} (${response.status})`);
+  }
+
+  return await response.text();
+};
+
 export const fetchAllCompetitions = async (
   signal?: AbortSignal,
 ): Promise<readonly CompetitionFromApi[]> =>
@@ -66,5 +80,15 @@ export const fetchEventLeaderboard = async (
   getJson<LeaderboardPayloadFromApi>(
     `${API_BASE}/Competitions/${EVENT_COMPETITION_ID}/Leaderboards/${EVENT_LEADERBOARD_ID}`,
     "Unable to load event list",
+    signal,
+  );
+
+export const fetchSiteName = async (
+  competitionId: string,
+  signal?: AbortSignal,
+): Promise<string> =>
+  getText(
+    `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/SiteName`,
+    "Unable to load site name",
     signal,
   );
