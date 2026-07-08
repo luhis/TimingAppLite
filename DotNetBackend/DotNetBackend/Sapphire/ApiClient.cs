@@ -90,15 +90,25 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
             return cached;
 
         using var client = httpClientFactory.CreateClient();
-        using var resp = await client.GetAsync(EventListUrl(competitionId), ct);
+        using var resp = await client.GetAsync(EventListUrl(competitionId), HttpCompletionOption.ResponseHeadersRead, ct);
         resp.EnsureSuccessStatusCode();
-        var html = await resp.Content.ReadAsStringAsync(ct);
-        var match = SiteNameRegex.Match(html);
-        if (!match.Success)
-            throw new InvalidOperationException("sitename not found in event list");
+        using var stream = await resp.Content.ReadAsStreamAsync(ct);
+        using var reader = new StreamReader(stream);
+        var buffer = new char[4096];
+        var accumulated = string.Empty;
+        int read;
+        while ((read = await reader.ReadAsync(buffer, ct)) > 0)
+        {
+            accumulated += new string(buffer, 0, read);
+            var match = SiteNameRegex.Match(accumulated);
+            if (match.Success)
+            {
+                cached = match.Groups[1].Value;
+                cache.Set(cacheKey, cached, TimeSpan.FromHours(24));
+                return cached;
+            }
+        }
 
-        cached = match.Groups[1].Value;
-        cache.Set(cacheKey, cached, TimeSpan.FromHours(24));
-        return cached;
+        throw new InvalidOperationException("sitename not found in event list");
     }
 }

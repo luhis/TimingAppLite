@@ -212,6 +212,17 @@ public class ApiClientTests
         result.Should().ContainSingle();
     }
 
+    [Fact]
+    public async Task GetCompetitions_ThrowsHttpRequestException_OnNonSuccessStatus()
+    {
+        var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
+        var client = CreateClient(handler);
+
+        var act = async () => await client.GetCompetitions(TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<HttpRequestException>();
+    }
+
     // -------------------------------------------------------------------------
     // GetSiteName
     // -------------------------------------------------------------------------

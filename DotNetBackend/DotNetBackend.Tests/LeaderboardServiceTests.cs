@@ -267,4 +267,46 @@ public class PushChangesTests
             Times.Once);
         _mockRepo.VerifyAll();
     }
+
+    [Fact]
+    public async Task PushChanges_ColumnCountChanged_SendsColumnUpdate()
+    {
+        var apiClient = _mockRepo.Create<IApiClient>();
+        var hubContext = _mockRepo.Create<IHubContext<LeaderboardHub>>();
+        var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
+        var first = new LeaderboardDto
+        {
+            Columns = [new() { Name = "Pos", Label = "Position" }],
+            Items = [new() { ["entry"] = "1", ["pos"] = "1" }]
+        };
+        var second = new LeaderboardDto
+        {
+            Columns =
+            [
+                new() { Name = "Pos", Label = "Position" },
+                new() { Name = "Driver", Label = "Driver Name" }
+            ],
+            Items = [new() { ["entry"] = "1", ["pos"] = "1", ["Driver"] = "Alice" }]
+        };
+
+        apiClient.SetupSequence(a => a.GetLeaderboard(1, 2, CancellationToken.None))
+            .ReturnsAsync(first)
+            .ReturnsAsync(second);
+        var clientProxy = SetupGroupClient(hubContext, groupName);
+        clientProxy
+            .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
+            .Returns(Task.CompletedTask);
+        clientProxy
+            .Setup(p => p.SendCoreAsync("ReceiveColumnUpdate", It.IsAny<object?[]>(), CancellationToken.None))
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService(apiClient, hubContext);
+        await service.PushChanges((competitionId: 1, leaderboardId: 2)); // first: sends columns
+        await service.PushChanges((competitionId: 1, leaderboardId: 2)); // second: column count changed → sends column update
+
+        clientProxy.Verify(
+            p => p.SendCoreAsync("ReceiveColumnUpdate", It.IsAny<object?[]>(), CancellationToken.None),
+            Times.Once);
+        _mockRepo.VerifyAll();
+    }
 }

@@ -94,4 +94,15 @@ public class AppStartupTests
         content.Should().Be("TestTrack");
         mockRepo.VerifyAll();
     }
+
+    [Fact]
+    public async Task Healthz_ReturnsSuccess()
+    {
+        var client = CreateClient(_ => { }, out var mockRepo);
+
+        var response = await client.GetAsync("/healthz", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+        mockRepo.VerifyAll();
+    }
 }
