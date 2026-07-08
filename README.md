@@ -16,6 +16,24 @@ Timing App Lite is a Gatsby TypeScript app that reads the live Sapphire Solution
 
 ## Development
 
+### Backend
+
+```powershell
+cd DotNetBackend
+dotnet run --project DotNetBackend
+```
+
+The API will be available at `http://localhost:5167`.
+
+To run backend tests:
+
+```powershell
+cd DotNetBackend/DotNetBackend.Tests
+dotnet run
+```
+
+### Frontend
+
 ```powershell
 cd frontend
 yarn install
