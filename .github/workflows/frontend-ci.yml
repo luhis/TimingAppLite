@@ -1,0 +1,38 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+    - uses: actions/checkout@v7
+    - name: Use Node.js 24.x
+      uses: actions/setup-node@v6
+      with:
+        node-version: 24.x
+        cache: 'yarn'
+        cache-dependency-path: frontend/yarn.lock
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+    - run: yarn lint
+    - run: yarn typecheck
+    - run: yarn build
+    - run: yarn test
