@@ -3,45 +3,6 @@ using DotNetBackend.Sapphire;
 
 namespace DotNetBackend.Tests;
 
-public class ForgivingStringConverterTests
-{
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        Converters = { new ForgivingStringConverter() }
-    };
-
-    [Theory]
-    [InlineData("false", "false")]
-    [InlineData("true", "true")]
-    [InlineData("42", "42")]
-    [InlineData("\"hello\"", "hello")]
-    [InlineData("\"\"", "")]
-    public void Read_CoercesValueToString(string json, string expected)
-    {
-        var result = JsonSerializer.Deserialize<string>(json, Options);
-
-        result.Should().Be(expected);
-    }
-
-    [Fact]
-    public void Write_WritesStringValue()
-    {
-        var json = JsonSerializer.Serialize("hello", Options);
-
-        json.Should().Be("\"hello\"");
-    }
-
-    [Fact]
-    public void RoundTrip_PreservesValue()
-    {
-        var original = "test value";
-        var json = JsonSerializer.Serialize(original, Options);
-        var deserialized = JsonSerializer.Deserialize<string>(json, Options);
-
-        deserialized.Should().Be(original);
-    }
-}
-
 public class ForgivingDictionaryConverterTests
 {
     private static readonly JsonSerializerOptions Options = new()

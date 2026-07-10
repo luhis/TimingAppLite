@@ -71,14 +71,6 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     public void Subscribe(string connectionId, (int competitionId, int leaderboardId) key) =>
         _connectionGroups[connectionId] = key;
 
-    public void Unsubscribe(string connectionId, (int competitionId, int leaderboardId) key)
-    {
-        if (!_connectionGroups.TryRemove(connectionId, out var removed) || removed != key) return;
-
-        if (!ActiveGroups.Contains(key))
-            _previousResults.TryRemove(key, out _);
-    }
-
     public void RemoveAllSubscriptions(string connectionId)
     {
         if (_connectionGroups.TryRemove(connectionId, out var key))

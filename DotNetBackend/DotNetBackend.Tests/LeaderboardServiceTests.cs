@@ -55,34 +55,6 @@ public class LeaderboardServiceTests
     }
 
     [Fact]
-    public void Unsubscribe_RemovesGroupFromConnection()
-    {
-        var service = CreateService();
-
-        service.Subscribe("conn1", (1, 2));
-        service.Unsubscribe("conn1", (1, 2));
-
-        service.ActiveGroups.Should().BeEmpty();
-
-        _mockRepo.VerifyAll();
-    }
-
-    [Fact]
-    public void Unsubscribe_WhenOtherConnectionStillSubscribed_GroupRemainsActive()
-    {
-        var service = CreateService();
-
-        service.Subscribe("conn1", (1, 2));
-        service.Subscribe("conn2", (1, 2));
-        service.Unsubscribe("conn1", (1, 2));
-
-        service.ActiveGroups.Should().ContainSingle()
-            .Which.Should().Be((1, 2));
-
-        _mockRepo.VerifyAll();
-    }
-
-    [Fact]
     public void RemoveAllSubscriptions_RemovesConnection()
     {
         var service = CreateService();
