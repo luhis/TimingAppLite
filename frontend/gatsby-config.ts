@@ -42,6 +42,9 @@ const config: GatsbyConfig = {
               icon: "static/favicon.svg",
             },
           },
+          {
+            resolve: `gatsby-plugin-offline`,
+          },
         ]
       : []),
   ],
