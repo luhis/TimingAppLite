@@ -5,6 +5,7 @@ import {
 } from "@microsoft/signalr";
 import { useEffect } from "react";
 
+import { trackException } from "../lib/appInsights";
 import type {
   Competition,
   LeaderboardColumn,
@@ -77,8 +78,12 @@ export const useLeaderboardStream = (
         await connection.start();
 
         return connection;
-      } catch {
-        // Keep UI alive when SignalR endpoint details aren't available in this environment.
+      } catch (error) {
+        trackException(error instanceof Error ? error : new Error(String(error)), {
+          signalRHubUrl,
+          competitionId,
+          leaderboardId,
+        });
         return null;
       }
     })();
@@ -92,7 +97,12 @@ export const useLeaderboardStream = (
 
           return connection.stop();
         })
-        .catch(() => undefined);
+        .catch((error) => {
+          trackException(
+            error instanceof Error ? error : new Error(String(error)),
+            { signalRHubUrl, phase: "stop" },
+          );
+        });
     };
   }, [
     competitionId,
