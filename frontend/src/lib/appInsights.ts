@@ -8,7 +8,6 @@ const appInsights = new ApplicationInsights({
     enableAutoRouteTracking: true,
     disableAjaxTracking: false,
     enableCorsCorrelation: true,
-    correlationHeaderExcludedDomains: ["*.purplesea-f465acb7.uksouth.azurecontainerapps.io"],
   },
 });
 

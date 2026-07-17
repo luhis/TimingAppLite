@@ -2,8 +2,12 @@ using DotNetBackend.Hubs;
 using DotNetBackend.Sapphire;
 using DotNetBackend.Serialization;
 using DotNetBackend.Services;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Net.Mime;
+using System.Text.Json;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -46,12 +50,41 @@ builder.Services.AddSignalR()
 
 var app = builder.Build();
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.ContentType = MediaTypeNames.Application.Json;
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+        var exceptionHandler = context.Features.Get<IExceptionHandlerFeature>();
+        if (exceptionHandler is not null)
+        {
+            var problemDetails = new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "An unexpected error occurred",
+                Detail = app.Environment.IsDevelopment() ? exceptionHandler.Error.Message : null,
+            };
+            var json = JsonSerializer.Serialize(problemDetails, AppJsonContext.Default.ProblemDetails);
+            await context.Response.WriteAsync(json);
+        }
+    });
+});
+
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
 app.UseResponseCompression();
 app.UseCors("AllowedOrigins");
-app.MapHealthChecks("/healthz");
+app.MapHealthChecks("/healthz", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = MediaTypeNames.Application.Json;
+        await context.Response.WriteAsync($"{{\"status\":\"{report.Status}\"}}");
+    },
+});
 app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
 app.MapGet("/API/1/LiveAllCompetitions", (IApiClient api, CancellationToken ct) => api.GetLiveAllCompetitions(ct));
 app.MapGet("/API/1/Competitions/{competitionId:int}/LeaderBoards/{leaderboardId:int?}", (IApiClient api, int competitionId, int? leaderboardId, CancellationToken ct) => api.GetLeaderboards(competitionId, leaderboardId, ct));

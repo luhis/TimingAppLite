@@ -1,5 +1,6 @@
 using DotNetBackend.Dto;
 using DotNetBackend.Sapphire;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
 namespace DotNetBackend.Serialization;
@@ -9,6 +10,7 @@ namespace DotNetBackend.Serialization;
 [JsonSerializable(typeof(List<ColumnDto>))]
 [JsonSerializable(typeof(List<Dictionary<string, string>>))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
+[JsonSerializable(typeof(ProblemDetails))]
 [JsonSourceGenerationOptions(
     PropertyNameCaseInsensitive = true,
     Converters = [typeof(ForgivingDictionaryConverter)])]
