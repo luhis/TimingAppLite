@@ -5909,7 +5909,7 @@ eslint@^7.32.0:
     text-table "^0.2.0"
     v8-compile-cache "^2.0.3"
 
-eslint@^9.39.4:
+eslint@^9.39.5:
   version "9.39.5"
   resolved "https://registry.yarnpkg.com/eslint/-/eslint-9.39.5.tgz#2a4e3c8b0f753196efae943c8ffaa8730fc6a3fa"
   integrity sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw==
