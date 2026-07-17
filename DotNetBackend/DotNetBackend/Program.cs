@@ -33,11 +33,17 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowedOrigins", policy =>
+    {
+        var origins = new List<string> { "https://timingapplite.mccorry.dev" };
+        if (builder.Environment.IsDevelopment())
+            origins.Add("http://localhost:8000");
+
         policy
-            .WithOrigins("https://timingapplite.mccorry.dev", "http://localhost:8000")
+            .WithOrigins([.. origins])
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials()));
+            .AllowCredentials();
+    }));
 
 if (builder.Environment.IsDevelopment())
     builder.Services.AddOpenApi();

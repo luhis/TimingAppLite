@@ -1,6 +1,7 @@
 using DotNetBackend.Dto;
 using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -50,16 +51,21 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
-            using var client = httpClientFactory.CreateClient();
-            using var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
-            resp.EnsureSuccessStatusCode();
-            cached = (
-                await resp.Content.ReadAsByteArrayAsync(ct),
-                resp.Content.Headers.ContentType?.ToString() ?? "application/json"
-            );
+            cached = await FetchCompetitionBytesAsync(ct);
             cache.Set(cacheKey, cached, _cacheDuration * 2);
         }
         return cached;
+    }
+
+    private async Task<(byte[] bytes, string contentType)> FetchCompetitionBytesAsync(CancellationToken ct)
+    {
+        using var client = httpClientFactory.CreateClient();
+        using var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
+        resp.EnsureSuccessStatusCode();
+        return (
+            await resp.Content.ReadAsByteArrayAsync(ct),
+            resp.Content.Headers.ContentType?.ToString() ?? "application/json"
+        );
     }
 
     async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
@@ -95,12 +101,12 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         using var stream = await resp.Content.ReadAsStreamAsync(ct);
         using var reader = new StreamReader(stream);
         var buffer = new char[4096];
-        var accumulated = string.Empty;
+        var sb = new StringBuilder();
         int read;
         while ((read = await reader.ReadAsync(buffer, ct)) > 0)
         {
-            accumulated += new string(buffer, 0, read);
-            var match = SiteNameRegex.Match(accumulated);
+            sb.Append(buffer, 0, read);
+            var match = SiteNameRegex.Match(sb.ToString());
             if (match.Success)
             {
                 cached = match.Groups[1].Value;

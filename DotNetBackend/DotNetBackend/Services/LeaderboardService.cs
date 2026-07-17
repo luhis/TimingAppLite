@@ -23,17 +23,23 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(_timerInterval);
-        try
+        while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            while (await timer.WaitForNextTickAsync(stoppingToken))
+            try
             {
                 var competitions = await apiClient.GetCompetitions(stoppingToken);
                 foreach (var key in ActiveGroups)
                 {
-                    var comp = competitions.Single(c => c.Id == key.competitionId.ToString());
+                    var comp = competitions.FirstOrDefault(c => c.Id == key.competitionId.ToString());
+                    if (comp is null)
+                    {
+                        logger.LogWarning("Competition {CompetitionId} not found in API response, skipping", key.competitionId);
+                        continue;
+                    }
+
                     if (comp.Active == ActiveStatus.Live)
                     {
-                        await SafePushChanges(key);
+                        await SafePushChanges(key, stoppingToken);
                     }
                     else
                     {
@@ -41,11 +47,14 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
                     }
                 }
             }
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception ex)
-        {
-            logger.LogCritical(ex, "Leaderboard timer crashed — host will keep running");
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Poll cycle failed, will retry next interval");
+            }
         }
     }
 
@@ -56,13 +65,13 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             .SendAsync("ReceiveCompetitionUpdate", competition, stoppingToken);
     }
 
-    private async Task SafePushChanges((int competitionId, int leaderboardId) key)
+    private async Task SafePushChanges((int competitionId, int leaderboardId) key, CancellationToken ct)
     {
         try
         {
-            await PushChanges(key);
+            await PushChanges(key, ct);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "PushChanges failed for {CompetitionId}/{LeaderboardId}", key.competitionId, key.leaderboardId);
         }
@@ -78,10 +87,10 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
                 _previousResults.TryRemove(key, out _);
     }
 
-    internal async Task PushChanges((int competitionId, int leaderboardId) key)
+    internal async Task PushChanges((int competitionId, int leaderboardId) key, CancellationToken ct)
     {
         logger.LogInformation("{Method} {CompetitionId}, {LeaderboardId}", nameof(PushChanges), key.competitionId, key.leaderboardId);
-        var values = await apiClient.GetLeaderboard(key.competitionId, key.leaderboardId, CancellationToken.None);
+        var values = await apiClient.GetLeaderboard(key.competitionId, key.leaderboardId, ct);
 
         for (var i = 0; i < values.Items.Count; i++)
             values.Items[i]["_index"] = i.ToString();
@@ -94,7 +103,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         if (!_optimisePushUpdates || prevSnapshot is null)
         {
             await hubContext.Clients.Group(groupName)
-                .SendAsync("ReceiveRowUpdate", values.Items, CancellationToken.None);
+                .SendAsync("ReceiveRowUpdate", values.Items, ct);
         }
         else
         {
@@ -112,7 +121,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             {
                 logger.LogInformation("Result changes detected, updating. Comp: {competitionId} board: {leaderboardId} count: {Count}", key.competitionId, key.leaderboardId, changedRows.Count);
                 await hubContext.Clients.Group(groupName)
-                    .SendAsync("ReceiveRowUpdate", changedRows, CancellationToken.None);
+                    .SendAsync("ReceiveRowUpdate", changedRows, ct);
 
             }
             else
@@ -125,7 +134,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         {
             logger.LogInformation("Columns have changed, updating. Comp: {competitionId} board: {leaderboardId} count: {Count}", key.competitionId, key.leaderboardId, values.Columns.Count);
             await hubContext.Clients.Group(groupName)
-                .SendAsync("ReceiveColumnUpdate", values.Columns, CancellationToken.None);
+                .SendAsync("ReceiveColumnUpdate", values.Columns, ct);
         }
     }
 
