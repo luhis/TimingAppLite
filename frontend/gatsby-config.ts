@@ -38,7 +38,7 @@ const config: GatsbyConfig = {
               background_color: "#ffffff",
               theme_color: "#1f2937",
               display: "standalone",
-              orientation: "portrait",
+              orientation: "any",
               icon: "static/favicon.svg",
               icons: [
                 { src: "icons/icon-48x48.png", sizes: "48x48", type: "image/png", purpose: "any" },
