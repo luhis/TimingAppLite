@@ -16,6 +16,20 @@ type ResultsPanelProps = {
 };
 
 const stickyColumnHeader = "entry";
+const classNameColumn = "classname";
+
+const truncatedCellStyle: React.CSSProperties = {
+  maxWidth: 200,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const cellStyleForColumn = (column: LeaderboardColumn): React.CSSProperties | undefined => {
+  if (column.name === stickyColumnHeader) return stickyCellStyle;
+  if (column.name === classNameColumn) return truncatedCellStyle;
+  return undefined;
+};
 
 const bordered = {
   outline: "1px solid var(--bulma-border)",
@@ -123,14 +137,16 @@ export const ResultsPanel = ({
                   key={`${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`}
                 >
                   {columns.map((column) => {
-                    const isSticky = column.name === stickyColumnHeader;
-                    const Cell = isSticky ? "th" : "td";
+                    const isClassName = column.name === classNameColumn;
+                    const Cell = column.name === stickyColumnHeader ? "th" : "td";
+                    const cellText = stringifyCell(item[column.name]);
                     return (
                       <Cell
                         key={column.name}
-                        style={isSticky ? stickyCellStyle : undefined}
+                        style={cellStyleForColumn(column)}
+                        title={isClassName ? cellText : undefined}
                       >
-                        {stringifyCell(item[column.name])}
+                        {cellText}
                       </Cell>
                     );
                   })}
