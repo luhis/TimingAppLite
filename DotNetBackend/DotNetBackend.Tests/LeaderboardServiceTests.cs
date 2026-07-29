@@ -91,8 +91,8 @@ public class PushChangesTests
     {
         var clientProxy = new Mock<IClientProxy>(MockBehavior.Strict);
         var hubClients = new Mock<IHubClients>(MockBehavior.Strict);
-        hubClients.Setup(c => c.Group(groupName)).Returns(clientProxy.Object);
-        hubContext.Setup(h => h.Clients).Returns(hubClients.Object);
+        hubClients.Setup(c => c.Group(groupName)).Returns(clientProxy.Object).Verifiable(Times.Once);
+        hubContext.Setup(h => h.Clients).Returns(hubClients.Object).Verifiable(Times.Once);
         return clientProxy;
     }
 
@@ -121,7 +121,8 @@ public class PushChangesTests
         var clientProxy = SetupGroupClient(hubContext, groupName);
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.Is<object?[]>(a => a[0] == items), CancellationToken.None))
-            .Returns(Task.CompletedTask);
+            .Returns(Task.CompletedTask)
+            .Verifiable(Times.Once);
 
         var service = CreateService(apiClient, hubContext);
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None);
@@ -143,16 +144,13 @@ public class PushChangesTests
         // Only the first call sends ReceiveRowUpdate
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
-            .Returns(Task.CompletedTask);
+            .Returns(Task.CompletedTask)
+            .Verifiable(Times.Once);
 
         var service = CreateService(apiClient, hubContext);
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // first — sends full list
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // second — rows unchanged, sends nothing
 
-        // ReceiveRowUpdate was called exactly once (first push only)
-        clientProxy.Verify(
-            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),
-            Times.Once);
         _mockRepo.VerifyAll();
     }
 
@@ -171,15 +169,13 @@ public class PushChangesTests
         var clientProxy = SetupGroupClient(hubContext, groupName);
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
-            .Returns(Task.CompletedTask);
+            .Returns(Task.CompletedTask)
+            .Verifiable(Times.Exactly(2));
 
         var service = CreateService(apiClient, hubContext);
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None);
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None);
 
-        clientProxy.Verify(
-            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),
-            Times.Exactly(2));
         _mockRepo.VerifyAll();
     }
 
@@ -198,16 +194,13 @@ public class PushChangesTests
         var clientProxy = SetupGroupClient(hubContext, groupName);
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
-            .Returns(Task.CompletedTask);
+            .Returns(Task.CompletedTask)
+            .Verifiable(Times.Exactly(2));
 
         var service = CreateService(apiClient, hubContext);
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None);
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None);
 
-        // First push: full list. Second push: only the new entry.
-        clientProxy.Verify(
-            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),
-            Times.Exactly(2));
         _mockRepo.VerifyAll();
     }
 
@@ -228,15 +221,13 @@ public class PushChangesTests
         // Only the first full-push ReceiveRowUpdate fires
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
-            .Returns(Task.CompletedTask);
+            .Returns(Task.CompletedTask)
+            .Verifiable(Times.Once);
 
         var service = CreateService(apiClient, hubContext);
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // full list (first push)
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // diff: no "entry" key → nothing sent
 
-        clientProxy.Verify(
-            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None),
-            Times.Once);
         _mockRepo.VerifyAll();
     }
 
@@ -267,18 +258,17 @@ public class PushChangesTests
         var clientProxy = SetupGroupClient(hubContext, groupName);
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
-            .Returns(Task.CompletedTask);
+            .Returns(Task.CompletedTask)
+            .Verifiable(Times.Once);
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveColumnUpdate", It.IsAny<object?[]>(), CancellationToken.None))
-            .Returns(Task.CompletedTask);
+            .Returns(Task.CompletedTask)
+            .Verifiable(Times.Once);
 
         var service = CreateService(apiClient, hubContext);
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // first: sends columns
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // second: column count changed → sends column update
 
-        clientProxy.Verify(
-            p => p.SendCoreAsync("ReceiveColumnUpdate", It.IsAny<object?[]>(), CancellationToken.None),
-            Times.Once);
         _mockRepo.VerifyAll();
     }
 }
