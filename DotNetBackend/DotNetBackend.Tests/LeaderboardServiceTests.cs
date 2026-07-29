@@ -87,12 +87,12 @@ public class PushChangesTests
 {
     private readonly MockRepository _mockRepo = new(MockBehavior.Strict);
 
-    private static Mock<IClientProxy> SetupGroupClient(Mock<IHubContext<LeaderboardHub>> hubContext, string groupName)
+    private static Mock<IClientProxy> SetupGroupClient(Mock<IHubContext<LeaderboardHub>> hubContext, string groupName, int expectedTimes = 2)
     {
         var clientProxy = new Mock<IClientProxy>(MockBehavior.Strict);
         var hubClients = new Mock<IHubClients>(MockBehavior.Strict);
-        hubClients.Setup(c => c.Group(groupName)).Returns(clientProxy.Object).Verifiable(Times.Once);
-        hubContext.Setup(h => h.Clients).Returns(hubClients.Object).Verifiable(Times.Once);
+        hubClients.Setup(c => c.Group(groupName)).Returns(clientProxy.Object).Verifiable(Times.Exactly(expectedTimes));
+        hubContext.Setup(h => h.Clients).Returns(hubClients.Object).Verifiable(Times.Exactly(expectedTimes));
         return clientProxy;
     }
 
@@ -118,7 +118,7 @@ public class PushChangesTests
         var dto = new LeaderboardDto { Items = items };
 
         apiClient.Setup(a => a.GetLeaderboard(1, 2, CancellationToken.None)).ReturnsAsync(dto);
-        var clientProxy = SetupGroupClient(hubContext, groupName);
+        var clientProxy = SetupGroupClient(hubContext, groupName, 1);
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.Is<object?[]>(a => a[0] == items), CancellationToken.None))
             .Returns(Task.CompletedTask)
@@ -140,7 +140,7 @@ public class PushChangesTests
         var dto = new LeaderboardDto { Items = items };
 
         apiClient.Setup(a => a.GetLeaderboard(1, 2, CancellationToken.None)).ReturnsAsync(dto);
-        var clientProxy = SetupGroupClient(hubContext, groupName);
+        var clientProxy = SetupGroupClient(hubContext, groupName, 1);
         // Only the first call sends ReceiveRowUpdate
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
@@ -217,7 +217,7 @@ public class PushChangesTests
         apiClient.SetupSequence(a => a.GetLeaderboard(1, 2, CancellationToken.None))
             .ReturnsAsync(first)
             .ReturnsAsync(second);
-        var clientProxy = SetupGroupClient(hubContext, groupName);
+        var clientProxy = SetupGroupClient(hubContext, groupName, 1);
         // Only the first full-push ReceiveRowUpdate fires
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
@@ -255,11 +255,11 @@ public class PushChangesTests
         apiClient.SetupSequence(a => a.GetLeaderboard(1, 2, CancellationToken.None))
             .ReturnsAsync(first)
             .ReturnsAsync(second);
-        var clientProxy = SetupGroupClient(hubContext, groupName);
+        var clientProxy = SetupGroupClient(hubContext, groupName, 3);
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
             .Returns(Task.CompletedTask)
-            .Verifiable(Times.Once);
+            .Verifiable(Times.Exactly(2));
         clientProxy
             .Setup(p => p.SendCoreAsync("ReceiveColumnUpdate", It.IsAny<object?[]>(), CancellationToken.None))
             .Returns(Task.CompletedTask)
