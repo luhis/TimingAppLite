@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
+using Scalar.AspNetCore;
 using System.Net.Mime;
 using System.Text.Json;
 
@@ -46,7 +47,9 @@ builder.Services.AddCors(options =>
     }));
 
 if (builder.Environment.IsDevelopment())
+{
     builder.Services.AddOpenApi();
+}
 
 builder.Services.AddHealthChecks();
 
@@ -79,7 +82,10 @@ app.UseExceptionHandler(errorApp =>
 });
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 app.UseResponseCompression();
 app.UseCors("AllowedOrigins");
