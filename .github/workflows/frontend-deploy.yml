@@ -39,5 +39,6 @@ jobs:
           action: "upload"
           app_location: "/frontend"
           output_location: ""
+          skip_deploy_on_missing_secrets: true
         env:
           GATSBY_BACKEND_URL: ${{ vars.GATSBY_BACKEND_URL }}
