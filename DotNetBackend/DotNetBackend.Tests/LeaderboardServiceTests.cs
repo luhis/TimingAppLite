@@ -34,7 +34,7 @@ public class LeaderboardServiceTests
 
         service.Subscribe("conn1", (1, 2));
 
-        service.ActiveGroups.Should().ContainSingle()
+        service.GetActiveGroups().Should().ContainSingle()
             .Which.Should().Be((1, 2));
 
         _mockRepo.VerifyAll();
@@ -48,7 +48,7 @@ public class LeaderboardServiceTests
         service.Subscribe("conn1", (1, 2));
         service.Subscribe("conn2", (1, 2));
 
-        service.ActiveGroups.Should().ContainSingle()
+        service.GetActiveGroups().Should().ContainSingle()
             .Which.Should().Be((1, 2));
 
         _mockRepo.VerifyAll();
@@ -62,7 +62,7 @@ public class LeaderboardServiceTests
         service.Subscribe("conn1", (1, 2));
         service.RemoveAllSubscriptions("conn1");
 
-        service.ActiveGroups.Should().BeEmpty();
+        service.GetActiveGroups().Should().BeEmpty();
 
         _mockRepo.VerifyAll();
     }
@@ -76,7 +76,7 @@ public class LeaderboardServiceTests
         service.Subscribe("conn2", (1, 2));
         service.RemoveAllSubscriptions("conn1");
 
-        service.ActiveGroups.Should().ContainSingle()
+        service.GetActiveGroups().Should().ContainSingle()
             .Which.Should().Be((1, 2));
 
         _mockRepo.VerifyAll();

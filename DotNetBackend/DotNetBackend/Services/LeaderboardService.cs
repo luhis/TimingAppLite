@@ -17,7 +17,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
     private readonly ConcurrentDictionary<(int competitionId, int leaderboardId), LeaderboardDto?> _previousResults = new();
     private readonly ConcurrentDictionary<string, (int competitionId, int leaderboardId)> _connectionGroups = new();
 
-    internal IEnumerable<(int competitionId, int leaderboardId)> ActiveGroups =>
+    internal IEnumerable<(int competitionId, int leaderboardId)> GetActiveGroups() =>
         _connectionGroups.Values.Distinct();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -28,7 +28,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             try
             {
                 var competitions = await apiClient.GetCompetitions(stoppingToken);
-                foreach (var key in ActiveGroups)
+                foreach (var key in GetActiveGroups())
                 {
                     var comp = competitions.FirstOrDefault(c => c.Id == key.competitionId.ToString());
                     if (comp is null)
@@ -82,8 +82,9 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
     public void RemoveAllSubscriptions(string connectionId)
     {
+        var activeGroups = GetActiveGroups().ToHashSet();
         if (_connectionGroups.TryRemove(connectionId, out var key))
-            if (!ActiveGroups.Contains(key))
+            if (!activeGroups.Contains(key))
                 _previousResults.TryRemove(key, out _);
     }
 
