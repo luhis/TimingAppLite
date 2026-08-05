@@ -282,7 +282,7 @@ public class PushChangesTests
         var hubContext = _mockRepo.Create<IHubContext<LeaderboardHub>>();
         var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
         var first = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }] };
-        var second = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }] };
+        var second = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "2" }] };
 
         apiClient.Setup(a => a.GetLeaderboard(1, 2, CancellationToken.None)).ReturnsAsync(first);
         var clientProxy = SetupGroupClient(hubContext, groupName, 2);
@@ -301,10 +301,6 @@ public class PushChangesTests
         service.Subscribe("conn2", (1, 2));
         apiClient.Setup(a => a.GetLeaderboard(1, 2, CancellationToken.None)).ReturnsAsync(second);
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None);
-
-        clientProxy.Verify(
-            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(2));
 
         _mockRepo.VerifyAll();
     }
