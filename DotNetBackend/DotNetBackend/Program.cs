@@ -42,7 +42,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins([.. origins])
             .AllowAnyHeader()
-            .AllowAnyMethod()
+            .WithMethods("GET")
             .AllowCredentials();
     }));
 
@@ -94,7 +94,7 @@ app.MapHealthChecks("/healthz", new HealthCheckOptions
     ResponseWriter = async (context, report) =>
     {
         context.Response.ContentType = MediaTypeNames.Application.Json;
-        await context.Response.WriteAsync($"{{\"status\":\"{report.Status}\"}}");
+        await context.Response.WriteAsync($"{{\"status\":\"{report.Status.ToString().ToLowerInvariant()}\"}}");
     },
 });
 app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
@@ -108,5 +108,4 @@ app.MapGet("/API/1/Competitions/{competitionId:int}/SiteName", async (IApiClient
     .Produces<string>(StatusCodes.Status200OK)
     .AddOpenApiOperationTransformer((op, _, _) => { op.Summary = "Returns the site name for a competition"; return Task.CompletedTask; });
 
-Console.WriteLine("Starting DotNetBackend...");
 app.Run();
