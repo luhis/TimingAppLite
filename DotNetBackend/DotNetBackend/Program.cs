@@ -12,9 +12,6 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
-builder.Services.Configure<HostOptions>(options =>
-    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
-
 builder.Services.AddSingleton<IApiClient, ApiClient>();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();

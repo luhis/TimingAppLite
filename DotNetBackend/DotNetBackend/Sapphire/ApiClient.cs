@@ -70,14 +70,14 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
 
     async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
     {
-        var cached = await GetCompetitionBytesAsync(ct);
-        return Results.Bytes(cached.bytes, cached.contentType);
+        var (bytes, contentType) = await GetCompetitionBytesAsync(ct);
+        return Results.Bytes(bytes, contentType);
     }
 
     async Task<IReadOnlyList<CompetitionDto>> IApiClient.GetCompetitions(CancellationToken ct)
     {
-        var cached = await GetCompetitionBytesAsync(ct);
-        return JsonSerializer.Deserialize(cached.bytes.AsSpan(), AppJsonContext.Default.ListCompetitionDto)
+        var (bytes, contentType) = await GetCompetitionBytesAsync(ct);
+        return JsonSerializer.Deserialize(bytes.AsSpan(), AppJsonContext.Default.ListCompetitionDto)
             ?? throw new InvalidOperationException($"Empty response from {LiveAllCompetitionsUrl()}");
     }
     private static string LiveAllCompetitionsUrl() =>
