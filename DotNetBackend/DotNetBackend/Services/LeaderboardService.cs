@@ -96,7 +96,9 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             values.Items[i]["_index"] = i.ToString();
 
         var prevSnapshot = _previousResults.GetValueOrDefault(key);
-        _previousResults[key] = values;
+
+        if (_connectionGroups.Values.Any(g => g == key))
+            _previousResults[key] = values;
 
         var groupName = LeaderboardHub.GetCompetitionGroup(key.competitionId, key.leaderboardId);
 

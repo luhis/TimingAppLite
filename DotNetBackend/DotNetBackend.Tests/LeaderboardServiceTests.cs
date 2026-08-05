@@ -148,6 +148,7 @@ public class PushChangesTests
             .Verifiable(Times.Once);
 
         var service = CreateService(apiClient, hubContext);
+        service.Subscribe("conn1", (1, 2));
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // first — sends full list
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // second — rows unchanged, sends nothing
 
@@ -225,6 +226,7 @@ public class PushChangesTests
             .Verifiable(Times.Once);
 
         var service = CreateService(apiClient, hubContext);
+        service.Subscribe("conn1", (1, 2));
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // full list (first push)
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // diff: no "entry" key → nothing sent
 
@@ -266,8 +268,43 @@ public class PushChangesTests
             .Verifiable(Times.Once);
 
         var service = CreateService(apiClient, hubContext);
+        service.Subscribe("conn1", (1, 2));
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // first: sends columns
         await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None); // second: column count changed → sends column update
+
+        _mockRepo.VerifyAll();
+    }
+
+    [Fact]
+    public async Task PushChanges_AfterAllConnectionsRemoved_DoesNotStoreSnapshot()
+    {
+        var apiClient = _mockRepo.Create<IApiClient>();
+        var hubContext = _mockRepo.Create<IHubContext<LeaderboardHub>>();
+        var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
+        var first = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }] };
+        var second = new LeaderboardDto { Items = [new() { ["entry"] = "1", ["pos"] = "1" }] };
+
+        apiClient.Setup(a => a.GetLeaderboard(1, 2, CancellationToken.None)).ReturnsAsync(first);
+        var clientProxy = SetupGroupClient(hubContext, groupName, 2);
+        clientProxy
+            .Setup(p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), CancellationToken.None))
+            .Returns(Task.CompletedTask)
+            .Verifiable(Times.Exactly(2));
+
+        var service = CreateService(apiClient, hubContext);
+
+        service.Subscribe("conn1", (1, 2));
+        await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None);
+
+        service.RemoveAllSubscriptions("conn1");
+
+        service.Subscribe("conn2", (1, 2));
+        apiClient.Setup(a => a.GetLeaderboard(1, 2, CancellationToken.None)).ReturnsAsync(second);
+        await service.PushChanges((competitionId: 1, leaderboardId: 2), CancellationToken.None);
+
+        clientProxy.Verify(
+            p => p.SendCoreAsync("ReceiveRowUpdate", It.IsAny<object?[]>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
 
         _mockRepo.VerifyAll();
     }
