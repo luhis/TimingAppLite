@@ -40,9 +40,10 @@ public class AppStartupTests
     [Fact]
     public async Task LiveAllCompetitions_ReturnsSuccess()
     {
+        var body = """{"items":[]}"""u8.ToArray();
         var client = CreateClient(mock =>
             mock.Setup(c => c.GetLiveAllCompetitions(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Results.Ok(new { items = Array.Empty<object>() })),
+                .ReturnsAsync((body, "application/json")),
             out var mockRepo);
 
         var response = await client.GetAsync("/API/1/LiveAllCompetitions", TestContext.Current.CancellationToken);
@@ -54,9 +55,10 @@ public class AppStartupTests
     [Fact]
     public async Task LeaderBoards_ReturnsSuccess()
     {
+        var body = """{"items":[]}"""u8.ToArray();
         var client = CreateClient(mock =>
             mock.Setup(c => c.GetLeaderboards(1, null, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Results.Ok(new { items = Array.Empty<object>() })),
+                .ReturnsAsync((body, "application/json")),
             out var mockRepo);
 
         var response = await client.GetAsync("/API/1/Competitions/1/LeaderBoards", TestContext.Current.CancellationToken);
@@ -68,9 +70,10 @@ public class AppStartupTests
     [Fact]
     public async Task LeaderBoardsWithBoardId_ReturnsSuccess()
     {
+        var body = """{"items":[]}"""u8.ToArray();
         var client = CreateClient(mock =>
             mock.Setup(c => c.GetLeaderboards(1, 2, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Results.Ok(new { items = Array.Empty<object>() })),
+                .ReturnsAsync((body, "application/json")),
             out var mockRepo);
 
         var response = await client.GetAsync("/API/1/Competitions/1/LeaderBoards/2", TestContext.Current.CancellationToken);

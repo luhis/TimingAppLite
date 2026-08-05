@@ -95,10 +95,18 @@ app.MapHealthChecks("/healthz", new HealthCheckOptions
     },
 });
 app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
-app.MapGet("/API/1/LiveAllCompetitions", async (IApiClient api, CancellationToken ct) => await api.GetLiveAllCompetitions(ct))
+app.MapGet("/API/1/LiveAllCompetitions", async (IApiClient api, CancellationToken ct) =>
+{
+    var (bytes, contentType) = await api.GetLiveAllCompetitions(ct);
+    return Results.Bytes(bytes, contentType);
+})
     .Produces(200, contentType: "application/json")
     .AddOpenApiOperationTransformer((op, _, _) => { op.Summary = "Returns all live competitions as raw bytes"; return Task.CompletedTask; });
-app.MapGet("/API/1/Competitions/{competitionId:int}/LeaderBoards/{leaderboardId:int?}", async (IApiClient api, int competitionId, int? leaderboardId, CancellationToken ct) => await api.GetLeaderboards(competitionId, leaderboardId, ct))
+app.MapGet("/API/1/Competitions/{competitionId:int}/LeaderBoards/{leaderboardId:int?}", async (IApiClient api, int competitionId, int? leaderboardId, CancellationToken ct) =>
+{
+    var (bytes, contentType) = await api.GetLeaderboards(competitionId, leaderboardId, ct);
+    return Results.Bytes(bytes, contentType);
+})
     .Produces(200, contentType: "application/json")
     .AddOpenApiOperationTransformer((op, _, _) => { op.Summary = "Returns leaderboard data for a competition"; return Task.CompletedTask; });
 app.MapGet("/API/1/Competitions/{competitionId:int}/SiteName", async (IApiClient api, int competitionId, CancellationToken ct) => await api.GetSiteName(competitionId, ct))

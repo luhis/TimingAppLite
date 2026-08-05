@@ -90,7 +90,7 @@ public class ErrorPathTests
         var body = """[{"id":1}]"""u8.ToArray();
         var client = CreateClient(mock =>
             mock.Setup(c => c.GetLiveAllCompetitions(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Results.Bytes(body, "application/json")),
+                .ReturnsAsync((body, "application/json")),
             out var mockRepo);
 
         var response = await client.GetAsync("/API/1/LiveAllCompetitions", TestContext.Current.CancellationToken);

@@ -29,7 +29,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
             ?? throw new InvalidOperationException($"Empty response from {url}");
     }
 
-    async Task<IResult> IApiClient.GetLeaderboards(int competitionId, int? leaderboardId, CancellationToken ct)
+    async Task<(byte[] Bytes, string ContentType)> IApiClient.GetLeaderboards(int competitionId, int? leaderboardId, CancellationToken ct)
     {
         var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competitionId}:{leaderboardId}";
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
@@ -43,7 +43,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
             );
             cache.Set(cacheKey, cached, _cacheDuration);
         }
-        return Results.Bytes(cached.bytes, cached.contentType);
+        return cached;
     }
 
     private async Task<(byte[] bytes, string contentType)> GetCompetitionBytesAsync(CancellationToken ct)
@@ -68,10 +68,9 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         );
     }
 
-    async Task<IResult> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
+    Task<(byte[] Bytes, string ContentType)> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
     {
-        var (bytes, contentType) = await GetCompetitionBytesAsync(ct);
-        return Results.Bytes(bytes, contentType);
+        return GetCompetitionBytesAsync(ct);
     }
 
     async Task<IReadOnlyList<CompetitionDto>> IApiClient.GetCompetitions(CancellationToken ct)
