@@ -288,6 +288,8 @@ const CompetitionPage = ({
     [],
   );
 
+  const isDevelopment =
+    typeof window !== "undefined" && window.location.hostname === "localhost";
   const handleCompetitionUpdate = useCallback((newCompetition: Competition) => {
     setCompetition(newCompetition);
     const isLive = newCompetition.active === CompetitionStatus.Live;
@@ -298,12 +300,10 @@ const CompetitionPage = ({
     if (!isLive || (!isToday && !isDevelopment)) {
       setStreamResults(false);
     }
-  }, []);
+  }, [isDevelopment]);
 
   // Only enable SignalR streaming if the competition is live and happening today
   // In development, skip the today check to allow testing with any event
-  const isDevelopment =
-    typeof window !== "undefined" && window.location.hostname === "localhost";
   const isCompetitionLive = competition?.active === CompetitionStatus.Live;
   const isToday = competition?.dateddmmyyyy
     ? competition.dateddmmyyyy.toDateString() === newValidDate().toDateString()
