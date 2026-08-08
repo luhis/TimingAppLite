@@ -295,17 +295,21 @@ const CompetitionPage = ({
       ? newCompetition.dateddmmyyyy.toDateString() ===
         newValidDate().toDateString()
       : false;
-    if (!isLive || !isToday) {
+    if (!isLive || (!isToday && !isDevelopment)) {
       setStreamResults(false);
     }
   }, []);
 
   // Only enable SignalR streaming if the competition is live and happening today
+  // In development, skip the today check to allow testing with any event
+  const isDevelopment =
+    typeof window !== "undefined" && window.location.hostname === "localhost";
   const isCompetitionLive = competition?.active === CompetitionStatus.Live;
   const isToday = competition?.dateddmmyyyy
     ? competition.dateddmmyyyy.toDateString() === newValidDate().toDateString()
     : false;
-  const enableStreaming = streamResults && isCompetitionLive && isToday;
+  const enableStreaming =
+    streamResults && isCompetitionLive && (isToday || isDevelopment);
 
   useLeaderboardStream(
     competitionId,
