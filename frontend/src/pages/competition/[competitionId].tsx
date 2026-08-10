@@ -17,6 +17,8 @@ import { HeroPanel } from "../../components/HeroPanel";
 import { Navbar } from "../../components/Navbar";
 import { ResultsPanel } from "../../components/ResultsPanel";
 import { SeoHead } from "../../components/SeoHead";
+import { useEntrantNotifications } from "../../hooks/useEntrantNotifications";
+import { useFavourites } from "../../hooks/useFavourites";
 import { useLeaderboardStream } from "../../hooks/useLeaderboardStream";
 import { parseCompetitionDate } from "../../lib/dataParser";
 import {
@@ -77,6 +79,11 @@ const CompetitionPage = ({
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
   const [eventNotes, setEventNotes] = useState("");
   const [siteName, setSiteName] = useState<string | null>(null);
+
+  const { favouriteEntries, toggle: toggleFavourite, isFavourite } =
+    useFavourites();
+  const { permission: notificationPermission, requestPermission, notifyIfFavourite } =
+    useEntrantNotifications();
 
   const requestedLeaderboardId = useMemo(
     () => new URLSearchParams(location.search).get("leaderboardid") ?? "",
@@ -261,20 +268,27 @@ const CompetitionPage = ({
     };
   }, [competitionId, leaderboardsState]);
 
-  const handleRowUpdate = useCallback((rows: readonly LeaderboardItem[]) => {
-    setLastUpdateTime(new Date());
-    setLeaderboardState((current) =>
-      current.status === "success"
-        ? {
-            ...current,
-            data: {
-              ...current.data,
-              items: mergeRowsByEntry(current.data.items, rows),
-            },
-          }
-        : current,
-    );
-  }, []);
+  const handleRowUpdate = useCallback(
+    (rows: readonly LeaderboardItem[]) => {
+      setLastUpdateTime(new Date());
+      setLeaderboardState((current) =>
+        current.status === "success"
+          ? {
+              ...current,
+              data: {
+                ...current.data,
+                items: mergeRowsByEntry(current.data.items, rows),
+              },
+            }
+          : current,
+      );
+
+      if (favouriteEntries.size > 0) {
+        notifyIfFavourite(rows, isFavourite, competition?.name ?? "Competition");
+      }
+    },
+    [favouriteEntries.size, isFavourite, notifyIfFavourite, competition?.name],
+  );
 
   const handleColumnUpdate = useCallback(
     (columns: readonly LeaderboardColumn[]) => {
@@ -381,6 +395,17 @@ const CompetitionPage = ({
   const resultColumns =
     leaderboardState.status === "success" ? leaderboardState.data.columns : [];
 
+  const handleToggleFavourite = useCallback(
+    (entry: string) => {
+      const willBeFavourite = !isFavourite(entry);
+      if (willBeFavourite && notificationPermission === "default") {
+        void requestPermission();
+      }
+      toggleFavourite(entry);
+    },
+    [isFavourite, toggleFavourite, notificationPermission, requestPermission],
+  );
+
   const handleLeaderboardChange = (value: string) => {
     setLeaderboardId(value);
     setLeaderboardState({ status: "idle" });
@@ -438,6 +463,8 @@ const CompetitionPage = ({
                 columns={resultColumns}
                 visibleRows={visibleRows}
                 leaderboardLoaded={leaderboardState.status === "success"}
+                isFavourite={isFavourite}
+                onToggleFavourite={handleToggleFavourite}
               />
             </Columns.Column>
           </Columns>

@@ -4,7 +4,7 @@ import { Heading, Notification, Table } from "react-bulma-components";
 import { isSectionRow, stringifyCell } from "../lib/leaderboardUtils";
 import type { LeaderboardColumn, LeaderboardItem } from "../types/leaderboard";
 
-type ResultsPanelProps = {
+type ResultsPanelData = {
   readonly selectedLeaderboardName: string | undefined;
   readonly isBusy: boolean;
   readonly error: string | null;
@@ -14,6 +14,13 @@ type ResultsPanelProps = {
   readonly visibleRows: readonly LeaderboardItem[];
   readonly leaderboardLoaded: boolean;
 };
+
+type ResultsPanelCallbacks = {
+  readonly isFavourite: (entry: string) => boolean;
+  readonly onToggleFavourite: (entry: string) => void;
+};
+
+type ResultsPanelProps = ResultsPanelData & ResultsPanelCallbacks;
 
 const stickyColumnHeader = "entry";
 const classNameColumn = "classname";
@@ -71,6 +78,8 @@ export const ResultsPanel = ({
   columns,
   visibleRows,
   leaderboardLoaded,
+  isFavourite,
+  onToggleFavourite,
 }: ResultsPanelProps) => (
   <>
     <div className="is-flex is-justify-content-space-between is-align-items-end is-flex-wrap-wrap mb-4">
@@ -138,7 +147,8 @@ export const ResultsPanel = ({
                 >
                   {columns.map((column) => {
                     const isClassName = column.name === classNameColumn;
-                    const Cell = column.name === stickyColumnHeader ? "th" : "td";
+                    const isEntry = column.name === stickyColumnHeader;
+                    const Cell = isEntry ? "th" : "td";
                     const cellText = stringifyCell(item[column.name]);
                     return (
                       <Cell
@@ -146,7 +156,32 @@ export const ResultsPanel = ({
                         style={cellStyleForColumn(column)}
                         title={isClassName ? cellText : undefined}
                       >
-                        {cellText}
+                        {isEntry && cellText ? (
+                          <span className="is-flex is-align-items-center">
+                            <button
+                              type="button"
+                              className="button is-small is-white has-text-warning-dark p-0 mr-1"
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                fontSize: "1rem",
+                                lineHeight: 1,
+                              }}
+                              onClick={() => onToggleFavourite(cellText)}
+                              title={
+                                isFavourite(cellText)
+                                  ? "Remove from favourites"
+                                  : "Add to favourites"
+                              }
+                            >
+                              {isFavourite(cellText) ? "★" : "☆"}
+                            </button>
+                            {cellText}
+                          </span>
+                        ) : (
+                          cellText
+                        )}
                       </Cell>
                     );
                   })}
