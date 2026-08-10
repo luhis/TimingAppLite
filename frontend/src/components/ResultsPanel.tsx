@@ -160,7 +160,7 @@ export const ResultsPanel = ({
                           <span className="is-flex is-align-items-center">
                             <button
                               type="button"
-                              className="button is-small p-0 mr-1"
+                              className="p-0 mr-1"
                               style={{
                                 background: "none",
                                 border: "none",
