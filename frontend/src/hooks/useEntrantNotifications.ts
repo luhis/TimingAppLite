@@ -9,6 +9,14 @@ const getPermission = (): NotificationPermission =>
     ? Notification.permission
     : "denied";
 
+const latestTestValue = (row: LeaderboardItem): string | undefined => {
+  const testKeys = Object.keys(row)
+    .filter((k) => /^test\d+$/.test(k))
+    .sort((a, b) => Number(a.slice(4)) - Number(b.slice(4)));
+  const last = testKeys[testKeys.length - 1];
+  return last ? String(row[last] ?? "") : undefined;
+};
+
 export const useEntrantNotifications = () => {
   const [permission, setPermission] =
     useState<NotificationPermission>(getPermission);
@@ -57,10 +65,14 @@ export const useEntrantNotifications = () => {
           const driver =
             typeof row.driver === "string" ? row.driver : `Entry ${entry}`;
           const pos = row.pos !== undefined ? ` (P${row.pos})` : "";
+          const testVal = latestTestValue(row);
+          const body = testVal
+            ? `New result in ${competitionName} — ${testVal}`
+            : `New result in ${competitionName}`;
 
           try {
             new Notification(`${driver}${pos}`, {
-              body: `New result in ${competitionName}`,
+              body,
               tag: `entrant-${entry}`,
             });
           } catch {

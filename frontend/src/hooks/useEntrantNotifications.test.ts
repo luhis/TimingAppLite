@@ -172,6 +172,52 @@ describe("useEntrantNotifications", () => {
 
       expect(mockNotificationConstructor).not.toHaveBeenCalled();
     });
+
+    test("includes latest test value in body", () => {
+      const { result } = renderHook(() => useEntrantNotifications());
+
+      const rows: LeaderboardItem[] = [
+        {
+          _index: 0,
+          entry: "5",
+          driver: "Alice",
+          pos: "1",
+          classname: "Class A",
+          test1: "48.2 47.9 48.1  TOT=96",
+          test2: "60.0 59.1 58.2  TOT=117.3",
+          test3: "42.6 42.1 WT=70.7  TOT=84.7",
+          test4: "57.0 55.9 55.8  TOT=111.7",
+        },
+      ];
+      const isFavourite = (entry: string) => entry === "5";
+
+      act(() => {
+        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+      });
+
+      expect(mockNotificationConstructor).toHaveBeenCalledWith(
+        "Alice (P1)",
+        expect.objectContaining({
+          body: "New result in Test Comp — 57.0 55.9 55.8  TOT=111.7",
+        }),
+      );
+    });
+
+    test("body has no test value when no testX columns present", () => {
+      const { result } = renderHook(() => useEntrantNotifications());
+
+      const rows = [makeRow("1", "Alice", "1")];
+      const isFavourite = () => true;
+
+      act(() => {
+        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+      });
+
+      expect(mockNotificationConstructor).toHaveBeenCalledWith(
+        "Alice (P1)",
+        expect.objectContaining({ body: "New result in Test Comp" }),
+      );
+    });
   });
 
   describe("requestPermission", () => {
