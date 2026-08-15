@@ -43,7 +43,11 @@ const setPermission = (value: string) =>
   });
 
 describe("useEntrantNotifications", () => {
-  const makeRow = (entry: string, driver: string, pos?: string): LeaderboardItem => ({
+  const makeRow = (
+    entry: string,
+    driver: string,
+    pos?: string,
+  ): LeaderboardItem => ({
     _index: 0,
     entry,
     driver,
@@ -112,7 +116,12 @@ describe("useEntrantNotifications", () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const rows = [
-        { _index: 0, classname: "Section", driver: undefined, entry: undefined } as unknown as LeaderboardItem,
+        {
+          _index: 0,
+          classname: "Section",
+          driver: undefined,
+          entry: undefined,
+        } as unknown as LeaderboardItem,
         makeRow("1", "Alice", "1"),
       ];
       const isFavourite = () => true;

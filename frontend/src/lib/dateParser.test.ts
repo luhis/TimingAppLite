@@ -1,6 +1,10 @@
 import { newValidDate } from "ts-date";
 
-import { mapCompetitionNode, parseCompetitionDate, parseDate } from "./dataParser";
+import {
+  mapCompetitionNode,
+  parseCompetitionDate,
+  parseDate,
+} from "./dataParser";
 import { CompetitionStatus } from "../types/leaderboard";
 
 describe("parseDate", () => {

@@ -29,9 +29,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
         <section className="section">
           <div className="container has-text-centered">
             <h1 className="title is-4">Something went wrong</h1>
-            <p className="has-text-grey">
-              Please try refreshing the page.
-            </p>
+            <p className="has-text-grey">Please try refreshing the page.</p>
           </div>
         </section>
       );

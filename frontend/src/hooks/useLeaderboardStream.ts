@@ -79,11 +79,14 @@ export const useLeaderboardStream = (
 
         return connection;
       } catch (error) {
-        trackException(error instanceof Error ? error : new Error(String(error)), {
-          signalRHubUrl,
-          competitionId,
-          leaderboardId,
-        });
+        trackException(
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            signalRHubUrl,
+            competitionId,
+            leaderboardId,
+          },
+        );
         return null;
       }
     })();

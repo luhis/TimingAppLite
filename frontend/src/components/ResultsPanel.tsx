@@ -32,7 +32,9 @@ const truncatedCellStyle: React.CSSProperties = {
   whiteSpace: "nowrap",
 };
 
-const cellStyleForColumn = (column: LeaderboardColumn): React.CSSProperties | undefined => {
+const cellStyleForColumn = (
+  column: LeaderboardColumn,
+): React.CSSProperties | undefined => {
   if (column.name === stickyColumnHeader) return stickyCellStyle;
   if (column.name === classNameColumn) return truncatedCellStyle;
   return undefined;

@@ -1,27 +1,47 @@
-# AutoTest
+# Timing App Lite
 
-## Running Tests
+## Project overview
 
-This project uses **xUnit v3** with `OutputType=Exe`. Do NOT use `dotnet test` — it fails with a testhost error.
+This repository contains:
+- a Gatsby/React frontend in `frontend/`
+- a .NET backend in `DotNetBackend/`
 
-Run tests directly as executables:
+## Local workflow
 
-```bash
-# Unit tests
-dotnet run --project DotNetBackend.Test/DotNetBackend.Test.csproj
-
-## Build
-
-After making changes, always run a release build to ensure analyzers execute:
+### Backend
 
 ```bash
-dotnet build DotNetBackend.slnx -c Release
+cd DotNetBackend
+dotnet run --project DotNetBackend
+```
+
+### Backend tests
+
+```bash
+cd DotNetBackend/DotNetBackend.Tests
+dotnet run
+```
+
+### Frontend
+
+```bash
+cd frontend
+yarn install
+yarn run develop
+```
+
+### Validation
+
+```bash
+cd frontend
+yarn run typecheck
+yarn run build
 ```
 
 ## Conventions
 
-- Use **Bulma components** from `react-bulma-components` where possible (e.g., `Table.Container` for scrollable tables, `Control` for form field spacing, `Columns` for layouts). Avoid inline styles for spacing or layout.
-- Use **strict mocks** (`MockBehavior.Strict`) in unit tests. Avoid `It.IsAny<T>()` where a specific value can be used instead — narrow down mock setups to match actual expected calls.
-- Prefer `BeEquivalentTo` over multiple individual assertions (e.g., `res.Should().BeEquivalentTo(new[] { new { ... } })`) for cleaner, more maintainable tests.
-- Prefer LINQ (`Select`, `Where`, etc.) over `foreach` loops where possible for more declarative, concise code.
-- Use method groups (e.g., `.Select(MapEntrant.Map)`) over lambda wrappers (e.g., `.Select(a => MapEntrant.Map(a))`) for less code.
+- Prefer changes that match the repo's existing Gatsby/React and .NET structure.
+- Use the repository’s actual project scripts instead of inventing custom test or build commands.
+- Keep frontend work consistent with the current TypeScript and Gatsby patterns already in use.
+- Keep backend changes aligned with the code patterns already present in the .NET project.
+- When possible, validate with the smallest relevant command before finishing work.

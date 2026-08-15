@@ -28,7 +28,10 @@ export const SeoHead = ({ description, path, title, type }: SeoOptions) => {
       <meta name="twitter:image:alt" content={seo.imageAlt} />
       <link rel="canonical" href={seo.canonicalUrl} />
       <meta name="apple-mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+      />
       <meta name="apple-mobile-web-app-title" content="Timing App" />
     </>
   );

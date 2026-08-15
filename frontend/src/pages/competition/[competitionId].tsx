@@ -80,10 +80,16 @@ const CompetitionPage = ({
   const [eventNotes, setEventNotes] = useState("");
   const [siteName, setSiteName] = useState<string | null>(null);
 
-  const { favouriteEntries, toggle: toggleFavourite, isFavourite } =
-    useFavourites();
-  const { permission: notificationPermission, requestPermission, notifyIfFavourite } =
-    useEntrantNotifications();
+  const {
+    favouriteEntries,
+    toggle: toggleFavourite,
+    isFavourite,
+  } = useFavourites();
+  const {
+    permission: notificationPermission,
+    requestPermission,
+    notifyIfFavourite,
+  } = useEntrantNotifications();
 
   const requestedLeaderboardId = useMemo(
     () => new URLSearchParams(location.search).get("leaderboardid") ?? "",
@@ -284,7 +290,11 @@ const CompetitionPage = ({
       );
 
       if (favouriteEntries.size > 0) {
-        notifyIfFavourite(rows, isFavourite, competition?.name ?? "Competition");
+        notifyIfFavourite(
+          rows,
+          isFavourite,
+          competition?.name ?? "Competition",
+        );
       }
     },
     [favouriteEntries.size, isFavourite, notifyIfFavourite, competition?.name],
@@ -304,17 +314,20 @@ const CompetitionPage = ({
 
   const isDevelopment =
     typeof window !== "undefined" && window.location.hostname === "localhost";
-  const handleCompetitionUpdate = useCallback((newCompetition: Competition) => {
-    setCompetition(newCompetition);
-    const isLive = newCompetition.active === CompetitionStatus.Live;
-    const isToday = newCompetition.dateddmmyyyy
-      ? newCompetition.dateddmmyyyy.toDateString() ===
-        newValidDate().toDateString()
-      : false;
-    if (!isLive || (!isToday && !isDevelopment)) {
-      setStreamResults(false);
-    }
-  }, [isDevelopment]);
+  const handleCompetitionUpdate = useCallback(
+    (newCompetition: Competition) => {
+      setCompetition(newCompetition);
+      const isLive = newCompetition.active === CompetitionStatus.Live;
+      const isToday = newCompetition.dateddmmyyyy
+        ? newCompetition.dateddmmyyyy.toDateString() ===
+          newValidDate().toDateString()
+        : false;
+      if (!isLive || (!isToday && !isDevelopment)) {
+        setStreamResults(false);
+      }
+    },
+    [isDevelopment],
+  );
 
   // Only enable SignalR streaming if the competition is live and happening today
   // In development, skip the today check to allow testing with any event
