@@ -1,6 +1,9 @@
 import { renderHook, act } from "@testing-library/react";
 
+import { trackException } from "../lib/appInsights";
 import { useLeaderboardStream } from "./useLeaderboardStream";
+
+const mockTrackException = trackException as jest.MockedFunction<typeof trackException>;
 
 const mockOn = jest.fn();
 const mockStart = jest.fn();
@@ -25,10 +28,8 @@ jest.mock("@microsoft/signalr", () => ({
   LogLevel: { Warning: 2 },
 }));
 
-const mockTrackException = jest.fn();
-
 jest.mock("../lib/appInsights", () => ({
-  trackException: (...args: readonly unknown[]) => mockTrackException(...args),
+  trackException: jest.fn(),
 }));
 
 beforeEach(() => {
@@ -38,9 +39,10 @@ beforeEach(() => {
 });
 
 const getRegisteredHandler = (event: string) => {
-  const call = mockOn.mock.calls.find(([name]) => name === event);
+  const calls = mockOn.mock.calls as Array<[string, jest.Mock]>;
+  const call = calls.find(([name]) => name === event);
   expect(call).toBeDefined();
-  return call![1] as jest.Mock;
+  return call![1];
 };
 
 describe("useLeaderboardStream", () => {
@@ -279,7 +281,8 @@ describe("useLeaderboardStream", () => {
       ),
     );
 
-    await act(async () => {
+    // eslint-disable-next-line @typescript-eslint/await-thenable -- act returns a thenable at runtime even for sync callbacks
+    await act(() => {
       unmount();
     });
 
@@ -300,7 +303,8 @@ describe("useLeaderboardStream", () => {
       ),
     );
 
-    await act(async () => {
+    // eslint-disable-next-line @typescript-eslint/await-thenable -- act returns a thenable at runtime even for sync callbacks
+    await act(() => {
       unmount();
     });
 
@@ -311,7 +315,8 @@ describe("useLeaderboardStream", () => {
     const error = new Error("connection failed");
     mockStart.mockRejectedValue(error);
 
-    await act(async () => {
+    // eslint-disable-next-line @typescript-eslint/await-thenable -- act returns a thenable at runtime even for sync callbacks
+    await act(() => {
       renderHook(() =>
         useLeaderboardStream(
           "comp-1",
@@ -324,10 +329,13 @@ describe("useLeaderboardStream", () => {
       );
     });
 
-    expect(mockTrackException).toHaveBeenCalledWith(error, {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining returns any
+    const expected = expect.objectContaining({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- asymmetric matchers return any
       signalRHubUrl: expect.stringContaining("/hubs/leaderboard"),
       competitionId: "comp-1",
       leaderboardId: "lb-1",
     });
+    expect(mockTrackException).toHaveBeenCalledWith(error, expected);
   });
 });
