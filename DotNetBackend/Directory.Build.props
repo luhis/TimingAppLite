@@ -8,4 +8,9 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <!-- NativeAOT on Alpine (musl) requires lld; clang does not ship bfd there -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)' != '' AND $(RuntimeIdentifier.StartsWith('linux-musl'))">
+    <LinkerArg Include="-fuse-ld=lld" />
+  </ItemGroup>
+
 </Project>
