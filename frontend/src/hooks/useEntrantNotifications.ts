@@ -50,35 +50,34 @@ export const useEntrantNotifications = () => {
       if (
         typeof window === "undefined" ||
         !("Notification" in window) ||
-        Notification.permission !== "granted"
+        Notification.permission !== "granted" ||
+        !("serviceWorker" in navigator)
       ) {
         return;
       }
 
-      rows
-        .filter((row) => {
-          const entryValue = row.entry;
-          return entryValue !== undefined && isFavourite(String(entryValue));
-        })
-        .forEach((row) => {
-          const entry = String(row.entry);
-          const driver =
-            typeof row.driver === "string" ? row.driver : `Entry ${entry}`;
-          const pos = row.pos !== undefined ? ` (P${row.pos})` : "";
-          const testVal = latestTestValue(row);
-          const body = testVal
-            ? `New result in ${competitionName} — ${testVal}`
-            : `New result in ${competitionName}`;
+      void navigator.serviceWorker.ready.then((registration) => {
+        rows
+          .filter((row) => {
+            const entryValue = row.entry;
+            return entryValue !== undefined && isFavourite(String(entryValue));
+          })
+          .forEach((row) => {
+            const entry = String(row.entry);
+            const driver =
+              typeof row.driver === "string" ? row.driver : `Entry ${entry}`;
+            const pos = row.pos !== undefined ? ` (P${row.pos})` : "";
+            const testVal = latestTestValue(row);
+            const body = testVal
+              ? `New result in ${competitionName} — ${testVal}`
+              : `New result in ${competitionName}`;
 
-          try {
-            new Notification(`${driver}${pos}`, {
+            void registration.showNotification(`${driver}${pos}`, {
               body,
               tag: `entrant-${entry}`,
             });
-          } catch {
-            // Notification construction may fail in some environments
-          }
-        });
+          });
+      });
     },
     [],
   );

@@ -3,15 +3,12 @@ import { renderHook, act } from "@testing-library/react";
 import type { LeaderboardItem } from "../types/leaderboard";
 import { useEntrantNotifications } from "./useEntrantNotifications";
 
-const mockNotificationConstructor = jest.fn();
+const mockShowNotification = jest.fn().mockResolvedValue(undefined);
 const mockRequestPermission = jest.fn();
 
 // eslint-disable-next-line functional/immutable-data -- test setup for browser API mocking
 Object.defineProperty(globalThis, "Notification", {
-  value: jest.fn().mockImplementation((title: string, options?: unknown) => {
-    mockNotificationConstructor(title, options);
-    return {};
-  }),
+  value: jest.fn(),
   writable: true,
   configurable: true,
 });
@@ -29,8 +26,19 @@ Object.defineProperty(Notification, "requestPermission", {
   configurable: true,
 });
 
+// eslint-disable-next-line functional/immutable-data -- test setup for browser API mocking
+Object.defineProperty(navigator, "serviceWorker", {
+  value: {
+    ready: Promise.resolve({
+      showNotification: mockShowNotification,
+    }),
+  },
+  writable: true,
+  configurable: true,
+});
+
 beforeEach(() => {
-  mockNotificationConstructor.mockClear();
+  mockShowNotification.mockClear();
   mockRequestPermission.mockClear();
   mockRequestPermission.mockResolvedValue("granted");
 });
@@ -57,37 +65,39 @@ describe("useEntrantNotifications", () => {
   });
 
   describe("notifyIfFavourite", () => {
-    test("sends notification for favourited entrant", () => {
+    test("sends notification for favourited entrant", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const rows = [makeRow("5", "Alice", "1")];
       const isFavourite = (entry: string) => entry === "5";
 
-      act(() => {
+      await act(async () => {
         result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        await Promise.resolve();
       });
 
-      expect(mockNotificationConstructor).toHaveBeenCalledTimes(1);
-      expect(mockNotificationConstructor).toHaveBeenCalledWith(
+      expect(mockShowNotification).toHaveBeenCalledTimes(1);
+      expect(mockShowNotification).toHaveBeenCalledWith(
         "Alice (P1)",
         expect.objectContaining({ body: "New result in Test Comp" }),
       );
     });
 
-    test("does not send notification for non-favourited entrant", () => {
+    test("does not send notification for non-favourited entrant", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const rows = [makeRow("5", "Alice", "1")];
       const isFavourite = (entry: string) => entry === "99";
 
-      act(() => {
+      await act(async () => {
         result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        await Promise.resolve();
       });
 
-      expect(mockNotificationConstructor).not.toHaveBeenCalled();
+      expect(mockShowNotification).not.toHaveBeenCalled();
     });
 
-    test("sends notification for each favourited entrant in batch", () => {
+    test("sends notification for each favourited entrant in batch", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const rows = [
@@ -97,22 +107,23 @@ describe("useEntrantNotifications", () => {
       ];
       const isFavourite = (entry: string) => entry === "1" || entry === "3";
 
-      act(() => {
+      await act(async () => {
         result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        await Promise.resolve();
       });
 
-      expect(mockNotificationConstructor).toHaveBeenCalledTimes(2);
-      expect(mockNotificationConstructor).toHaveBeenCalledWith(
+      expect(mockShowNotification).toHaveBeenCalledTimes(2);
+      expect(mockShowNotification).toHaveBeenCalledWith(
         "Alice (P1)",
         expect.anything(),
       );
-      expect(mockNotificationConstructor).toHaveBeenCalledWith(
+      expect(mockShowNotification).toHaveBeenCalledWith(
         "Charlie (P3)",
         expect.anything(),
       );
     });
 
-    test("skips rows with undefined entry", () => {
+    test("skips rows with undefined entry", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const rows = [
@@ -126,34 +137,36 @@ describe("useEntrantNotifications", () => {
       ];
       const isFavourite = () => true;
 
-      act(() => {
+      await act(async () => {
         result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        await Promise.resolve();
       });
 
-      expect(mockNotificationConstructor).toHaveBeenCalledTimes(1);
-      expect(mockNotificationConstructor).toHaveBeenCalledWith(
+      expect(mockShowNotification).toHaveBeenCalledTimes(1);
+      expect(mockShowNotification).toHaveBeenCalledWith(
         "Alice (P1)",
         expect.anything(),
       );
     });
 
-    test("handles missing pos field gracefully", () => {
+    test("handles missing pos field gracefully", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const rows = [makeRow("1", "Alice")];
       const isFavourite = () => true;
 
-      act(() => {
+      await act(async () => {
         result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        await Promise.resolve();
       });
 
-      expect(mockNotificationConstructor).toHaveBeenCalledWith(
+      expect(mockShowNotification).toHaveBeenCalledWith(
         "Alice",
         expect.objectContaining({ body: "New result in Test Comp" }),
       );
     });
 
-    test("does not notify when permission is not granted", () => {
+    test("does not notify when permission is not granted", async () => {
       setPermission("denied");
 
       const { result } = renderHook(() => useEntrantNotifications());
@@ -161,28 +174,30 @@ describe("useEntrantNotifications", () => {
       const rows = [makeRow("1", "Alice", "1")];
       const isFavourite = () => true;
 
-      act(() => {
+      await act(async () => {
         result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        await Promise.resolve();
       });
 
-      expect(mockNotificationConstructor).not.toHaveBeenCalled();
+      expect(mockShowNotification).not.toHaveBeenCalled();
 
       setPermission("granted");
     });
 
-    test("empty rows produces no notification", () => {
+    test("empty rows produces no notification", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const isFavourite = () => true;
 
-      act(() => {
+      await act(async () => {
         result.current.notifyIfFavourite([], isFavourite, "Test Comp");
+        await Promise.resolve();
       });
 
-      expect(mockNotificationConstructor).not.toHaveBeenCalled();
+      expect(mockShowNotification).not.toHaveBeenCalled();
     });
 
-    test("includes latest test value in body", () => {
+    test("includes latest test value in body", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const rows: LeaderboardItem[] = [
@@ -200,11 +215,12 @@ describe("useEntrantNotifications", () => {
       ];
       const isFavourite = (entry: string) => entry === "5";
 
-      act(() => {
+      await act(async () => {
         result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        await Promise.resolve();
       });
 
-      expect(mockNotificationConstructor).toHaveBeenCalledWith(
+      expect(mockShowNotification).toHaveBeenCalledWith(
         "Alice (P1)",
         expect.objectContaining({
           body: "New result in Test Comp — 57.0 55.9 55.8  TOT=111.7",
@@ -212,17 +228,18 @@ describe("useEntrantNotifications", () => {
       );
     });
 
-    test("body has no test value when no testX columns present", () => {
+    test("body has no test value when no testX columns present", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const rows = [makeRow("1", "Alice", "1")];
       const isFavourite = () => true;
 
-      act(() => {
+      await act(async () => {
         result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        await Promise.resolve();
       });
 
-      expect(mockNotificationConstructor).toHaveBeenCalledWith(
+      expect(mockShowNotification).toHaveBeenCalledWith(
         "Alice (P1)",
         expect.objectContaining({ body: "New result in Test Comp" }),
       );
