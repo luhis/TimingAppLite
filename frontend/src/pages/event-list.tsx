@@ -142,30 +142,6 @@ const EventListPage = (
               </tbody>
             </Table>
           </Table.Container>
-
-          <div className="has-text-centered mt-5">
-            <button
-              type="button"
-              className="button is-link is-light"
-              onClick={() => {
-                if ("serviceWorker" in navigator) {
-                  void navigator.serviceWorker.ready.then((reg) => {
-                    void reg.showNotification("Test Notification", {
-                      body: "If you can see this, notifications are working!",
-                      tag: "test-notification",
-                    });
-                  });
-                } else if ("Notification" in window && Notification.permission === "granted") {
-                  new Notification("Test Notification", {
-                    body: "If you can see this, notifications are working!",
-                    tag: "test-notification",
-                  });
-                }
-              }}
-            >
-              Test Notifications
-            </button>
-          </div>
         </Container>
         <Footer />
       </Section>

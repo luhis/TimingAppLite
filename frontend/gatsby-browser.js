@@ -23,6 +23,24 @@ export const onClientEntry = () => {
         : new Error(String(event.reason));
     trackException(error, { type: "unhandledrejection" });
   });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.update();
+
+      setInterval(() => {
+        registration.update();
+      }, 24 * 60 * 60 * 1000);
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    });
+  }
 };
 
 export const wrapRootElement = ({ element }) => (
