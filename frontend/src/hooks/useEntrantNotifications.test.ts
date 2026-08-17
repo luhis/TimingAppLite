@@ -78,7 +78,7 @@ describe("useEntrantNotifications", () => {
 
       expect(mockShowNotification).toHaveBeenCalledTimes(1);
       expect(mockShowNotification).toHaveBeenCalledWith(
-        "Alice (P1)",
+        "5 - Alice (P1)",
         expect.objectContaining({ body: "New result in Test Comp" }),
       );
     });
@@ -114,11 +114,11 @@ describe("useEntrantNotifications", () => {
 
       expect(mockShowNotification).toHaveBeenCalledTimes(2);
       expect(mockShowNotification).toHaveBeenCalledWith(
-        "Alice (P1)",
+        "1 - Alice (P1)",
         expect.anything(),
       );
       expect(mockShowNotification).toHaveBeenCalledWith(
-        "Charlie (P3)",
+        "3 - Charlie (P3)",
         expect.anything(),
       );
     });
@@ -144,7 +144,7 @@ describe("useEntrantNotifications", () => {
 
       expect(mockShowNotification).toHaveBeenCalledTimes(1);
       expect(mockShowNotification).toHaveBeenCalledWith(
-        "Alice (P1)",
+        "1 - Alice (P1)",
         expect.anything(),
       );
     });
@@ -161,7 +161,7 @@ describe("useEntrantNotifications", () => {
       });
 
       expect(mockShowNotification).toHaveBeenCalledWith(
-        "Alice",
+        "1 - Alice",
         expect.objectContaining({ body: "New result in Test Comp" }),
       );
     });
@@ -221,9 +221,9 @@ describe("useEntrantNotifications", () => {
       });
 
       expect(mockShowNotification).toHaveBeenCalledWith(
-        "Alice (P1)",
+        "5 - Alice (P1)",
         expect.objectContaining({
-          body: "New result in Test Comp — 57.0 55.9 55.8  TOT=111.7",
+          body: "Test 4 result in Test Comp — 57.0 55.9 55.8  TOT=111.7",
         }),
       );
     });
@@ -240,7 +240,7 @@ describe("useEntrantNotifications", () => {
       });
 
       expect(mockShowNotification).toHaveBeenCalledWith(
-        "Alice (P1)",
+        "1 - Alice (P1)",
         expect.objectContaining({ body: "New result in Test Comp" }),
       );
     });

@@ -3,7 +3,9 @@ import { renderHook, act } from "@testing-library/react";
 import { trackException } from "../lib/appInsights";
 import { useLeaderboardStream } from "./useLeaderboardStream";
 
-const mockTrackException = trackException as jest.MockedFunction<typeof trackException>;
+const mockTrackException = trackException as jest.MockedFunction<
+  typeof trackException
+>;
 
 const mockOn = jest.fn();
 const mockStart = jest.fn();

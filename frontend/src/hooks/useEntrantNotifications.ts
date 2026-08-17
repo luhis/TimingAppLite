@@ -9,12 +9,16 @@ const getPermission = (): NotificationPermission =>
     ? Notification.permission
     : "denied";
 
-const latestTestValue = (row: LeaderboardItem): string | undefined => {
+const latestTestValue = (
+  row: LeaderboardItem,
+): { readonly number: number; readonly value: string } | undefined => {
   const testKeys = Object.keys(row)
     .filter((k) => /^test\d+$/.test(k))
     .sort((a, b) => Number(a.slice(4)) - Number(b.slice(4)));
   const last = testKeys[testKeys.length - 1];
-  return last ? String(row[last] ?? "") : undefined;
+  return last
+    ? { number: Number(last.slice(4)), value: String(row[last] ?? "") }
+    : undefined;
 };
 
 export const useEntrantNotifications = () => {
@@ -69,10 +73,10 @@ export const useEntrantNotifications = () => {
             const pos = row.pos !== undefined ? ` (P${row.pos})` : "";
             const testVal = latestTestValue(row);
             const body = testVal
-              ? `New result in ${competitionName} — ${testVal}`
+              ? `Test ${testVal.number} result in ${competitionName} — ${testVal.value}`
               : `New result in ${competitionName}`;
 
-            void registration.showNotification(`${driver}${pos}`, {
+            void registration.showNotification(`${entry} - ${driver}${pos}`, {
               body,
               tag: `entrant-${entry}`,
             });
