@@ -2,12 +2,8 @@
 **/.github
 **/bin
 **/obj
-**/node_modules
 **/.vs
 **/.vscode
-**/Dockerfile
-**/.dockerignore
+**/TestResults
 **/*.md
 **/LICENSE
-frontend/
-DotNetBackend.Tests/
