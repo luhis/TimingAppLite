@@ -13,7 +13,7 @@ COPY DotNetBackend.slnx .
 RUN dotnet restore DotNetBackend/DotNetBackend.csproj -r linux-musl-x64
 
 COPY . .
-RUN dotnet publish DotNetBackend/DotNetBackend.csproj -c Release -r linux-musl-x64 --self-contained -o /app/publish
+RUN dotnet publish DotNetBackend/DotNetBackend.csproj -c Release -r linux-musl-x64 --self-contained -p:StripSymbols=false -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine
 WORKDIR /app
