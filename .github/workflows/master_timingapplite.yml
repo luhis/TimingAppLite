@@ -33,9 +33,6 @@ jobs:
           -r linux-x64
           -o ${{env.DOTNET_ROOT}}/myapp
 
-      - name: Create Oryx deployment config
-        run: echo -e "[config]\nappCommandLine = ./DotNetBackend" > ${{env.DOTNET_ROOT}}/myapp/.deployment
-
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
@@ -69,3 +66,14 @@ jobs:
           app-name: 'timingapplite'
           slot-name: 'Production'
           package: .
+
+      - name: Configure App Service
+        run: |
+          az webapp config appsettings set \
+            --resource-group AutoTest \
+            --name timingapplite \
+            --settings "ASPNETCORE_URLS=http://0.0.0.0:80" "WEBSITES_PORT=80"
+          az webapp config set \
+            --resource-group AutoTest \
+            --name timingapplite \
+            --startup-file '/home/site/wwwroot/DotNetBackend'
