@@ -34,11 +34,7 @@ jobs:
           -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Create Oryx deployment config
-        run: |
-          cat > ${{env.DOTNET_ROOT}}/myapp/.deployment << 'EOF'
-          [config]
-          appCommandLine = ./DotNetBackend
-          EOF
+        run: echo -e "[config]\nappCommandLine = ./DotNetBackend" > ${{env.DOTNET_ROOT}}/myapp/.deployment
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
