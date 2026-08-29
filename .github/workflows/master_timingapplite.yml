@@ -59,6 +59,17 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E454D3DE4FD3412FAEAEBE530335E457 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_666ABE017D2840B8B364E6DE59141B69 }}
 
+      - name: Configure App Service
+        run: |
+          az webapp config appsettings set \
+            --resource-group AutoTest \
+            --name timingapplite \
+            --settings "ASPNETCORE_URLS=http://0.0.0.0:80" "WEBSITES_PORT=80"
+          az webapp config set \
+            --resource-group AutoTest \
+            --name timingapplite \
+            --startup-file './DotNetBackend'
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
