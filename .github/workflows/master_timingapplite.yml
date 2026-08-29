@@ -66,14 +66,4 @@ jobs:
           app-name: 'timingapplite'
           slot-name: 'Production'
           package: .
-
-      - name: Configure App Service
-        run: |
-          az webapp config appsettings set \
-            --resource-group AutoTest \
-            --name timingapplite \
-            --settings "ASPNETCORE_URLS=http://0.0.0.0:80" "WEBSITES_PORT=80"
-          az webapp config set \
-            --resource-group AutoTest \
-            --name timingapplite \
-            --startup-file '/home/site/wwwroot/DotNetBackend'
+          startup-file: '/home/site/wwwroot/DotNetBackend'
