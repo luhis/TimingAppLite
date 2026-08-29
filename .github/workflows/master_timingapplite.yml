@@ -59,6 +59,14 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E454D3DE4FD3412FAEAEBE530335E457 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_666ABE017D2840B8B364E6DE59141B69 }}
 
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'timingapplite'
+          slot-name: 'Production'
+          package: .
+
       - name: Configure App Service
         run: |
           az webapp config appsettings set \
@@ -68,12 +76,4 @@ jobs:
           az webapp config set \
             --resource-group AutoTest \
             --name timingapplite \
-            --startup-file './DotNetBackend'
-
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'timingapplite'
-          slot-name: 'Production'
-          package: .
+            --startup-file '/home/site/wwwroot/DotNetBackend'
