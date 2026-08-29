@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/Bits/">
+    <File Path="../.github/workflows/backend-ci.yml" />
+    <File Path="../.github/workflows/backend-deploy.yml" />
     <File Path="Dockerfile" />
   </Folder>
   <Project Path="DotNetBackend.Tests/DotNetBackend.Tests.csproj" />

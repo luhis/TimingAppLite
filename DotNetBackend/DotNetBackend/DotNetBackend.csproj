@@ -5,6 +5,8 @@
     <PublishAot>true</PublishAot>
     <WarningLevel>1</WarningLevel>
     <NoWarn>1701;1702</NoWarn>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine</ContainerBaseImage>
+    <ContainerPort>8080</ContainerPort>
   </PropertyGroup>
 
   <ItemGroup>
