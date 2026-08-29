@@ -33,6 +33,13 @@ jobs:
           -r linux-x64
           -o ${{env.DOTNET_ROOT}}/myapp
 
+      - name: Create Oryx deployment config
+        run: |
+          cat > ${{env.DOTNET_ROOT}}/myapp/.deployment << 'EOF'
+          [config]
+          appCommandLine = ./DotNetBackend
+          EOF
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
@@ -66,4 +73,3 @@ jobs:
           app-name: 'timingapplite'
           slot-name: 'Production'
           package: .
-          startup-file: '/home/site/wwwroot/DotNetBackend'
