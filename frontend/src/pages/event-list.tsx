@@ -12,6 +12,7 @@ import {
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
+import { parseDate } from "../lib/dataParser";
 import { fetchEventLeaderboard, isAbortError } from "../lib/leaderboardApi";
 import type {
   LeaderboardColumn,
@@ -122,11 +123,15 @@ const EventListPage = (
                 {eventData.items.length > 0 ? (
                   eventData.items.map((item, index) => (
                     <tr key={`${item.name}-${index}`}>
-                      {eventData.columns.map((column) => (
-                        <td key={column.name}>
-                          {String(item[column.name] ?? "")}
-                        </td>
-                      ))}
+                      {eventData.columns.map((column) => {
+                        const value = item[column.name];
+                        const displayValue =
+                          column.name === "date" && typeof value === "string"
+                            ? (parseDate(value)?.toLocaleDateString("en-gb") ??
+                              value)
+                            : String(value ?? "");
+                        return <td key={column.name}>{displayValue}</td>;
+                      })}
                     </tr>
                   ))
                 ) : (

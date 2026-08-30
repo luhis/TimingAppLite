@@ -7,6 +7,7 @@ const navItems = [
   { label: "Current Events", to: "/" },
   { label: "Historical Events", to: "/historical-events" },
   { label: "Event List", to: "/event-list" },
+  { label: "How It Works", to: "/info" },
 ] as const;
 
 export const Navbar = () => {
