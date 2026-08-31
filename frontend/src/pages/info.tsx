@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PageProps, type HeadFC } from "gatsby";
+import { type HeadFC } from "gatsby";
 import {
   Container,
   Content,
@@ -12,7 +12,7 @@ import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
 
-const InfoPage = (props: Readonly<PageProps>) => {
+const InfoPage = () => {
   return (
     <>
       <Navbar />
