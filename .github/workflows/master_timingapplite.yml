@@ -65,10 +65,3 @@ jobs:
           app-name: 'timingapplite'
           slot-name: 'Production'
           package: .
-
-      - name: Configure startup command for AOT
-        run: |
-          az webapp config set \
-            --resource-group AutoTest \
-            --name timingapplite \
-            --startup-file "./DotNetBackend"
