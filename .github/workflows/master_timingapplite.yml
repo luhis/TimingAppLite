@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy ASP.Net Core app to Azure Web App - timingapplite
 
 on:
@@ -12,8 +9,37 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -23,11 +49,18 @@ jobs:
         with:
           dotnet-version: '10.x'
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Install AOT prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang binutils
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - name: Publish with AOT
+        run: >
+          dotnet publish DotNetBackend/DotNetBackend/DotNetBackend.csproj
+          -c Release
+          --self-contained
+          -r linux-x64
+          -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -39,21 +72,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: .net-app
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E34C8EB870804E17B5812323EE494695 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DA4ECB5C934F4737A6D85ED6233DD0FF }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2BF105B11B6D475B8A8DB6C43F86ABE8 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_79C5FA2FD03A4509B08BD3AF63ABE952 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E454D3DE4FD3412FAEAEBE530335E457 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_666ABE017D2840B8B364E6DE59141B69 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -62,4 +95,3 @@ jobs:
           app-name: 'timingapplite'
           slot-name: 'Production'
           package: .
-          
