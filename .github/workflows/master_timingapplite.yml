@@ -9,35 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     permissions:
       contents: read
 
@@ -58,7 +29,6 @@ jobs:
         run: >
           dotnet publish DotNetBackend/DotNetBackend/DotNetBackend.csproj
           -c Release
-          --self-contained
           -r linux-x64
           -o ${{env.DOTNET_ROOT}}/myapp
 
@@ -95,3 +65,10 @@ jobs:
           app-name: 'timingapplite'
           slot-name: 'Production'
           package: .
+
+      - name: Configure startup command for AOT
+        run: |
+          az webapp config set \
+            --resource-group AutoTest \
+            --name timingapplite \
+            --startup-file "./DotNetBackend"
