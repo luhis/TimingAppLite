@@ -6,7 +6,7 @@ export const onSetResponseHeaders = ({ setHeader }) => {
       "script-src 'self' https://www.googletagmanager.com https://js.monitor.azure.com",
       "style-src 'self'",
       "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com",
-      "connect-src 'self' https://timingapplite.purplesea-f465acb7.uksouth.azurecontainerapps.io wss://timingapplite.purplesea-f465acb7.uksouth.azurecontainerapps.io https://westeurope-5.in.applicationinsights.azure.com https://js.monitor.azure.com https://www.google-analytics.com",
+      "connect-src 'self' https://timingapplite-c8fta7hvacf3e4f8.uksouth-01.azurewebsites.net https://timingapplite.purplesea-f465acb7.uksouth.azurecontainerapps.io wss://timingapplite.purplesea-f465acb7.uksouth.azurecontainerapps.io https://westeurope-5.in.applicationinsights.azure.com https://js.monitor.azure.com https://www.google-analytics.com",
       "font-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",
