@@ -1,21 +1,33 @@
-name: Build and deploy ASP.Net Core app to Azure Web App - timingapplite
+name: Backend Deploy
 
 on:
   push:
     branches:
       - master
+    paths:
+      - 'DotNetBackend/**'
+      - '.github/workflows/backend-deploy.yml'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: 1
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.x'
@@ -32,10 +44,10 @@ jobs:
           -r linux-x64
           -o ${{env.DOTNET_ROOT}}/myapp
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: .net-app
+          name: backend-app
           path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
@@ -46,10 +58,10 @@ jobs:
       contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v8
         with:
-          name: .net-app
+          name: backend-app
 
       - name: Login to Azure
         uses: azure/login@v3
