@@ -13,7 +13,8 @@ import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
 import { parseDate } from "../lib/dataParser";
-import { fetchEventLeaderboard, isAbortError } from "../lib/leaderboardApi";
+import { fetchEventLeaderboard } from "../lib/leaderboardApi";
+import { retryWithBackoff } from "../lib/retryWithBackoff";
 import type {
   LeaderboardColumn,
   LeaderboardItemFromApi,
@@ -55,7 +56,10 @@ const EventListPage = (
       setAsyncState({ status: "loading" });
 
       try {
-        const payload = await fetchEventLeaderboard(controller.signal);
+        const payload = await retryWithBackoff(
+          (signal) => fetchEventLeaderboard(signal),
+          controller.signal,
+        );
         if (!controller.signal.aborted) {
           setEventData({
             columns: payload.columns,
@@ -67,7 +71,7 @@ const EventListPage = (
           });
         }
       } catch (fetchError) {
-        if (!controller.signal.aborted && !isAbortError(fetchError)) {
+        if (!controller.signal.aborted) {
           setAsyncState({
             status: "error",
             error:

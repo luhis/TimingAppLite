@@ -29,6 +29,7 @@ import {
   isAbortError,
   getErrorMessage,
 } from "../../lib/leaderboardApi";
+import { retryWithBackoff } from "../../lib/retryWithBackoff";
 import {
   extractNotesText,
   isSelectableLeaderboard,
@@ -101,7 +102,11 @@ const CompetitionPage = ({
 
     const loadCompetition = async () => {
       try {
-        const data = await fetchAllCompetitions(controller.signal);
+        const data = await retryWithBackoff(
+          (signal) => fetchAllCompetitions(signal),
+          controller.signal,
+          { maxRetries: 3 },
+        );
         const parsed = data.map(parseCompetitionDate);
         if (!controller.signal.aborted) {
           setCompetition(parsed.find((c) => c.id === competitionId) ?? null);
@@ -127,7 +132,11 @@ const CompetitionPage = ({
 
     const loadSiteName = async () => {
       try {
-        const name = await fetchSiteName(competitionId, controller.signal);
+        const name = await retryWithBackoff(
+          (signal) => fetchSiteName(competitionId, signal),
+          controller.signal,
+          { maxRetries: 3 },
+        );
         if (!controller.signal.aborted) {
           setSiteName(name);
         }
@@ -154,7 +163,11 @@ const CompetitionPage = ({
       setLeaderboardsState({ status: "loading" });
 
       try {
-        const data = await fetchLeaderboards(competitionId, controller.signal);
+        const data = await retryWithBackoff(
+          (signal) => fetchLeaderboards(competitionId, signal),
+          controller.signal,
+          { maxRetries: 3 },
+        );
 
         if (!controller.signal.aborted) {
           setLeaderboardsState({ status: "success", data });
@@ -203,10 +216,10 @@ const CompetitionPage = ({
       setLeaderboardState({ status: "loading" });
 
       try {
-        const data = await fetchLeaderboard(
-          competitionId,
-          leaderboardId,
+        const data = await retryWithBackoff(
+          (signal) => fetchLeaderboard(competitionId, leaderboardId, signal),
           controller.signal,
+          { maxRetries: 3 },
         );
 
         if (!controller.signal.aborted) {
@@ -253,10 +266,15 @@ const CompetitionPage = ({
 
     const loadEventNotes = async () => {
       try {
-        const payload = await fetchLeaderboard(
-          competitionId,
-          String(notesLeaderboard.id),
+        const payload = await retryWithBackoff(
+          (signal) =>
+            fetchLeaderboard(
+              competitionId,
+              String(notesLeaderboard.id),
+              signal,
+            ),
           controller.signal,
+          { maxRetries: 2 },
         );
 
         if (!controller.signal.aborted && payload.items.length > 0) {

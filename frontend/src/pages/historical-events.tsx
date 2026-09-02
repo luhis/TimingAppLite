@@ -16,7 +16,8 @@ import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
 import type { Competition } from "../types/leaderboard";
 import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
-import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
+import { fetchAllCompetitions } from "../lib/leaderboardApi";
+import { retryWithBackoff } from "../lib/retryWithBackoff";
 import {
   competitionStatusColor,
   competitionStatusLabel,
@@ -40,13 +41,16 @@ const HistoricalEventsPage = (
 
     const refreshCompetitions = async () => {
       try {
-        const freshData = await fetchAllCompetitions(controller.signal);
+        const freshData = await retryWithBackoff(
+          (signal) => fetchAllCompetitions(signal),
+          controller.signal,
+        );
         if (!controller.signal.aborted) {
           setCompetitions(freshData.map(parseCompetitionDate));
         }
       } catch (fetchError) {
         // Keep existing data on error
-        if (!controller.signal.aborted && !isAbortError(fetchError)) {
+        if (!controller.signal.aborted) {
           console.warn("Failed to refresh competitions:", fetchError);
         }
       }

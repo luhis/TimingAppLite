@@ -20,7 +20,8 @@ import {
   competitionStatusLabel,
 } from "../lib/competitionStatus";
 import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
-import { fetchAllCompetitions, isAbortError } from "../lib/leaderboardApi";
+import { fetchAllCompetitions } from "../lib/leaderboardApi";
+import { retryWithBackoff } from "../lib/retryWithBackoff";
 import { type Competition } from "../types/leaderboard";
 
 const IndexPage = (props: Readonly<PageProps<Queries.IndexPageQueryQuery>>) => {
@@ -38,13 +39,16 @@ const IndexPage = (props: Readonly<PageProps<Queries.IndexPageQueryQuery>>) => {
 
     const refreshCompetitions = async () => {
       try {
-        const freshData = await fetchAllCompetitions(controller.signal);
+        const freshData = await retryWithBackoff(
+          (signal) => fetchAllCompetitions(signal),
+          controller.signal,
+        );
         if (!controller.signal.aborted) {
           setCompetitions(freshData.map(parseCompetitionDate));
         }
       } catch (fetchError) {
         // Keep existing data on error
-        if (!controller.signal.aborted && !isAbortError(fetchError)) {
+        if (!controller.signal.aborted) {
           console.warn("Failed to refresh competitions:", fetchError);
         }
       }
