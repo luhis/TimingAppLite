@@ -46,16 +46,17 @@
     "@types/react": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.60.1",
-    "eslint": "^9.39.5",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-functional": "^10.0.0",
-    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react": "github:plthomasva/eslint-plugin-react#update-deprecated-calls-v8",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.6.0",
     "jest": "^30.0.0",
     "jest-environment-jsdom": "^30.0.0",
     "prettier": "^3.8.3",
     "ts-jest": "^29.1.0",
-    "typescript": "^6.0.3"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }

@@ -8,7 +8,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['node_modules/**', 'public/**', '.cache/**', 'dist/**'],
+    ignores: ['node_modules/**', 'public/**', '.cache/**', 'dist/**', 'src/gatsby-types.d.ts'],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
