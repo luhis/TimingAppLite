@@ -4366,9 +4366,9 @@ brace-expansion@^2.0.2:
     balanced-match "^1.0.0"
 
 brace-expansion@^5.0.8:
-  version "5.0.9"
-  resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-5.0.9.tgz#7c72438809b5fa5babf54199a1f1c281a6984fcf"
-  integrity sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==
+  version "5.0.12"
+  resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-5.0.12.tgz#995fbb4750a77c4d16a7dc942ff2ca6ef8e675ec"
+  integrity sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ==
   dependencies:
     balanced-match "^4.0.2"
 
@@ -5330,9 +5330,9 @@ deep-is@^0.1.3:
   integrity sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==
 
 deepmerge-ts@^7.1.5:
-  version "7.1.5"
-  resolved "https://registry.npmjs.org/deepmerge-ts/-/deepmerge-ts-7.1.5.tgz"
-  integrity sha512-HOJkrhaYsweh+W+e74Yn7YStZOilkoPb6fycpwNLKzSPtruFs48nYis0zy5yJz1+ktUhHxoRDJ27RQAWLIJVJw==
+  version "7.1.6"
+  resolved "https://registry.yarnpkg.com/deepmerge-ts/-/deepmerge-ts-7.1.6.tgz#e226a79609c20aa6b89b00a1f4c5705ca71d9d2e"
+  integrity sha512-gQhL1ksGBLQbHeAo47YU6cs2ahd3Pv+8PFYoWogNZbQnNwQyOh9Ad5kbeHFiWwbKdeWQJ5Z7Y7mwb9ew2hXBLw==
 
 deepmerge@^4.2.2, deepmerge@^4.3.1:
   version "4.3.1"
@@ -5893,7 +5893,7 @@ escape-string-regexp@^4.0.0:
 
 escape-string-regexp@^5.0.0:
   version "5.0.0"
-  resolved "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-5.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-5.0.0.tgz#4683126b500b61762f2dbebace1806e8be31b1c8"
   integrity sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==
 
 eslint-config-prettier@^10.1.8:
@@ -5933,9 +5933,9 @@ eslint-plugin-flowtype@^5.10.0:
     string-natural-compare "^3.0.1"
 
 eslint-plugin-functional@^10.0.0:
-  version "10.0.0"
-  resolved "https://registry.npmjs.org/eslint-plugin-functional/-/eslint-plugin-functional-10.0.0.tgz"
-  integrity sha512-D/BWdGUvPz5uIC+kZM1BWrELhjHpDiYxIYjzF7a6TZ62KINajjKgOiSYGbGv4fpMT1enEC9yG+0kOaIRTZzpTg==
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-functional/-/eslint-plugin-functional-10.0.1.tgz#9b29172319b0ec0b3c7a52bfd19439981e35d0ca"
+  integrity sha512-clkYpLx2NmBnJYZNdmFUV0uBOVOcaNSAsz050FLVeX3mDl8JB9dbJBGFXDwiWeE1vG90S4OwLB+xevAsD/cr5w==
   dependencies:
     "@typescript-eslint/utils" "^8.26.0"
     deepmerge-ts "^7.1.5"
@@ -7999,9 +7999,9 @@ is-glob@^4.0.0, is-glob@^4.0.1, is-glob@^4.0.3, is-glob@~4.0.1:
     is-extglob "^2.1.1"
 
 is-immutable-type@^5.0.1:
-  version "5.0.2"
-  resolved "https://registry.npmjs.org/is-immutable-type/-/is-immutable-type-5.0.2.tgz"
-  integrity sha512-liGTvz7pbINOKvy0P4VTCEAIf8xrKJ9165xnwsS7udUyYxwDGBdQIJd+OhwxAn6Kv3pzdy1uha4oJCigzNw2xA==
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/is-immutable-type/-/is-immutable-type-5.0.4.tgz#fe4153558d89a630abdfa614443c5d4a5a7653dd"
+  integrity sha512-tDf0vB9dJJt/1USS2nvHJb8UsIAhs+pF6z8UZLNdhrzB+PKMrdcN45je9jhuFpaJOjJpoRhueFmFrRs5g/TNMA==
   dependencies:
     "@typescript-eslint/type-utils" "^8.0.0"
     ts-api-utils "^2.0.0"
@@ -10306,9 +10306,9 @@ prelude-ls@^1.2.1:
   integrity sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==
 
 prettier@^3.8.3:
-  version "3.9.6"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.9.6.tgz#b3ea5146515d40fc53f18aa63f74dfab1e10dbf6"
-  integrity sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g==
+  version "3.9.7"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.9.7.tgz#dfc831d49deeece0505b692d516ef6f39ec874a5"
+  integrity sha512-T3mF5P7HFzZVLDQuCUNtJj6WK1pcpLMweMNUVwGb01bLNkH9AkKxtZvmInw8K6bnn2O3d6/5RHl6zSHiBAD0Og==
 
 pretty-bytes@^5.1.0:
   version "5.6.0"
@@ -11936,7 +11936,7 @@ tr46@~0.0.3:
 
 ts-api-utils@^2.0.0, ts-api-utils@^2.0.1, ts-api-utils@^2.5.0:
   version "2.5.0"
-  resolved "https://registry.npmjs.org/ts-api-utils/-/ts-api-utils-2.5.0.tgz"
+  resolved "https://registry.yarnpkg.com/ts-api-utils/-/ts-api-utils-2.5.0.tgz#4acd4a155e22734990a5ed1fe9e97f113bcb37c1"
   integrity sha512-OJ/ibxhPlqrMM0UiNHJ/0CKQkoKF243/AEmplt3qpRgkW8VG7IfOS41h7V8TjITqdByHzrjcS/2si+y4lIh8NA==
 
 ts-date@^3.1.0:
@@ -11946,7 +11946,7 @@ ts-date@^3.1.0:
 
 ts-declaration-location@^1.0.4, ts-declaration-location@^1.0.6:
   version "1.0.7"
-  resolved "https://registry.npmjs.org/ts-declaration-location/-/ts-declaration-location-1.0.7.tgz"
+  resolved "https://registry.yarnpkg.com/ts-declaration-location/-/ts-declaration-location-1.0.7.tgz#d4068fe9975828b3b453b3ab112b4711d8267688"
   integrity sha512-EDyGAwH1gO0Ausm9gV6T2nUvBgXT5kGoCMJPllOaooZ+4VvJiKBdZE7wK18N1deEowhcUptS+5GXZK8U/fvpwA==
   dependencies:
     picomatch "^4.0.2"
