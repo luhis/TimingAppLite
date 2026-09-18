@@ -3,7 +3,7 @@ import {
   HttpTransportType,
   LogLevel,
 } from "@microsoft/signalr";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { trackException } from "../lib/appInsights";
 import type {
@@ -37,6 +37,27 @@ export const useLeaderboardStream = (
   onColumnUpdate: (columns: readonly LeaderboardColumn[]) => void,
   onCompetitionUpdate: (competition: Competition) => void,
 ) => {
+  const onRowUpdateRef = useRef(onRowUpdate);
+  const onColumnUpdateRef = useRef(onColumnUpdate);
+  const onCompetitionUpdateRef = useRef(onCompetitionUpdate);
+
+  useEffect(() => {
+    // React refs are intentionally mutated to keep the latest callback
+    // without re-creating the SignalR subscription.
+    // eslint-disable-next-line functional/immutable-data
+    onRowUpdateRef.current = onRowUpdate;
+  }, [onRowUpdate]);
+
+  useEffect(() => {
+    // eslint-disable-next-line functional/immutable-data
+    onColumnUpdateRef.current = onColumnUpdate;
+  }, [onColumnUpdate]);
+
+  useEffect(() => {
+    // eslint-disable-next-line functional/immutable-data
+    onCompetitionUpdateRef.current = onCompetitionUpdate;
+  }, [onCompetitionUpdate]);
+
   useEffect(() => {
     if (!competitionId || !leaderboardId || !signalRHubUrl || !enabled) {
       return;
@@ -58,20 +79,20 @@ export const useLeaderboardStream = (
 
         connection.on("ReceiveRowUpdate", (rows: LeaderboardItem[]) => {
           if (rows.length > 0) {
-            onRowUpdate(rows);
+            onRowUpdateRef.current(rows);
           }
         });
 
         connection.on("ReceiveColumnUpdate", (columns: LeaderboardColumn[]) => {
           if (columns.length > 0) {
-            onColumnUpdate(columns);
+            onColumnUpdateRef.current(columns);
           }
         });
 
         connection.on(
           "ReceiveCompetitionUpdate",
           (competition: Competition) => {
-            onCompetitionUpdate(competition);
+            onCompetitionUpdateRef.current(competition);
           },
         );
 
@@ -107,12 +128,5 @@ export const useLeaderboardStream = (
           );
         });
     };
-  }, [
-    competitionId,
-    leaderboardId,
-    enabled,
-    onRowUpdate,
-    onColumnUpdate,
-    onCompetitionUpdate,
-  ]);
+  }, [competitionId, leaderboardId, enabled]);
 };

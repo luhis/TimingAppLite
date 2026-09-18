@@ -271,6 +271,39 @@ describe("useLeaderboardStream", () => {
     expect(onCompetitionUpdate).toHaveBeenCalledWith(competition);
   });
 
+  test("does not reconnect when callback props change but the subscription inputs do not", () => {
+    const onRowUpdate = jest.fn();
+    const onColumnUpdate = jest.fn();
+    const onCompetitionUpdate = jest.fn();
+
+    const { rerender } = renderHook(
+      ({ rowHandler, columnHandler, competitionHandler }) =>
+        useLeaderboardStream(
+          "comp-1",
+          "lb-1",
+          true,
+          rowHandler,
+          columnHandler,
+          competitionHandler,
+        ),
+      {
+        initialProps: {
+          rowHandler: onRowUpdate,
+          columnHandler: onColumnUpdate,
+          competitionHandler: onCompetitionUpdate,
+        },
+      },
+    );
+
+    rerender({
+      rowHandler: jest.fn(),
+      columnHandler: jest.fn(),
+      competitionHandler: jest.fn(),
+    });
+
+    expect(mockBuild).toHaveBeenCalledTimes(1);
+  });
+
   test("stops connection on cleanup", async () => {
     const { unmount } = renderHook(() =>
       useLeaderboardStream(
