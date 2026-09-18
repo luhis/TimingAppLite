@@ -1,7 +1,23 @@
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "gatsby";
 import { Navbar as BulmaNavbar } from "react-bulma-components";
+
+type BeforeInstallPromptDetails = {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: "accepted" | "dismissed";
+    platform: string;
+  }>;
+};
+
+type BeforeInstallPromptPrompt = {
+  readonly prompt: () => Promise<void>;
+};
+
+type BeforeInstallPromptEvent = Event &
+  BeforeInstallPromptDetails &
+  BeforeInstallPromptPrompt;
 
 const navItems = [
   { label: "Current Events", to: "/" },
@@ -12,8 +28,70 @@ const navItems = [
 
 export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [installPrompt, setInstallPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const currentPath =
     typeof window !== "undefined" ? window.location.pathname : "";
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (event: Event) => {
+      if (!("detail" in event)) {
+        return;
+      }
+
+      const customEvent = event as CustomEvent<BeforeInstallPromptDetails>;
+      const detail: BeforeInstallPromptDetails & BeforeInstallPromptPrompt =
+        (customEvent.detail ?? {
+          platforms: [],
+          prompt: () => Promise.resolve(),
+          userChoice: Promise.resolve({
+            outcome: "dismissed",
+            platform: "web",
+          }),
+        }) as BeforeInstallPromptDetails & BeforeInstallPromptPrompt;
+
+      event.preventDefault();
+
+      setInstallPrompt({
+        ...event,
+        platforms: detail.platforms,
+        prompt: detail.prompt,
+        userChoice: detail.userChoice,
+      } satisfies BeforeInstallPromptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      setInstallPrompt(null);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) {
+      return;
+    }
+
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+
+    if (choice.outcome === "accepted") {
+      setInstallPrompt(null);
+    }
+  };
 
   return (
     <BulmaNavbar color="dark" active={mobileOpen}>
@@ -37,6 +115,17 @@ export const Navbar = () => {
             {item.label}
           </BulmaNavbar.Item>
         ))}
+        {installPrompt && (
+          <button
+            type="button"
+            className="navbar-item"
+            onClick={() => {
+              void handleInstallClick();
+            }}
+          >
+            Install PWA
+          </button>
+        )}
       </BulmaNavbar.Menu>
     </BulmaNavbar>
   );

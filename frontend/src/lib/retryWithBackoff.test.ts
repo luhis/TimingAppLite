@@ -12,7 +12,10 @@ describe("retryWithBackoff", () => {
   test("returns result on first successful attempt", async () => {
     const fetchFn = jest.fn().mockResolvedValue("ok");
 
-    const result = await retryWithBackoff(fetchFn, new AbortController().signal);
+    const result = await retryWithBackoff(
+      fetchFn,
+      new AbortController().signal,
+    );
 
     expect(result).toBe("ok");
     expect(fetchFn).toHaveBeenCalledTimes(1);
@@ -119,13 +122,14 @@ describe("retryWithBackoff", () => {
     const recordedDelays: number[] = [];
     const originalSetTimeout = globalThis.setTimeout;
 
-    jest.spyOn(globalThis, "setTimeout").mockImplementation(
-      ((fn: (...args: readonly unknown[]) => void, ms: number) => {
-        // eslint-disable-next-line functional/immutable-data
-        recordedDelays[recordedDelays.length] = ms;
-        return originalSetTimeout(fn, ms);
-      }) as typeof setTimeout,
-    );
+    jest.spyOn(globalThis, "setTimeout").mockImplementation(((
+      fn: (...args: readonly unknown[]) => void,
+      ms: number,
+    ) => {
+      // eslint-disable-next-line functional/immutable-data
+      recordedDelays[recordedDelays.length] = ms;
+      return originalSetTimeout(fn, ms);
+    }) as typeof setTimeout);
 
     const fetchFn = jest
       .fn()
