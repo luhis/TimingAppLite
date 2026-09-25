@@ -1,6 +1,11 @@
 import type { GatsbyNode } from "gatsby";
 
-import { EVENT_COMPETITION_ID, EVENT_LEADERBOARD_ID, fetchAllCompetitions, fetchEventLeaderboard } from "./src/lib/leaderboardApi";
+import {
+  EVENT_COMPETITION_ID,
+  EVENT_LEADERBOARD_ID,
+  fetchAllCompetitions,
+  fetchEventLeaderboard,
+} from "./src/lib/leaderboardApi";
 import { retryWithBackoff } from "./src/lib/retryWithBackoff";
 
 const BUILD_FETCH_MAX_RETRIES = 3;
@@ -28,7 +33,7 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
         id: ID!
         competitionId: String!
         name: String!
-        dateddmmyyyy: Date! @dateformat
+        dateddmmyyyy: String
         active: String!
         provisional: String
         finalised: String
@@ -53,7 +58,6 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
       }
     `);
   };
-
 
 export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
   actions,
