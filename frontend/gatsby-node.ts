@@ -26,6 +26,23 @@ const fetchWithBuildRetry = async <T>(
   );
 };
 
+const normalizeCompetitionNode = (competition: {
+  readonly id?: string | number | null;
+  readonly active?: string | number | boolean | null;
+  readonly name?: string | null;
+  readonly dateddmmyyyy?: string | null;
+  readonly provisional?: string | number | boolean | null;
+  readonly finalised?: string | number | boolean | null;
+}) => ({
+  competitionId: String(competition.id ?? ""),
+  name: competition.name ?? "",
+  dateddmmyyyy: competition.dateddmmyyyy ?? null,
+  active: String(competition.active ?? ""),
+  provisional:
+    competition.provisional == null ? null : String(competition.provisional),
+  finalised: competition.finalised == null ? null : String(competition.finalised),
+});
+
 export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] =
   ({ actions }) => {
     actions.createTypes(`
@@ -87,15 +104,16 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
     console.log(`✅ Fetched ${compResult.value.length} competitions`);
 
     compResult.value.forEach((competition) => {
+      const normalizedCompetition = normalizeCompetitionNode(competition);
+
       void createNode({
-        ...competition,
-        competitionId: competition.id,
-        id: createNodeId(`Competition-${competition.id}`),
+        ...normalizedCompetition,
+        id: createNodeId(`Competition-${normalizedCompetition.competitionId}`),
         parent: null,
         children: [],
         internal: {
           type: "Competition",
-          contentDigest: createContentDigest(competition),
+          contentDigest: createContentDigest(normalizedCompetition),
         },
       });
     });
