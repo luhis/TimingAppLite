@@ -1,6 +1,58 @@
 import type { GatsbyNode } from "gatsby";
 
 import { EVENT_COMPETITION_ID, EVENT_LEADERBOARD_ID, fetchAllCompetitions, fetchEventLeaderboard } from "./src/lib/leaderboardApi";
+import { retryWithBackoff } from "./src/lib/retryWithBackoff";
+
+const BUILD_FETCH_MAX_RETRIES = 3;
+const BUILD_FETCH_BASE_DELAY_MS = 5000;
+
+const fetchWithBuildRetry = async <T>(
+  fetchFn: (signal?: AbortSignal) => Promise<T>,
+): Promise<T> => {
+  const controller = new AbortController();
+
+  return retryWithBackoff(
+    (signal) => fetchFn(signal),
+    controller.signal,
+    {
+      maxRetries: BUILD_FETCH_MAX_RETRIES,
+      baseDelayMs: BUILD_FETCH_BASE_DELAY_MS,
+    },
+  );
+};
+
+export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] =
+  ({ actions }) => {
+    actions.createTypes(`
+      type Competition implements Node @dontInfer {
+        id: ID!
+        competitionId: String!
+        name: String!
+        dateddmmyyyy: Date! @dateformat
+        active: String!
+        provisional: String
+        finalised: String
+      }
+
+      type EventListColumn {
+        name: String!
+        label: String!
+      }
+
+      type EventListItem {
+        name: String
+        entries: String
+        date: String
+      }
+
+      type EventList implements Node @dontInfer {
+        id: ID!
+        eventId: String!
+        columns: [EventListColumn!]!
+        items: [EventListItem!]!
+      }
+    `);
+  };
 
 
 export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
@@ -23,8 +75,8 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
   console.log("📡 Fetching competitions and event list…");
 
   const [compResult, eventResult] = await Promise.allSettled([
-    fetchAllCompetitions(),
-    fetchEventLeaderboard(),
+    fetchWithBuildRetry(fetchAllCompetitions),
+    fetchWithBuildRetry(fetchEventLeaderboard),
   ]);
 
   if (compResult.status === "fulfilled") {
