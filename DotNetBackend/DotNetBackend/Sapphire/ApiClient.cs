@@ -23,7 +23,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     {
         using var client = httpClientFactory.CreateClient();
         var url = LeaderboardsUrl(competitionId, leaderboardId);
-        using var resp = await client.GetAsync(url, ct);
+        using var resp = await GetWithBackoffAsync(client, url, HttpCompletionOption.ResponseContentRead, ct);
         await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
         var bytes = await resp.Content.ReadAsByteArrayAsync(ct);
         var contentType = resp.Content.Headers.ContentType?.ToString() ?? "application/json";
@@ -39,7 +39,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
         {
             using var client = httpClientFactory.CreateClient();
-            using var resp = await client.GetAsync(LeaderboardsUrl(competitionId, leaderboardId), ct);
+            using var resp = await GetWithBackoffAsync(client, LeaderboardsUrl(competitionId, leaderboardId), HttpCompletionOption.ResponseContentRead, ct);
             await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
             cached = (
                 await resp.Content.ReadAsByteArrayAsync(ct),
@@ -64,7 +64,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     private async Task<(byte[] bytes, string contentType)> FetchCompetitionBytesAsync(CancellationToken ct)
     {
         using var client = httpClientFactory.CreateClient();
-        using var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
+        using var resp = await GetWithBackoffAsync(client, LiveAllCompetitionsUrl(), HttpCompletionOption.ResponseContentRead, ct);
         await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
         return (
             await resp.Content.ReadAsByteArrayAsync(ct),
@@ -99,7 +99,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
             return cached;
 
         using var client = httpClientFactory.CreateClient();
-        using var resp = await client.GetAsync(EventListUrl(competitionId), HttpCompletionOption.ResponseHeadersRead, ct);
+        using var resp = await GetWithBackoffAsync(client, EventListUrl(competitionId), HttpCompletionOption.ResponseHeadersRead, ct);
         await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
         using var stream = await resp.Content.ReadAsStreamAsync(ct);
         using var reader = new StreamReader(stream);
@@ -119,6 +119,31 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         }
 
         throw new InvalidOperationException("sitename not found in event list");
+    }
+
+    private const int MaxRetries = 3;
+    private static readonly TimeSpan BaseDelay = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan MaxDelay = TimeSpan.FromSeconds(30);
+
+    private static async Task<HttpResponseMessage> GetWithBackoffAsync(
+        HttpClient client, string url, HttpCompletionOption option, CancellationToken ct)
+    {
+#pragma warning disable IDISP011, IDISP017 // ownership of the final response passes to the caller
+        for (var attempt = 0; ; attempt++)
+        {
+            var resp = await client.GetAsync(url, option, ct);
+            if (resp.StatusCode != System.Net.HttpStatusCode.TooManyRequests || attempt >= MaxRetries)
+                return resp;
+
+            var retryAfter = resp.Headers.RetryAfter;
+            TimeSpan delay = retryAfter?.Delta
+                ?? (retryAfter?.Date is { } date ? date - DateTimeOffset.UtcNow : BaseDelay * Math.Pow(2, attempt));
+            if (delay < TimeSpan.Zero) delay = TimeSpan.Zero;
+            if (delay > MaxDelay) delay = MaxDelay;
+            resp.Dispose();
+            await Task.Delay(delay, ct);
+        }
+#pragma warning restore IDISP011, IDISP017
     }
 
     private static async Task EnsureSuccessOrThrowUpstreamAsync(HttpResponseMessage response, CancellationToken ct)
