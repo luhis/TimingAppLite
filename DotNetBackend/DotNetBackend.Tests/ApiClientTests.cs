@@ -127,14 +127,14 @@ public class ApiClientTests
     }
 
     [Fact]
-    public async Task GetLiveAllCompetitions_ThrowsHttpRequestException_OnNonSuccessStatus()
+    public async Task GetLiveAllCompetitions_ThrowsUpstreamHttpException_OnNonSuccessStatus()
     {
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
         var act = async () => await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowAsync<HttpRequestException>();
+        await act.Should().ThrowAsync<UpstreamHttpException>();
     }
 
     // -------------------------------------------------------------------------
@@ -160,14 +160,14 @@ public class ApiClientTests
     }
 
     [Fact]
-    public async Task GetResults_ThrowsHttpRequestException_OnNonSuccessStatus()
+    public async Task GetResults_ThrowsUpstreamHttpException_OnNonSuccessStatus()
     {
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
         var act = async () => await client.GetLeaderboard(1, 2, TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowAsync<HttpRequestException>();
+        await act.Should().ThrowAsync<UpstreamHttpException>();
     }
 
     [Fact]
@@ -213,14 +213,14 @@ public class ApiClientTests
     }
 
     [Fact]
-    public async Task GetCompetitions_ThrowsHttpRequestException_OnNonSuccessStatus()
+    public async Task GetCompetitions_ThrowsUpstreamHttpException_OnNonSuccessStatus()
     {
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
         var act = async () => await client.GetCompetitions(TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowAsync<HttpRequestException>();
+        await act.Should().ThrowAsync<UpstreamHttpException>();
     }
 
     // -------------------------------------------------------------------------
