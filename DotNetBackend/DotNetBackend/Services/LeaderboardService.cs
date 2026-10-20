@@ -82,9 +82,8 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
 
     public void RemoveAllSubscriptions(string connectionId)
     {
-        var activeGroups = GetActiveGroups().ToHashSet();
         if (_connectionGroups.TryRemove(connectionId, out var key))
-            if (!activeGroups.Contains(key))
+            if (!GetActiveGroups().Contains(key))
                 _previousResults.TryRemove(key, out _);
     }
 
@@ -112,7 +111,8 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         {
             var prevByEntry = prevSnapshot.Items
                 .Where(r => r.ContainsKey("entry"))
-                .ToDictionary(r => r["entry"]);
+                .GroupBy(r => r["entry"])
+                .ToDictionary(g => g.Key, g => g.Last());
 
             var changedRows = values.Items
                 .Where(row => row.ContainsKey("entry")
