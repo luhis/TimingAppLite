@@ -8,12 +8,15 @@ using System.Text.RegularExpressions;
 
 namespace DotNetBackend.Sapphire;
 
-public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration) : IApiClient
+public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration) : IApiClient
 {
     private const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk";
     private const string ApiBase = $"{RemoteApiBase}/API/1";
     private const string EventListBase = $"{RemoteApiBase}/eventlist.php";
-    private static readonly Regex SiteNameRegex = new(@"sitename=([^""&]+)", RegexOptions.Compiled);
+
+    [GeneratedRegex(@"sitename=([^""&]+)")]
+    private static partial Regex SiteNameRegex();
+
     private readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(
         configuration.GetValue<int>("ApiClient:CacheDurationSeconds", 30));
     async Task<LeaderboardDto> IApiClient.GetLeaderboard(int competitionId, int leaderboardId, CancellationToken ct)
@@ -106,7 +109,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         while ((read = await reader.ReadAsync(buffer, ct)) > 0)
         {
             sb.Append(buffer, 0, read);
-            var match = SiteNameRegex.Match(sb.ToString());
+            var match = SiteNameRegex().Match(sb.ToString());
             if (match.Success)
             {
                 cached = match.Groups[1].Value;
