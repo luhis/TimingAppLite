@@ -48,9 +48,9 @@ function assertWssCounterpartForEachHttpsBackend(origins: string[]) {
     )
     .map((origin) => origin.replace("https://", ""));
 
-  for (const host of httpsBackendHosts) {
+  httpsBackendHosts.forEach((host) => {
     expect(origins).toContain(`wss://${host}`);
-  }
+  });
 }
 
 describe("Content-Security-Policy connect-src", () => {
@@ -65,10 +65,10 @@ describe("Content-Security-Policy connect-src", () => {
   });
 
   it("keeps gatsby-ssr.js and static/staticwebapp.config.json connect-src origins in sync", () => {
-    const ssrOrigins = readGatsbySsrConnectSrc().sort();
-    const swaOrigins = readStaticWebAppConnectSrc(
+    const ssrOrigins = [...readGatsbySsrConnectSrc()].sort();
+    const swaOrigins = [...readStaticWebAppConnectSrc(
       "static/staticwebapp.config.json",
-    ).sort();
+    )].sort();
     expect(swaOrigins).toEqual(ssrOrigins);
   });
 });
