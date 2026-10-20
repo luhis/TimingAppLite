@@ -1,6 +1,7 @@
 using DotNetBackend.Dto;
 using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
+using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -20,7 +21,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         using var client = httpClientFactory.CreateClient();
         var url = LeaderboardsUrl(competitionId, leaderboardId);
         using var resp = await client.GetAsync(url, ct);
-        resp.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
         var bytes = await resp.Content.ReadAsByteArrayAsync(ct);
         var contentType = resp.Content.Headers.ContentType?.ToString() ?? "application/json";
         var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competitionId}:{leaderboardId}";
@@ -36,7 +37,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         {
             using var client = httpClientFactory.CreateClient();
             using var resp = await client.GetAsync(LeaderboardsUrl(competitionId, leaderboardId), ct);
-            resp.EnsureSuccessStatusCode();
+            await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
             cached = (
                 await resp.Content.ReadAsByteArrayAsync(ct),
                 resp.Content.Headers.ContentType?.ToString() ?? "application/json"
@@ -61,7 +62,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
     {
         using var client = httpClientFactory.CreateClient();
         using var resp = await client.GetAsync(LiveAllCompetitionsUrl(), ct);
-        resp.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
         return (
             await resp.Content.ReadAsByteArrayAsync(ct),
             resp.Content.Headers.ContentType?.ToString() ?? "application/json"
@@ -96,7 +97,7 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
 
         using var client = httpClientFactory.CreateClient();
         using var resp = await client.GetAsync(EventListUrl(competitionId), HttpCompletionOption.ResponseHeadersRead, ct);
-        resp.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
         using var stream = await resp.Content.ReadAsStreamAsync(ct);
         using var reader = new StreamReader(stream);
         var buffer = new char[4096];
@@ -115,5 +116,15 @@ public class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache,
         }
 
         throw new InvalidOperationException("sitename not found in event list");
+    }
+
+    private static async Task EnsureSuccessOrThrowUpstreamAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        if (response.IsSuccessStatusCode)
+            return;
+
+        var responseBody = await response.Content.ReadAsByteArrayAsync(ct);
+        var contentType = response.Content.Headers.ContentType?.ToString() ?? MediaTypeNames.Application.Json;
+        throw new UpstreamHttpException(response.StatusCode, responseBody, contentType);
     }
 }

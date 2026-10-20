@@ -1,5 +1,4 @@
 using DotNetBackend.Sapphire;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 

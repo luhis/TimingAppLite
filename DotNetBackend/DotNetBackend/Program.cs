@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Scalar.AspNetCore;
+using System.Net;
 using System.Net.Mime;
 using System.Text.Json;
 
@@ -61,20 +62,38 @@ app.UseExceptionHandler(errorApp =>
     errorApp.Run(async context =>
     {
         context.Response.ContentType = MediaTypeNames.Application.Json;
-        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
         var exceptionHandler = context.Features.Get<IExceptionHandlerFeature>();
-        if (exceptionHandler is not null)
+        if (exceptionHandler is null)
         {
-            var problemDetails = new ProblemDetails
-            {
-                Status = StatusCodes.Status500InternalServerError,
-                Title = "An unexpected error occurred",
-                Detail = app.Environment.IsDevelopment() ? exceptionHandler.Error.Message : null,
-            };
-            var json = JsonSerializer.Serialize(problemDetails, AppJsonContext.Default.ProblemDetails);
-            await context.Response.WriteAsync(json);
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return;
         }
+
+        if (exceptionHandler.Error is UpstreamHttpException upstreamHttpException)
+        {
+            context.Response.StatusCode = (int)upstreamHttpException.StatusCode;
+            context.Response.ContentType = upstreamHttpException.ContentType;
+            await context.Response.Body.WriteAsync(upstreamHttpException.ResponseBody.AsMemory());
+            return;
+        }
+
+        var statusCode = exceptionHandler.Error is HttpRequestException { StatusCode: not null } httpRequestException
+            ? (int)(httpRequestException.StatusCode ?? HttpStatusCode.InternalServerError)
+            : StatusCodes.Status500InternalServerError;
+
+        context.Response.StatusCode = statusCode;
+
+        var problemDetails = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = statusCode == StatusCodes.Status500InternalServerError
+                ? "An unexpected error occurred"
+                : "Upstream request failed",
+            Detail = app.Environment.IsDevelopment() ? exceptionHandler.Error.Message : null,
+        };
+        var json = JsonSerializer.Serialize(problemDetails, AppJsonContext.Default.ProblemDetails);
+        await context.Response.WriteAsync(json);
     });
 });
 

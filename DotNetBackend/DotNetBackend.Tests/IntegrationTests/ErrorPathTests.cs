@@ -43,6 +43,24 @@ public class ErrorPathTests
     }
 
     [Fact]
+    public async Task LiveAllCompetitions_ForwardsUpstreamHttpErrorResponse()
+    {
+        var upstreamBody = "{\"error\":\"upstream unavailable\"}"u8.ToArray();
+        var client = CreateClient(mock =>
+            mock.Setup(c => c.GetLiveAllCompetitions(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new UpstreamHttpException(System.Net.HttpStatusCode.ServiceUnavailable, upstreamBody, "application/json")),
+            out var mockRepo);
+
+        var response = await client.GetAsync("/API/1/LiveAllCompetitions", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.ServiceUnavailable);
+        response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        content.Should().Be("{\"error\":\"upstream unavailable\"}");
+        mockRepo.VerifyAll();
+    }
+
+    [Fact]
     public async Task LeaderBoards_Returns500_WhenUpstreamThrows()
     {
         var client = CreateClient(mock =>
