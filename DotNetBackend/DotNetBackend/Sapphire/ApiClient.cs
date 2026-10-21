@@ -23,10 +23,20 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     {
         using var client = httpClientFactory.CreateClient();
         var url = LeaderboardsUrl(competitionId, leaderboardId);
-        using var resp = await GetWithBackoffAsync(client, url, HttpCompletionOption.ResponseContentRead, ct);
-        await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
-        var bytes = await resp.Content.ReadAsByteArrayAsync(ct);
-        var contentType = resp.Content.Headers.ContentType?.ToString() ?? "application/json";
+        byte[] bytes;
+        string contentType;
+        await UpstreamGate.WaitAsync(ct);
+        try
+        {
+            using var resp = await GetWithBackoffAsync(client, url, HttpCompletionOption.ResponseContentRead, ct);
+            await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
+            bytes = await resp.Content.ReadAsByteArrayAsync(ct);
+            contentType = resp.Content.Headers.ContentType?.ToString() ?? "application/json";
+        }
+        finally
+        {
+            UpstreamGate.Release();
+        }
         var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competitionId}:{leaderboardId}";
         cache.Set(cacheKey, (bytes, contentType), _cacheDuration);
         return JsonSerializer.Deserialize(bytes.AsSpan(), AppJsonContext.Default.LeaderboardDto)
@@ -36,8 +46,14 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     async Task<(byte[] Bytes, string ContentType)> IApiClient.GetLeaderboards(int competitionId, int? leaderboardId, CancellationToken ct)
     {
         var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competitionId}:{leaderboardId}";
-        if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
+        if (cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
+            return cached;
+
+        await UpstreamGate.WaitAsync(ct);
+        try
         {
+            if (cache.TryGetValue(cacheKey, out cached))
+                return cached;
             using var client = httpClientFactory.CreateClient();
             using var resp = await GetWithBackoffAsync(client, LeaderboardsUrl(competitionId, leaderboardId), HttpCompletionOption.ResponseContentRead, ct);
             await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
@@ -46,19 +62,33 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
                 resp.Content.Headers.ContentType?.ToString() ?? "application/json"
             );
             cache.Set(cacheKey, cached, _cacheDuration);
+            return cached;
         }
-        return cached;
+        finally
+        {
+            UpstreamGate.Release();
+        }
     }
 
     private async Task<(byte[] bytes, string contentType)> GetCompetitionBytesAsync(CancellationToken ct)
     {
         var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
-        if (!cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
+        if (cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
+            return cached;
+
+        await UpstreamGate.WaitAsync(ct);
+        try
         {
+            if (cache.TryGetValue(cacheKey, out cached))
+                return cached;
             cached = await FetchCompetitionBytesAsync(ct);
             cache.Set(cacheKey, cached, _cacheDuration * 2);
+            return cached;
         }
-        return cached;
+        finally
+        {
+            UpstreamGate.Release();
+        }
     }
 
     private async Task<(byte[] bytes, string contentType)> FetchCompetitionBytesAsync(CancellationToken ct)
@@ -99,7 +129,17 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
             return cached;
 
         using var client = httpClientFactory.CreateClient();
-        using var resp = await GetWithBackoffAsync(client, EventListUrl(competitionId), HttpCompletionOption.ResponseHeadersRead, ct);
+        HttpResponseMessage resp;
+        await UpstreamGate.WaitAsync(ct);
+        try
+        {
+            resp = await GetWithBackoffAsync(client, EventListUrl(competitionId), HttpCompletionOption.ResponseHeadersRead, ct);
+        }
+        finally
+        {
+            UpstreamGate.Release();
+        }
+        using var _ = resp;
         await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
         using var stream = await resp.Content.ReadAsStreamAsync(ct);
         using var reader = new StreamReader(stream);
@@ -120,6 +160,9 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
 
         throw new InvalidOperationException("sitename not found in event list");
     }
+
+    // Serialise upstream calls across the singleton so concurrent cache misses don't trigger 429s
+    private static readonly SemaphoreSlim UpstreamGate = new(1, 1);
 
     private const int MaxRetries = 3;
     private static readonly TimeSpan BaseDelay = TimeSpan.FromSeconds(1);
