@@ -65,6 +65,24 @@ public class SignalRTests
             .Build();
     }
 
+    private static async Task WaitForSubscriptionAsync(
+        WebApplicationFactory<Program> factory,
+        (int competitionId, int leaderboardId) key,
+        CancellationToken cancellationToken)
+    {
+        var leaderboardService = factory.Server.Services.GetRequiredService<LeaderboardService>();
+        var start = DateTime.UtcNow;
+        while (DateTime.UtcNow - start < TimeSpan.FromSeconds(10))
+        {
+            if (leaderboardService.GetActiveGroups().Contains(key))
+                return;
+
+            await Task.Delay(50, cancellationToken);
+        }
+
+        throw new TimeoutException($"Connection did not subscribe to {key.competitionId}/{key.leaderboardId} in time.");
+    }
+
     [Fact]
     public async Task Connect_ValidParams_Connected()
     {
@@ -91,6 +109,7 @@ public class SignalRTests
         connection.On("ReceiveRowUpdate", (List<Dictionary<string, string>> items) => tcs.TrySetResult(items));
 
         await connection.StartAsync(TestContext.Current.CancellationToken);
+        await WaitForSubscriptionAsync(factory, (1, 2), TestContext.Current.CancellationToken);
 
         var hubContext = factory.Server.Services.GetRequiredService<IHubContext<LeaderboardHub>>();
         var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
@@ -120,6 +139,7 @@ public class SignalRTests
         connection.On("ReceiveColumnUpdate", (List<ColumnDto> columns) => tcs.TrySetResult(columns));
 
         await connection.StartAsync(TestContext.Current.CancellationToken);
+        await WaitForSubscriptionAsync(factory, (1, 2), TestContext.Current.CancellationToken);
 
         var hubContext = factory.Server.Services.GetRequiredService<IHubContext<LeaderboardHub>>();
         var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
@@ -151,6 +171,7 @@ public class SignalRTests
         connection.On("ReceiveCompetitionUpdate", (CompetitionDto comp) => tcs.TrySetResult(comp));
 
         await connection.StartAsync(TestContext.Current.CancellationToken);
+        await WaitForSubscriptionAsync(factory, (1, 2), TestContext.Current.CancellationToken);
 
         var hubContext = factory.Server.Services.GetRequiredService<IHubContext<LeaderboardHub>>();
         var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
@@ -211,6 +232,7 @@ public class SignalRTests
 
         await connection1.StartAsync(TestContext.Current.CancellationToken);
         await connection2.StartAsync(TestContext.Current.CancellationToken);
+        await WaitForSubscriptionAsync(factory, (1, 2), TestContext.Current.CancellationToken);
 
         var hubContext = factory.Server.Services.GetRequiredService<IHubContext<LeaderboardHub>>();
         var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
@@ -249,6 +271,7 @@ public class SignalRTests
 
         await connection1.StartAsync(TestContext.Current.CancellationToken);
         await connection2.StartAsync(TestContext.Current.CancellationToken);
+        await WaitForSubscriptionAsync(factory, (1, 2), TestContext.Current.CancellationToken);
 
         var hubContext = factory.Server.Services.GetRequiredService<IHubContext<LeaderboardHub>>();
         var groupName = LeaderboardHub.GetCompetitionGroup(1, 2);
