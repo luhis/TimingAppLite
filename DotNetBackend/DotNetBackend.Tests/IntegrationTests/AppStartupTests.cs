@@ -52,6 +52,24 @@ public class AppStartupTests
     }
 
     [Fact]
+    public async Task LiveAllCompetitions_ReturnsCacheControlHeader()
+    {
+        var body = """{"items":[]}"""u8.ToArray();
+        var client = CreateClient(mock =>
+            mock.Setup(c => c.GetLiveAllCompetitions(It.IsAny<CancellationToken>()))
+                .ReturnsAsync((body, "application/json")),
+            out var mockRepo);
+
+        var response = await client.GetAsync("/API/1/LiveAllCompetitions", TestContext.Current.CancellationToken);
+
+        response.Headers.CacheControl.Should().NotBeNull();
+        response.Headers.CacheControl!.Public.Should().BeTrue();
+        response.Headers.CacheControl.MaxAge.Should().Be(TimeSpan.FromSeconds(30));
+        response.Headers.CacheControl.Extensions.Should().ContainSingle(e => e.Name == "stale-if-error" && e.Value == "600");
+        mockRepo.VerifyAll();
+    }
+
+    [Fact]
     public async Task LeaderBoards_ReturnsSuccess()
     {
         var body = """{"items":[]}"""u8.ToArray();

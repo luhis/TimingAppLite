@@ -127,6 +127,66 @@ public class ApiClientTests
     }
 
     [Fact]
+    public async Task GetLiveAllCompetitions_WhenUpstream429AfterWarmCache_ReturnsStaleCachedResponse()
+    {
+        var okBody = """[{"id":1}]"""u8.ToArray();
+        var tooManyBody = """{"error":"rate limited"}"""u8.ToArray();
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ApiClient:CacheDurationSeconds"] = "30",
+            ["ApiClient:StaleCacheDurationSeconds"] = "600"
+        }).Build();
+
+        var handler = new SequenceHttpHandler(
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(okBody)
+                {
+                    Headers = { ContentType = MediaTypeHeaderValue.Parse("application/json") }
+                }
+            },
+            new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+            {
+                Content = new ByteArrayContent(tooManyBody)
+                {
+                    Headers = { ContentType = MediaTypeHeaderValue.Parse("application/json") }
+                }
+            },
+            new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+            {
+                Content = new ByteArrayContent(tooManyBody)
+                {
+                    Headers = { ContentType = MediaTypeHeaderValue.Parse("application/json") }
+                },
+                Headers = { RetryAfter = new RetryConditionHeaderValue(TimeSpan.Zero) }
+            },
+            new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+            {
+                Content = new ByteArrayContent(tooManyBody)
+                {
+                    Headers = { ContentType = MediaTypeHeaderValue.Parse("application/json") }
+                }
+            },
+            new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+            {
+                Content = new ByteArrayContent(tooManyBody)
+                {
+                    Headers = { ContentType = MediaTypeHeaderValue.Parse("application/json") }
+                }
+            });
+
+        var client = CreateClient(handler, cache, config);
+
+        var first = await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
+        cache.Remove(nameof(IApiClient.GetLiveAllCompetitions));
+        var second = await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
+
+        first.Bytes.Should().Equal(okBody);
+        second.Bytes.Should().Equal(okBody, "stale data should be returned when upstream is rate limited");
+    }
+
+    [Fact]
     public async Task GetLiveAllCompetitions_ThrowsUpstreamHttpException_OnNonSuccessStatus()
     {
         var handler = new StubHttpHandler([], "application/json", HttpStatusCode.ServiceUnavailable);
@@ -283,6 +343,19 @@ public class ApiClientTests
             var content = new ByteArrayContent(body);
             content.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
             return Task.FromResult(new HttpResponseMessage(statusCode) { Content = content });
+        }
+    }
+
+    private sealed class SequenceHttpHandler(params HttpResponseMessage[] responses) : HttpMessageHandler
+    {
+        private readonly Queue<HttpResponseMessage> _responses = new(responses);
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (_responses.Count == 0)
+                throw new InvalidOperationException("No more stub responses configured.");
+
+            return Task.FromResult(_responses.Dequeue());
         }
     }
 

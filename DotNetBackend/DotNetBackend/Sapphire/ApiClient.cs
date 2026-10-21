@@ -1,6 +1,7 @@
 using DotNetBackend.Dto;
 using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
+using System.Net;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
@@ -19,6 +20,8 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
 
     private readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(
         configuration.GetValue<int>("ApiClient:CacheDurationSeconds", 30));
+    private readonly TimeSpan _staleCacheDuration = TimeSpan.FromSeconds(
+        configuration.GetValue<int>("ApiClient:StaleCacheDurationSeconds", 600));
     async Task<LeaderboardDto> IApiClient.GetLeaderboard(int competitionId, int leaderboardId, CancellationToken ct)
     {
         using var client = httpClientFactory.CreateClient();
@@ -73,6 +76,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     private async Task<(byte[] bytes, string contentType)> GetCompetitionBytesAsync(CancellationToken ct)
     {
         var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
+        var staleCacheKey = $"{cacheKey}:stale";
         if (cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
             return cached;
 
@@ -81,9 +85,19 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         {
             if (cache.TryGetValue(cacheKey, out cached))
                 return cached;
-            cached = await FetchCompetitionBytesAsync(ct);
-            cache.Set(cacheKey, cached, _cacheDuration * 2);
-            return cached;
+
+            try
+            {
+                cached = await FetchCompetitionBytesAsync(ct);
+                cache.Set(cacheKey, cached, _cacheDuration * 2);
+                cache.Set(staleCacheKey, cached, _staleCacheDuration);
+                return cached;
+            }
+            catch (UpstreamHttpException ex) when (ex.StatusCode == HttpStatusCode.TooManyRequests
+                && cache.TryGetValue(staleCacheKey, out (byte[] bytes, string contentType) staleCached))
+            {
+                return staleCached;
+            }
         }
         finally
         {

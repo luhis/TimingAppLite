@@ -12,6 +12,8 @@ using System.Net.Mime;
 using System.Text.Json;
 
 var builder = WebApplication.CreateSlimBuilder(args);
+var apiCacheSeconds = builder.Configuration.GetValue("ApiClient:CacheDurationSeconds", 30);
+var staleIfErrorSeconds = builder.Configuration.GetValue("ApiClient:StaleCacheDurationSeconds", 600);
 
 builder.Services.AddSingleton<IApiClient, ApiClient>();
 builder.Services.AddHttpClient();
@@ -114,8 +116,9 @@ app.MapHealthChecks("/healthz", new HealthCheckOptions
     },
 });
 app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
-app.MapGet("/API/1/LiveAllCompetitions", async (IApiClient api, CancellationToken ct) =>
+app.MapGet("/API/1/LiveAllCompetitions", async (IApiClient api, HttpContext context, CancellationToken ct) =>
 {
+    context.Response.Headers.CacheControl = $"public,max-age={apiCacheSeconds},stale-if-error={staleIfErrorSeconds}";
     var (bytes, contentType) = await api.GetLiveAllCompetitions(ct);
     return Results.Bytes(bytes, contentType);
 })
