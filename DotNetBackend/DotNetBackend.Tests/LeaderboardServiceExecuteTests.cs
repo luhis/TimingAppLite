@@ -5,6 +5,7 @@ using DotNetBackend.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Globalization;
 
 namespace DotNetBackend.Tests;
 
@@ -39,7 +40,7 @@ public class LeaderboardServiceExecuteTests
 
         var competitions = new List<CompetitionDto>
         {
-            new() { Id = "1", Active = ActiveStatus.Live, Name = "Test" }
+            new() { Id = "1", Active = ActiveStatus.Live, Name = "Test", Dateddmmyyyy = DateTime.Today.ToString("d MMMM yyyy", CultureInfo.InvariantCulture) }
         };
         apiClient.Setup(a => a.GetCompetitions(It.IsAny<CancellationToken>()))
             .ReturnsAsync(competitions);
@@ -71,16 +72,13 @@ public class LeaderboardServiceExecuteTests
     {
         var (service, apiClient, hubContext) = CreateService();
 
-        apiClient.Setup(a => a.GetCompetitions(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<CompetitionDto>());
-
         using var cts = new CancellationTokenSource();
         await service.StartAsync(cts.Token);
         await Task.Delay(1500, TestContext.Current.CancellationToken);
         await cts.CancelAsync();
         await service.StopAsync(CancellationToken.None);
 
-        apiClient.Verify(a => a.GetCompetitions(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        apiClient.Verify(a => a.GetCompetitions(It.IsAny<CancellationToken>()), Times.Never);
         hubContext.Verify(h => h.Clients, Times.Never);
         _mockRepo.VerifyAll();
     }
@@ -152,6 +150,37 @@ public class LeaderboardServiceExecuteTests
         clientProxy.Verify(
             p => p.SendCoreAsync("ReceiveCompetitionUpdate", It.IsAny<object?[]>(), It.IsAny<CancellationToken>()),
             Times.AtLeastOnce);
+        _mockRepo.VerifyAll();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenLiveButNotToday_DoesNotPollLeaderboard()
+    {
+        var (service, apiClient, hubContext) = CreateService();
+        service.Subscribe("conn1", (1, 2));
+
+        var competitions = new List<CompetitionDto>
+        {
+            new() { Id = "1", Active = ActiveStatus.Live, Name = "Test", Dateddmmyyyy = "1st January 2000" }
+        };
+        apiClient.Setup(a => a.GetCompetitions(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(competitions);
+
+        var clientProxy = new Mock<IClientProxy>(MockBehavior.Strict);
+        var hubClients = new Mock<IHubClients>(MockBehavior.Strict);
+        hubClients.Setup(c => c.Group(LeaderboardHub.GetCompetitionGroup(1, 2))).Returns(clientProxy.Object);
+        hubContext.Setup(h => h.Clients).Returns(hubClients.Object);
+        clientProxy
+            .Setup(p => p.SendCoreAsync("ReceiveCompetitionUpdate", It.IsAny<object?[]>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        using var cts = new CancellationTokenSource();
+        await service.StartAsync(cts.Token);
+        await Task.Delay(1500, TestContext.Current.CancellationToken);
+        await cts.CancelAsync();
+        await service.StopAsync(CancellationToken.None);
+
+        apiClient.Verify(a => a.GetLeaderboard(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
         _mockRepo.VerifyAll();
     }
 }

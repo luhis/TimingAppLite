@@ -3,10 +3,12 @@ using DotNetBackend.Hubs;
 using DotNetBackend.Sapphire;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace DotNetBackend.Services;
 
-public sealed class LeaderboardService(IApiClient apiClient, IHubContext<LeaderboardHub> hubContext, IConfiguration configuration, ILogger<LeaderboardService> logger)
+public sealed partial class LeaderboardService(IApiClient apiClient, IHubContext<LeaderboardHub> hubContext, IConfiguration configuration, ILogger<LeaderboardService> logger)
     : BackgroundService
 {
     private readonly TimeSpan _timerInterval = TimeSpan.FromSeconds(
@@ -27,8 +29,12 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
         {
             try
             {
+                var activeGroups = GetActiveGroups().ToArray();
+                if (activeGroups.Length == 0)
+                    continue;
+
                 var competitions = await apiClient.GetCompetitions(stoppingToken);
-                foreach (var key in GetActiveGroups())
+                foreach (var key in activeGroups)
                 {
                     var comp = competitions.FirstOrDefault(c => c.Id == key.competitionId.ToString());
                     if (comp is null)
@@ -37,7 +43,7 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
                         continue;
                     }
 
-                    if (comp.Active == ActiveStatus.Live)
+                    if (comp.Active == ActiveStatus.Live && IsCompetitionToday(comp))
                     {
                         await SafePushChanges(key, stoppingToken);
                     }
@@ -139,6 +145,21 @@ public sealed class LeaderboardService(IApiClient apiClient, IHubContext<Leaderb
             await hubContext.Clients.Group(groupName)
                 .SendAsync("ReceiveColumnUpdate", values.Columns, ct);
         }
+    }
+
+    [GeneratedRegex(@"\b(\d{1,2})(st|nd|rd|th)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex DateOrdinalSuffixRegex();
+
+    private static bool IsCompetitionToday(CompetitionDto competition)
+    {
+        if (string.IsNullOrWhiteSpace(competition.Dateddmmyyyy))
+            return false;
+
+        var dateText = DateOrdinalSuffixRegex().Replace(competition.Dateddmmyyyy.Trim(), "$1");
+        if (!DateTime.TryParseExact(dateText, "d MMMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var competitionDate))
+            return false;
+
+        return competitionDate.Date == DateTime.Today;
     }
 
     private static bool RowsEqual(Dictionary<string, string> x, Dictionary<string, string> y)
