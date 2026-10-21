@@ -14,6 +14,8 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     private const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk";
     private const string ApiBase = $"{RemoteApiBase}/API/1";
     private const string EventListBase = $"{RemoteApiBase}/eventlist.php";
+    private const string DefaultJsonContentType = "application/json";
+    private static readonly TimeSpan SiteNameCacheDuration = TimeSpan.FromHours(24);
 
     [GeneratedRegex(@"sitename=([^""&]+)")]
     private static partial Regex SiteNameRegex();
@@ -24,53 +26,32 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         configuration.GetValue<int>("ApiClient:StaleCacheDurationSeconds", 600));
     async Task<LeaderboardDto> IApiClient.GetLeaderboard(int competitionId, int leaderboardId, CancellationToken ct)
     {
-        using var client = httpClientFactory.CreateClient();
         var url = LeaderboardsUrl(competitionId, leaderboardId);
-        byte[] bytes;
-        string contentType;
-        await UpstreamGate.WaitAsync(ct);
-        try
-        {
-            using var resp = await GetWithBackoffAsync(client, url, HttpCompletionOption.ResponseContentRead, ct);
-            await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
-            bytes = await resp.Content.ReadAsByteArrayAsync(ct);
-            contentType = resp.Content.Headers.ContentType?.ToString() ?? "application/json";
-        }
-        finally
-        {
-            UpstreamGate.Release();
-        }
-        var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competitionId}:{leaderboardId}";
-        cache.Set(cacheKey, (bytes, contentType), _cacheDuration);
+        var (bytes, contentType) = await ExecuteWithUpstreamGateAsync(
+            () => FetchBytesAsync(url, HttpCompletionOption.ResponseContentRead, ct),
+            ct);
+
+        cache.Set(GetLeaderboardsCacheKey(competitionId, leaderboardId), (bytes, contentType), _cacheDuration);
+
         return JsonSerializer.Deserialize(bytes.AsSpan(), AppJsonContext.Default.LeaderboardDto)
             ?? throw new InvalidOperationException($"Empty response from {url}");
     }
 
     async Task<(byte[] Bytes, string ContentType)> IApiClient.GetLeaderboards(int competitionId, int? leaderboardId, CancellationToken ct)
     {
-        var cacheKey = $"{nameof(IApiClient.GetLeaderboards)}:{competitionId}:{leaderboardId}";
+        var cacheKey = GetLeaderboardsCacheKey(competitionId, leaderboardId);
         if (cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
             return cached;
 
-        await UpstreamGate.WaitAsync(ct);
-        try
+        return await ExecuteWithUpstreamGateAsync(async () =>
         {
             if (cache.TryGetValue(cacheKey, out cached))
                 return cached;
-            using var client = httpClientFactory.CreateClient();
-            using var resp = await GetWithBackoffAsync(client, LeaderboardsUrl(competitionId, leaderboardId), HttpCompletionOption.ResponseContentRead, ct);
-            await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
-            cached = (
-                await resp.Content.ReadAsByteArrayAsync(ct),
-                resp.Content.Headers.ContentType?.ToString() ?? "application/json"
-            );
+
+            cached = await FetchBytesAsync(LeaderboardsUrl(competitionId, leaderboardId), HttpCompletionOption.ResponseContentRead, ct);
             cache.Set(cacheKey, cached, _cacheDuration);
             return cached;
-        }
-        finally
-        {
-            UpstreamGate.Release();
-        }
+        }, ct);
     }
 
     private async Task<(byte[] bytes, string contentType)> GetCompetitionBytesAsync(CancellationToken ct)
@@ -105,16 +86,8 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         }
     }
 
-    private async Task<(byte[] bytes, string contentType)> FetchCompetitionBytesAsync(CancellationToken ct)
-    {
-        using var client = httpClientFactory.CreateClient();
-        using var resp = await GetWithBackoffAsync(client, LiveAllCompetitionsUrl(), HttpCompletionOption.ResponseContentRead, ct);
-        await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
-        return (
-            await resp.Content.ReadAsByteArrayAsync(ct),
-            resp.Content.Headers.ContentType?.ToString() ?? "application/json"
-        );
-    }
+    private Task<(byte[] bytes, string contentType)> FetchCompetitionBytesAsync(CancellationToken ct) =>
+        FetchBytesAsync(LiveAllCompetitionsUrl(), HttpCompletionOption.ResponseContentRead, ct);
 
     Task<(byte[] Bytes, string ContentType)> IApiClient.GetLiveAllCompetitions(CancellationToken ct)
     {
@@ -167,7 +140,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
             if (match.Success)
             {
                 cached = match.Groups[1].Value;
-                cache.Set(cacheKey, cached, TimeSpan.FromHours(24));
+                cache.Set(cacheKey, cached, SiteNameCacheDuration);
                 return cached;
             }
         }
@@ -201,6 +174,36 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
             await Task.Delay(delay, ct);
         }
 #pragma warning restore IDISP011, IDISP017
+    }
+
+    private async Task<(byte[] bytes, string contentType)> FetchBytesAsync(
+        string url,
+        HttpCompletionOption completionOption,
+        CancellationToken ct)
+    {
+        using var client = httpClientFactory.CreateClient();
+        using var resp = await GetWithBackoffAsync(client, url, completionOption, ct);
+        await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
+        return (
+            await resp.Content.ReadAsByteArrayAsync(ct),
+            resp.Content.Headers.ContentType?.ToString() ?? DefaultJsonContentType
+        );
+    }
+
+    private static string GetLeaderboardsCacheKey(int competitionId, int? leaderboardId) =>
+        $"{nameof(IApiClient.GetLeaderboards)}:{competitionId}:{leaderboardId}";
+
+    private static async Task<T> ExecuteWithUpstreamGateAsync<T>(Func<Task<T>> action, CancellationToken ct)
+    {
+        await UpstreamGate.WaitAsync(ct);
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            UpstreamGate.Release();
+        }
     }
 
     private static async Task EnsureSuccessOrThrowUpstreamAsync(HttpResponseMessage response, CancellationToken ct)
