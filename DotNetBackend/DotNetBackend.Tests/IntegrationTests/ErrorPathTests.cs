@@ -61,6 +61,30 @@ public class ErrorPathTests
     }
 
     [Fact]
+    public async Task LiveAllCompetitions_ForwardsUpstreamHeaders_On429()
+    {
+        var upstreamBody = "{\"error\":\"rate limited\"}"u8.ToArray();
+        var upstreamHeaders = new Dictionary<string, string[]>
+        {
+            ["Retry-After"] = ["120"],
+            ["X-RateLimit-Remaining"] = ["0"]
+        };
+        var client = CreateClient(mock =>
+            mock.Setup(c => c.GetLiveAllCompetitions(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new UpstreamHttpException(System.Net.HttpStatusCode.TooManyRequests, upstreamBody, "application/json", upstreamHeaders)),
+            out var mockRepo);
+
+        var response = await client.GetAsync("/API/1/LiveAllCompetitions", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.TooManyRequests);
+        response.Headers.TryGetValues("Retry-After", out var retryAfterValues).Should().BeTrue();
+        retryAfterValues.Should().ContainSingle().Which.Should().Be("120");
+        response.Headers.TryGetValues("X-RateLimit-Remaining", out var rateLimitValues).Should().BeTrue();
+        rateLimitValues.Should().ContainSingle().Which.Should().Be("0");
+        mockRepo.VerifyAll();
+    }
+
+    [Fact]
     public async Task LeaderBoards_Returns500_WhenUpstreamThrows()
     {
         var client = CreateClient(mock =>

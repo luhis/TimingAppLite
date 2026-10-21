@@ -213,6 +213,9 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
 
         var responseBody = await response.Content.ReadAsByteArrayAsync(ct);
         var contentType = response.Content.Headers.ContentType?.ToString() ?? MediaTypeNames.Application.Json;
-        throw new UpstreamHttpException(response.StatusCode, responseBody, contentType);
+        var responseHeaders = response.Headers
+            .Concat(response.Content.Headers)
+            .ToDictionary(h => h.Key, h => h.Value.ToArray(), StringComparer.OrdinalIgnoreCase);
+        throw new UpstreamHttpException(response.StatusCode, responseBody, contentType, responseHeaders);
     }
 }

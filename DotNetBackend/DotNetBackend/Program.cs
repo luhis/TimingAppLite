@@ -74,8 +74,32 @@ app.UseExceptionHandler(errorApp =>
 
         if (exceptionHandler.Error is UpstreamHttpException upstreamHttpException)
         {
+            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("UpstreamErrors");
+            var headersForLog = string.Join(", ", upstreamHttpException.ResponseHeaders.Select(h => $"{h.Key}={string.Join("|", h.Value)}"));
+            logger.LogWarning(
+                "Upstream returned {StatusCode}. Headers: {Headers}",
+                (int)upstreamHttpException.StatusCode,
+                headersForLog);
+
             context.Response.StatusCode = (int)upstreamHttpException.StatusCode;
             context.Response.ContentType = upstreamHttpException.ContentType;
+
+            if (upstreamHttpException.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                foreach (var (key, values) in upstreamHttpException.ResponseHeaders)
+                {
+                    if (string.Equals(key, "Content-Type", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(key, "Content-Length", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(key, "Transfer-Encoding", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(key, "Connection", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    context.Response.Headers[key] = values;
+                }
+            }
+
             await context.Response.Body.WriteAsync(upstreamHttpException.ResponseBody.AsMemory());
             return;
         }
