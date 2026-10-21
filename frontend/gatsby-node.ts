@@ -95,15 +95,11 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
 
   console.log("📡 Fetching competitions and event list…");
 
-  const [compResult, eventResult] = await Promise.allSettled([
-    fetchWithBuildRetry(fetchAllCompetitions),
-    fetchWithBuildRetry(fetchEventLeaderboard),
-  ]);
+  try {
+    const competitions = await fetchWithBuildRetry(fetchAllCompetitions);
+    console.log(`✅ Fetched ${competitions.length} competitions`);
 
-  if (compResult.status === "fulfilled") {
-    console.log(`✅ Fetched ${compResult.value.length} competitions`);
-
-    compResult.value.forEach((competition) => {
+    competitions.forEach((competition) => {
       const normalizedCompetition = normalizeCompetitionNode(competition);
 
       void createNode({
@@ -117,26 +113,26 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
         },
       });
     });
-  } else {
-    console.error("❌ Error fetching competitions:", compResult.reason);
+  } catch (error) {
+    console.error("❌ Error fetching competitions:", error);
   }
 
-  if (eventResult.status === "fulfilled") {
-    console.log(`✅ Fetched ${eventResult.value.items.length} events`);
-
+  try {
+    const event = await fetchWithBuildRetry(fetchEventLeaderboard);
+    console.log(`✅ Fetched ${event.items.length} events`);
     void createNode({
       eventId: `${EVENT_COMPETITION_ID}-${EVENT_LEADERBOARD_ID}`,
-      columns: eventResult.value.columns,
-      items: eventResult.value.items,
+      columns: event.columns,
+      items: event.items,
       id: createNodeId(`EventList-${EVENT_COMPETITION_ID}-${EVENT_LEADERBOARD_ID}`),
       parent: null,
       children: [],
       internal: {
         type: "EventList",
-        contentDigest: createContentDigest(eventResult.value),
+        contentDigest: createContentDigest(event),
       },
     });
-  } else {
-    console.error("❌ Error fetching event list:", eventResult.reason);
+  } catch (error) {
+    console.error("❌ Error fetching event list:", error);
   }
 };
