@@ -1,0 +1,6 @@
+@competitionId = 1495
+@leaderboardId = 1050
+
+### Leaderboards
+GET {{baseUrl}}/API/1/Competitions/{{competitionId}}/LeaderBoards/{{leaderboardId}}
+Accept: application/json

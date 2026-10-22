@@ -1,0 +1,3 @@
+### LiveAllCompetitions
+GET {{baseUrl}}/API/1/LiveAllCompetitions/
+Accept: application/json
