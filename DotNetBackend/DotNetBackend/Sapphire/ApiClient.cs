@@ -11,7 +11,7 @@ namespace DotNetBackend.Sapphire;
 
 public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration) : IApiClient
 {
-    private const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk";
+    internal const string RemoteApiBase = "https://autotest.sapphire-solutions.co.uk";
     private const string ApiBase = $"{RemoteApiBase}/API/1";
     private const string EventListBase = $"{RemoteApiBase}/eventlist.php";
     private const string DefaultJsonContentType = "application/json";
