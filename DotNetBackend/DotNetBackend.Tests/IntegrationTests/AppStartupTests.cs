@@ -6,25 +6,37 @@ namespace DotNetBackend.Tests.IntegrationTests;
 
 public class AppStartupTests
 {
-    private static HttpClient CreateClient(Action<Mock<IApiClient>> configure, out MockRepository mockRepo)
+    private static HttpClient CreateClient(
+        Action<Mock<IApiClient>> configure,
+        out MockRepository mockRepo,
+        bool backendDisabled = false)
     {
         mockRepo = new MockRepository(MockBehavior.Strict);
         var mockApiClient = mockRepo.Create<IApiClient>();
         configure(mockApiClient);
 
         var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            if (backendDisabled)
+                builder.UseSetting("Backend:Disabled", "true");
+
             builder.ConfigureServices(services =>
             {
-                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IApiClient));
-                if (descriptor is not null)
+                if (!backendDisabled)
                 {
-                    services.Remove(descriptor);
+                    var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IApiClient));
+                    if (descriptor is not null)
+                        services.Remove(descriptor);
+
+                    services.AddSingleton(mockApiClient.Object);
                 }
+            });
+        });
 
-                services.AddSingleton(mockApiClient.Object);
-            }));
-
-        return factory.CreateClient();
+        return factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = !backendDisabled
+        });
     }
 
     [Fact]
@@ -125,6 +137,35 @@ public class AppStartupTests
         var response = await client.GetAsync("/healthz", TestContext.Current.CancellationToken);
 
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+        mockRepo.VerifyAll();
+    }
+
+    [Fact]
+    public async Task BackendDisabled_RedirectsRequestsToSapphireWith307()
+    {
+        var client = CreateClient(_ => { }, out var mockRepo, backendDisabled: true);
+
+        var response = await client.GetAsync(
+            "/API/1/Competitions/42/SiteName?source=registration",
+            TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.TemporaryRedirect);
+        response.Headers.Location!.AbsoluteUri.Should().Be(
+            "https://autotest.sapphire-solutions.co.uk/API/1/Competitions/42/SiteName?source=registration");
+        mockRepo.VerifyAll();
+    }
+
+    [Fact]
+    public async Task BackendDisabled_RedirectsSignalRRequestsInsteadOfStartingHub()
+    {
+        var client = CreateClient(_ => { }, out var mockRepo, backendDisabled: true);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/hubs/LeaderBoard/negotiate?negotiateVersion=1");
+
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.TemporaryRedirect);
+        response.Headers.Location!.AbsoluteUri.Should().Be(
+            "https://autotest.sapphire-solutions.co.uk/hubs/LeaderBoard/negotiate?negotiateVersion=1");
         mockRepo.VerifyAll();
     }
 }
