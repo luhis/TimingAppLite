@@ -16,11 +16,12 @@ var backendDisabled = builder.Configuration.GetValue("Backend:Disabled", false);
 var apiCacheSeconds = builder.Configuration.GetValue("ApiClient:CacheDurationSeconds", 30);
 var staleIfErrorSeconds = builder.Configuration.GetValue("ApiClient:StaleCacheDurationSeconds", 600);
 
+builder.Services.AddSingleton<IApiClient, ApiClient>();
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+
 if (!backendDisabled)
 {
-    builder.Services.AddSingleton<IApiClient, ApiClient>();
-    builder.Services.AddHttpClient();
-    builder.Services.AddMemoryCache();
     builder.Services.AddSingleton<LeaderboardService>();
     builder.Services.AddHostedService(sp => sp.GetRequiredService<LeaderboardService>());
     builder.Services.AddSignalR()

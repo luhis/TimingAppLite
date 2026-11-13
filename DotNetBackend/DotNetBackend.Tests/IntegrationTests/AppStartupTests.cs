@@ -55,6 +55,15 @@ public class AppStartupTests
     }
 
     [Fact]
+    public void BackendDisabled_StillRegistersApiClient()
+    {
+        using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            builder.UseSetting("Backend:Disabled", "true"));
+
+        factory.Services.GetRequiredService<IApiClient>().Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task LiveAllCompetitions_ReturnsSuccess()
     {
         var body = """{"items":[]}"""u8.ToArray();
