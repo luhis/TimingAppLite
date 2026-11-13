@@ -44,7 +44,9 @@ builder.Services.AddCors(options =>
     {
         var origins = new List<string> { "https://timingapplite.mccorry.dev" };
         if (builder.Environment.IsDevelopment())
+        {
             origins.Add("http://localhost:8000");
+        }
 
         policy
             .WithOrigins([.. origins])
@@ -155,7 +157,10 @@ app.MapHealthChecks("/healthz", new HealthCheckOptions
     },
 });
 if (!backendDisabled)
+{
     app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
+}
+
 app.MapGet("/API/1/LiveAllCompetitions", async (IApiClient api, HttpContext context, CancellationToken ct) =>
 {
     context.Response.Headers.CacheControl = $"public,max-age={apiCacheSeconds},stale-if-error={staleIfErrorSeconds}";

@@ -41,12 +41,16 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     {
         var cacheKey = GetLeaderboardsCacheKey(competitionId, leaderboardId);
         if (cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
+        {
             return cached;
+        }
 
         return await ExecuteWithUpstreamGateAsync(async () =>
         {
             if (cache.TryGetValue(cacheKey, out cached))
+            {
                 return cached;
+            }
 
             cached = await FetchBytesAsync(LeaderboardsUrl(competitionId, leaderboardId), HttpCompletionOption.ResponseContentRead, ct);
             cache.Set(cacheKey, cached, _cacheDuration);
@@ -59,13 +63,17 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         var cacheKey = nameof(IApiClient.GetLiveAllCompetitions);
         var staleCacheKey = $"{cacheKey}:stale";
         if (cache.TryGetValue(cacheKey, out (byte[] bytes, string contentType) cached))
+        {
             return cached;
+        }
 
         await UpstreamGate.WaitAsync(ct);
         try
         {
             if (cache.TryGetValue(cacheKey, out cached))
+            {
                 return cached;
+            }
 
             try
             {
@@ -113,7 +121,9 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     {
         var cacheKey = $"{nameof(IApiClient.GetSiteName)}:{competitionId}";
         if (cache.TryGetValue(cacheKey, out string? cached) && cached is not null)
+        {
             return cached;
+        }
 
         using var client = httpClientFactory.CreateClient();
         HttpResponseMessage resp;
@@ -163,13 +173,23 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         {
             var resp = await client.GetAsync(url, option, ct);
             if (resp.StatusCode != System.Net.HttpStatusCode.TooManyRequests || attempt >= MaxRetries)
+            {
                 return resp;
+            }
 
             var retryAfter = resp.Headers.RetryAfter;
             TimeSpan delay = retryAfter?.Delta
                 ?? (retryAfter?.Date is { } date ? date - DateTimeOffset.UtcNow : BaseDelay * Math.Pow(2, attempt));
-            if (delay < TimeSpan.Zero) delay = TimeSpan.Zero;
-            if (delay > MaxDelay) delay = MaxDelay;
+            if (delay < TimeSpan.Zero)
+            {
+                delay = TimeSpan.Zero;
+            }
+
+            if (delay > MaxDelay)
+            {
+                delay = MaxDelay;
+            }
+
             resp.Dispose();
             await Task.Delay(delay, ct);
         }
@@ -209,7 +229,9 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     private static async Task EnsureSuccessOrThrowUpstreamAsync(HttpResponseMessage response, CancellationToken ct)
     {
         if (response.IsSuccessStatusCode)
+        {
             return;
+        }
 
         var responseBody = await response.Content.ReadAsByteArrayAsync(ct);
         var contentType = response.Content.Headers.ContentType?.ToString() ?? MediaTypeNames.Application.Json;

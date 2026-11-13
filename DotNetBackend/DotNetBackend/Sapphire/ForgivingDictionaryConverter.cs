@@ -9,13 +9,17 @@ public sealed class ForgivingDictionaryConverter : JsonConverter<Dictionary<stri
     public override Dictionary<string, string> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
+        {
             throw new JsonException("Expected StartObject");
+        }
 
         var dict = new Dictionary<string, string>();
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject)
+            {
                 return dict;
+            }
 
             var key = reader.GetString()!;
             reader.Read();
@@ -38,7 +42,10 @@ public sealed class ForgivingDictionaryConverter : JsonConverter<Dictionary<stri
     {
         writer.WriteStartObject();
         foreach (var (k, v) in value)
+        {
             writer.WriteString(k, v);
+        }
+
         writer.WriteEndObject();
     }
 }
