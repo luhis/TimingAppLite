@@ -12,22 +12,17 @@ using System.Net.Mime;
 using System.Text.Json;
 
 var builder = WebApplication.CreateSlimBuilder(args);
-var backendDisabled = builder.Configuration.GetValue("Backend:Disabled", false);
 var apiCacheSeconds = builder.Configuration.GetValue("ApiClient:CacheDurationSeconds", 30);
 var staleIfErrorSeconds = builder.Configuration.GetValue("ApiClient:StaleCacheDurationSeconds", 600);
 
 builder.Services.AddSingleton<IApiClient, ApiClient>();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
-
-if (!backendDisabled)
-{
-    builder.Services.AddSingleton<LeaderboardService>();
-    builder.Services.AddHostedService(sp => sp.GetRequiredService<LeaderboardService>());
-    builder.Services.AddSignalR()
-        .AddJsonProtocol(options =>
-            options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default));
-}
+builder.Services.AddSingleton<LeaderboardService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<LeaderboardService>());
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+        options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default));
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -64,18 +59,6 @@ if (builder.Environment.IsDevelopment())
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
-
-app.Use(async (context, next) =>
-{
-    if (backendDisabled)
-    {
-        var target = $"{ApiClient.RemoteApiBase}{context.Request.PathBase}{context.Request.Path}{context.Request.QueryString}";
-        context.Response.Redirect(target, permanent: false, preserveMethod: true);
-        return;
-    }
-
-    await next();
-});
 
 app.UseExceptionHandler(errorApp =>
 {
@@ -157,10 +140,7 @@ app.MapHealthChecks("/healthz", new HealthCheckOptions
         await context.Response.WriteAsync($"{{\"status\":\"{report.Status.ToString().ToLowerInvariant()}\"}}");
     },
 });
-if (!backendDisabled)
-{
-    app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
-}
+app.MapHub<LeaderboardHub>("/hubs/LeaderBoard").RequireCors("AllowedOrigins");
 
 app.MapGet("/API/1/LiveAllCompetitions", async (IApiClient api, HttpContext context, CancellationToken ct) =>
 {
