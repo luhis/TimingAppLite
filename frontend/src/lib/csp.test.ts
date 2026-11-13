@@ -54,6 +54,14 @@ function assertWssCounterpartForEachHttpsBackend(origins: string[]) {
 }
 
 describe("Content-Security-Policy connect-src", () => {
+  it("allows requests to the Sapphire Solutions API in both policies", () => {
+    const apiOrigin = "https://autotest.sapphire-solutions.co.uk";
+    expect(readGatsbySsrConnectSrc()).toContain(apiOrigin);
+    expect(readStaticWebAppConnectSrc("static/staticwebapp.config.json")).toContain(
+      apiOrigin,
+    );
+  });
+
   it("allows a wss:// upgrade for every azurewebsites.net/azurecontainerapps.io backend in gatsby-ssr.js", () => {
     assertWssCounterpartForEachHttpsBackend(readGatsbySsrConnectSrc());
   });
