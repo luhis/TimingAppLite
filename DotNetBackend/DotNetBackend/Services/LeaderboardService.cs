@@ -31,7 +31,9 @@ public sealed partial class LeaderboardService(IApiClient apiClient, IHubContext
             {
                 var activeGroups = GetActiveGroups().ToArray();
                 if (activeGroups.Length == 0)
+                {
                     continue;
+                }
 
                 var competitions = await apiClient.GetCompetitions(stoppingToken);
                 foreach (var key in activeGroups)
@@ -89,8 +91,12 @@ public sealed partial class LeaderboardService(IApiClient apiClient, IHubContext
     public void RemoveAllSubscriptions(string connectionId)
     {
         if (_connectionGroups.TryRemove(connectionId, out var key))
+        {
             if (!GetActiveGroups().Contains(key))
+            {
                 _previousResults.TryRemove(key, out _);
+            }
+        }
     }
 
     internal async Task PushChanges((int competitionId, int leaderboardId) key, CancellationToken ct)
@@ -99,12 +105,16 @@ public sealed partial class LeaderboardService(IApiClient apiClient, IHubContext
         var values = await apiClient.GetLeaderboard(key.competitionId, key.leaderboardId, ct);
 
         for (var i = 0; i < values.Items.Count; i++)
+        {
             values.Items[i]["_index"] = i.ToString();
+        }
 
         var prevSnapshot = _previousResults.GetValueOrDefault(key);
 
         if (_connectionGroups.Values.Any(g => g == key))
+        {
             _previousResults[key] = values;
+        }
 
         var groupName = LeaderboardHub.GetCompetitionGroup(key.competitionId, key.leaderboardId);
 
@@ -153,20 +163,34 @@ public sealed partial class LeaderboardService(IApiClient apiClient, IHubContext
     private static bool IsCompetitionToday(CompetitionDto competition)
     {
         if (string.IsNullOrWhiteSpace(competition.Dateddmmyyyy))
+        {
             return false;
+        }
 
         var dateText = DateOrdinalSuffixRegex().Replace(competition.Dateddmmyyyy.Trim(), "$1");
         if (!DateTime.TryParseExact(dateText, "d MMMM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var competitionDate))
+        {
             return false;
+        }
 
         return competitionDate.Date == DateTime.Today;
     }
 
     private static bool RowsEqual(Dictionary<string, string> x, Dictionary<string, string> y)
     {
-        if (x.Count != y.Count) return false;
+        if (x.Count != y.Count)
+        {
+            return false;
+        }
+
         foreach (var (k, v) in x)
-            if (!y.TryGetValue(k, out var yv) || v != yv) return false;
+        {
+            if (!y.TryGetValue(k, out var yv) || v != yv)
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 }
