@@ -18,7 +18,9 @@ public class ErrorPathTests
             {
                 var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IApiClient));
                 if (descriptor is not null)
+                {
                     services.Remove(descriptor);
+                }
 
                 services.AddSingleton(mockApiClient.Object);
             }));

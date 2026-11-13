@@ -95,7 +95,10 @@ public class LeaderboardServiceExecuteTests
             {
                 Interlocked.Increment(ref callCount);
                 if (callCount == 1)
+                {
                     throw new HttpRequestException("Upstream error");
+                }
+
                 return new List<CompetitionDto>
                 {
                     new() { Id = "1", Active = ActiveStatus.Finalised, Name = "Test" }

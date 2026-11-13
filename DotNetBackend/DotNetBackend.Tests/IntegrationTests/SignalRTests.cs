@@ -29,16 +29,22 @@ public class SignalRTests
             {
                 var apiDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IApiClient));
                 if (apiDescriptor is not null)
+                {
                     services.Remove(apiDescriptor);
+                }
 
                 var hostedDescriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(IHostedService) && d.ImplementationType == typeof(LeaderboardService));
                 if (hostedDescriptor is not null)
+                {
                     services.Remove(hostedDescriptor);
+                }
 
                 var singletonDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(LeaderboardService));
                 if (singletonDescriptor is not null)
+                {
                     services.Remove(singletonDescriptor);
+                }
 
                 services.AddSingleton(mockApiClient.Object);
                 services.AddSingleton<LeaderboardService>();
@@ -75,7 +81,9 @@ public class SignalRTests
         while (DateTime.UtcNow - start < TimeSpan.FromSeconds(10))
         {
             if (leaderboardService.GetActiveGroups().Contains(key))
+            {
                 return;
+            }
 
             await Task.Delay(50, cancellationToken);
         }

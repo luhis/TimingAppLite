@@ -353,7 +353,9 @@ public class ApiClientTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             if (_responses.Count == 0)
+            {
                 throw new InvalidOperationException("No more stub responses configured.");
+            }
 
             return Task.FromResult(_responses.Dequeue());
         }
