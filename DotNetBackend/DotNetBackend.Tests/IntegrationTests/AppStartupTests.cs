@@ -18,7 +18,9 @@ public class AppStartupTests
         var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             if (backendDisabled)
+            {
                 builder.UseSetting("Backend:Disabled", "true");
+            }
 
             builder.ConfigureServices(services =>
             {
@@ -26,7 +28,9 @@ public class AppStartupTests
                 {
                     var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IApiClient));
                     if (descriptor is not null)
+                    {
                         services.Remove(descriptor);
+                    }
 
                     services.AddSingleton(mockApiClient.Object);
                 }
