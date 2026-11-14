@@ -12,6 +12,11 @@ export const isAbortError = (error: unknown): boolean =>
 export const getErrorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
 
+type CorsWrapper ={
+  headers: Record<string, string>;
+  body: string;
+}
+
 const getJson = async <T>(
   url: string,
   errorPrefix: string,
@@ -23,7 +28,8 @@ const getJson = async <T>(
     throw new Error(`${errorPrefix} (${response.status})`);
   }
 
-  return (await response.json()) as T;
+  const corsWrapper = (await response.json()) as CorsWrapper;
+  return JSON.parse(corsWrapper.body) as T;
 };
 
 const getText = async (
@@ -54,7 +60,7 @@ export const fetchLeaderboards = async (
   signal?: AbortSignal,
 ): Promise<readonly LeaderboardSummary[]> =>
   getJson<readonly LeaderboardSummary[]>(
-    `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/LeaderBoards/`,
+    `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/Leaderboards/`,
     "Unable to load leaderboard list",
     signal,
   );

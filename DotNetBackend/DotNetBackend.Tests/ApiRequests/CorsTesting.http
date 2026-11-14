@@ -1,0 +1,29 @@
+### LiveAllCompetitions preflight (allowed origin)
+OPTIONS https://api.allorigins.win/get?url=autotest.sapphire-solutions.co.uk%2FAPI%2F1%2FLiveAllCompetitions
+Origin: https://timingapplite.mccorry.dev
+Access-Control-Request-Method: GET
+Access-Control-Request-Headers: content-type
+
+### LiveAllCompetitions GET (allowed origin)
+GET https://api.allorigins.win/get?url=https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions
+Origin: https://timingapplite.mccorry.dev
+Accept: application/json
+
+### LiveAllCompetitions preflight (disallowed origin, should have no Access-Control-Allow-Origin)
+OPTIONS https://api.allorigins.win/get?url=https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions
+Origin: https://example.com
+Access-Control-Request-Method: GET
+
+
+
+### other
+GET https://api.cors.lol/?url=autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions
+Origin: https://timingapplite.mccorry.dev
+
+
+### other
+OPTIONS https://cors-anywhere.herokuapp.com/autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions
+Origin: https://timingapplite.mccorry.dev
+
+### aaa
+GET https://cors.io/?url=https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions
