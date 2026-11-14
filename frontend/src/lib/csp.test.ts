@@ -70,6 +70,14 @@ describe("Content-Security-Policy connect-src", () => {
     );
   });
 
+  it("allows requests to the cors.lol proxy in both policies", () => {
+    const proxyOrigin = "https://api.cors.lol";
+    expect(readGatsbySsrConnectSrc()).toContain(proxyOrigin);
+    expect(readStaticWebAppConnectSrc("static/staticwebapp.config.json")).toContain(
+      proxyOrigin,
+    );
+  });
+
   it("allows a wss:// upgrade for every azurewebsites.net/azurecontainerapps.io backend in gatsby-ssr.js", () => {
     assertWssCounterpartForEachHttpsBackend(readGatsbySsrConnectSrc());
   });
