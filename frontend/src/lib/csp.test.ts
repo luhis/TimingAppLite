@@ -63,7 +63,7 @@ describe("Content-Security-Policy connect-src", () => {
   });
 
   it("allows requests to the Corsfix proxy in both policies", () => {
-    const proxyOrigin = "https://proxy.corsfix.com";
+    const proxyOrigin = "https://lite.corsfix.com";
     expect(readGatsbySsrConnectSrc()).toContain(proxyOrigin);
     expect(readStaticWebAppConnectSrc("static/staticwebapp.config.json")).toContain(
       proxyOrigin,
