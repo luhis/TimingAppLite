@@ -1,0 +1,3 @@
+### Healthz
+GET {{baseUrl}}/healthz
+Accept: application/json
