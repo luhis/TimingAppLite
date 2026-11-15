@@ -1,3 +1,5 @@
+/** @jest-environment node */
+
 import {
   fetchAllCompetitions,
   fetchLeaderboard,
@@ -6,34 +8,24 @@ import {
 } from "./leaderboardApi";
 
 describe("API JSON responses", () => {
-  const originalFetch = globalThis.fetch;
-  const mockFetch = jest.fn();
-
-  beforeEach(() => {
-    mockFetch.mockReset();
-    globalThis.fetch = mockFetch;
-  });
-
   afterEach(() => {
-    globalThis.fetch = originalFetch;
+    jest.restoreAllMocks();
   });
 
   test("returns an unwrapped competition array", async () => {
     const competitions = [{ id: "1", name: "Test" }];
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => competitions,
-    });
+    jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify(competitions)),
+    );
 
     await expect(fetchAllCompetitions()).resolves.toEqual(competitions);
   });
 
   test("returns an unwrapped leaderboard object", async () => {
     const leaderboard = { columns: [], items: [] };
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => leaderboard,
-    });
+    jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify(leaderboard)),
+    );
 
     await expect(fetchLeaderboard("1", "2")).resolves.toEqual(leaderboard);
   });
