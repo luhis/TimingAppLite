@@ -115,7 +115,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         $"{ApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
 
     private static string EventListUrl(int competitionId) =>
-        $"{EventListBase}?event={competitionId}";
+        $"{EventListBase}?event%3D{competitionId}";
 
     async Task<string> IApiClient.GetSiteName(int competitionId, CancellationToken ct)
     {

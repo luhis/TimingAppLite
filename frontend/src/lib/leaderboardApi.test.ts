@@ -1,4 +1,43 @@
-import { getErrorMessage, isAbortError } from "./leaderboardApi";
+import {
+  fetchAllCompetitions,
+  fetchLeaderboard,
+  getErrorMessage,
+  isAbortError,
+} from "./leaderboardApi";
+
+describe("API JSON responses", () => {
+  const originalFetch = globalThis.fetch;
+  const mockFetch = jest.fn();
+
+  beforeEach(() => {
+    mockFetch.mockReset();
+    globalThis.fetch = mockFetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  test("returns an unwrapped competition array", async () => {
+    const competitions = [{ id: "1", name: "Test" }];
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => competitions,
+    });
+
+    await expect(fetchAllCompetitions()).resolves.toEqual(competitions);
+  });
+
+  test("returns an unwrapped leaderboard object", async () => {
+    const leaderboard = { columns: [], items: [] };
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => leaderboard,
+    });
+
+    await expect(fetchLeaderboard("1", "2")).resolves.toEqual(leaderboard);
+  });
+});
 
 describe("isAbortError", () => {
   test("returns true for DOMException with name AbortError", () => {

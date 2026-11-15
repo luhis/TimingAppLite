@@ -3,3 +3,9 @@
 ### Site Name
 GET {{baseUrl}}/API/1/Competitions/{{competitionId}}/SiteName
 Accept: application/json
+
+### Sapphire Base
+GET https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1471
+
+### proxied  Base
+GET https://proxy.cors.dev/https://autotest.sapphire-solutions.co.uk/eventlist.php%3Fevent%3D1471
