@@ -11,7 +11,6 @@ namespace DotNetBackend.Serialization;
 [JsonSerializable(typeof(List<Dictionary<string, string>>))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(ProblemDetails))]
-[JsonSerializable(typeof(ProxyResponse))]
 [JsonSourceGenerationOptions(
     PropertyNameCaseInsensitive = true,
     Converters = [typeof(ForgivingDictionaryConverter)])]

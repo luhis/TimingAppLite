@@ -1,11 +1,8 @@
-using DotNetBackend.Dto;
 using DotNetBackend.Sapphire;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
 
 namespace DotNetBackend.Tests;
 
@@ -145,7 +142,7 @@ public class ApiClientTests
         var handler = new SequenceHttpHandler(
             new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new ByteArrayContent(CreateProxyResponse(okBody, "application/json"))
+                Content = new ByteArrayContent(okBody)
                 {
                     Headers = { ContentType = MediaTypeHeaderValue.Parse("application/json") }
                 }
@@ -202,10 +199,10 @@ public class ApiClientTests
     }
 
     [Fact]
-    public async Task GetLiveAllCompetitions_ThrowsUpstreamHttpException_ForProxyUpstreamError()
+    public async Task GetLiveAllCompetitions_PreservesUpstreamErrorBody()
     {
         var body = """{"error":"unavailable"}"""u8.ToArray();
-        var handler = new StubHttpHandler(CreateProxyResponse(body, "application/problem+json", 503), "application/json", wrapResponse: false);
+        var handler = new StubHttpHandler(body, "application/problem+json", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
         var act = async () => await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
@@ -217,30 +214,20 @@ public class ApiClientTests
     }
 
     [Fact]
-    public async Task GetLiveAllCompetitions_RetriesProxyRateLimit()
+    public async Task GetLiveAllCompetitions_RetriesRateLimit()
     {
-        var limited = """{"url":"https://example.com","status":429,"headers":{"retry-after":"0"},"body":"rate limited"}"""u8.ToArray();
         var body = """[{"id":1}]"""u8.ToArray();
         var handler = new SequenceHttpHandler(
-            new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(limited) },
-            new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(CreateProxyResponse(body, "application/json")) });
+            new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+            {
+                Headers = { RetryAfter = new RetryConditionHeaderValue(TimeSpan.Zero) }
+            },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(body) });
         var client = CreateClient(handler);
 
         var result = await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
 
         result.Bytes.Should().Equal(body);
-    }
-
-    [Fact]
-    public async Task GetLiveAllCompetitions_RejectsMissingProxyBody()
-    {
-        var envelope = """{"url":"https://example.com","status":200,"headers":{}}"""u8.ToArray();
-        var handler = new StubHttpHandler(envelope, "application/json", wrapResponse: false);
-        var client = CreateClient(handler);
-
-        var act = async () => await client.GetLiveAllCompetitions(TestContext.Current.CancellationToken);
-
-        await act.Should().ThrowAsync<JsonException>();
     }
 
     // -------------------------------------------------------------------------
@@ -378,16 +365,7 @@ public class ApiClientTests
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static byte[] CreateProxyResponse(byte[] body, string contentType, int status = 200) =>
-        JsonSerializer.SerializeToUtf8Bytes(new
-        {
-            url = "https://example.com",
-            status,
-            headers = new Dictionary<string, string> { ["content-type"] = contentType },
-            body = Encoding.UTF8.GetString(body)
-        });
-
-    private sealed class StubHttpHandler(byte[] body, string contentType, HttpStatusCode statusCode = HttpStatusCode.OK, bool wrapResponse = true)
+    private sealed class StubHttpHandler(byte[] body, string contentType, HttpStatusCode statusCode = HttpStatusCode.OK)
         : HttpMessageHandler
     {
         public int CallCount { get; private set; }
@@ -395,10 +373,7 @@ public class ApiClientTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             CallCount++;
-            var responseBody = statusCode == HttpStatusCode.OK && wrapResponse
-                ? CreateProxyResponse(body, contentType)
-                : body;
-            var content = new ByteArrayContent(responseBody);
+            var content = new ByteArrayContent(body);
             content.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
             return Task.FromResult(new HttpResponseMessage(statusCode) { Content = content });
         }

@@ -27,3 +27,11 @@ Origin: https://timingapplite.mccorry.dev
 
 ### working but needs app change for body
 GET https://cors.io/?u=https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions 
+
+
+### other
+GET https://proxy.cors.dev/https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions 
+
+
+
+

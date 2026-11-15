@@ -2,7 +2,6 @@ using DotNetBackend.Dto;
 using DotNetBackend.Serialization;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
@@ -126,15 +125,34 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
             return cached;
         }
 
-        var (bytes, _) = await ExecuteWithUpstreamGateAsync(
-            () => FetchBytesAsync(EventListUrl(competitionId), HttpCompletionOption.ResponseContentRead, ct),
-            ct);
-        var match = SiteNameRegex().Match(Encoding.UTF8.GetString(bytes));
-        if (match.Success)
+        using var client = httpClientFactory.CreateClient();
+        HttpResponseMessage resp;
+        await UpstreamGate.WaitAsync(ct);
+        try
         {
-            cached = match.Groups[1].Value;
-            cache.Set(cacheKey, cached, SiteNameCacheDuration);
-            return cached;
+            resp = await GetWithBackoffAsync(client, EventListUrl(competitionId), HttpCompletionOption.ResponseHeadersRead, ct);
+        }
+        finally
+        {
+            UpstreamGate.Release();
+        }
+        using var _ = resp;
+        await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
+        using var stream = await resp.Content.ReadAsStreamAsync(ct);
+        using var reader = new StreamReader(stream);
+        var buffer = new char[4096];
+        var sb = new StringBuilder();
+        int read;
+        while ((read = await reader.ReadAsync(buffer, ct)) > 0)
+        {
+            sb.Append(buffer, 0, read);
+            var match = SiteNameRegex().Match(sb.ToString());
+            if (match.Success)
+            {
+                cached = match.Groups[1].Value;
+                cache.Set(cacheKey, cached, SiteNameCacheDuration);
+                return cached;
+            }
         }
 
         throw new InvalidOperationException("sitename not found in event list");
@@ -147,11 +165,35 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     private static readonly TimeSpan BaseDelay = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan MaxDelay = TimeSpan.FromSeconds(30);
 
-    private static TimeSpan GetRetryDelay(RetryConditionHeaderValue? retryAfter, int attempt)
+    private static async Task<HttpResponseMessage> GetWithBackoffAsync(
+        HttpClient client, string url, HttpCompletionOption option, CancellationToken ct)
     {
-        var delay = retryAfter?.Delta
-            ?? (retryAfter?.Date is { } date ? date - DateTimeOffset.UtcNow : BaseDelay * Math.Pow(2, attempt));
-        return delay < TimeSpan.Zero ? TimeSpan.Zero : delay > MaxDelay ? MaxDelay : delay;
+#pragma warning disable IDISP011, IDISP017 // ownership of the final response passes to the caller
+        for (var attempt = 0; ; attempt++)
+        {
+            var resp = await client.GetAsync(url, option, ct);
+            if (resp.StatusCode != HttpStatusCode.TooManyRequests || attempt >= MaxRetries)
+            {
+                return resp;
+            }
+
+            var retryAfter = resp.Headers.RetryAfter;
+            TimeSpan delay = retryAfter?.Delta
+                ?? (retryAfter?.Date is { } date ? date - DateTimeOffset.UtcNow : BaseDelay * Math.Pow(2, attempt));
+            if (delay < TimeSpan.Zero)
+            {
+                delay = TimeSpan.Zero;
+            }
+
+            if (delay > MaxDelay)
+            {
+                delay = MaxDelay;
+            }
+
+            resp.Dispose();
+            await Task.Delay(delay, ct);
+        }
+#pragma warning restore IDISP011, IDISP017
     }
 
     private async Task<(byte[] bytes, string contentType)> FetchBytesAsync(
@@ -160,51 +202,12 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         CancellationToken ct)
     {
         using var client = httpClientFactory.CreateClient();
-        for (var attempt = 0; ; attempt++)
-        {
-            using var resp = await client.GetAsync(url, completionOption, ct);
-            if (resp.StatusCode == HttpStatusCode.TooManyRequests && attempt < MaxRetries)
-            {
-                var delay = GetRetryDelay(resp.Headers.RetryAfter, attempt);
-                resp.Dispose();
-                await Task.Delay(delay, ct);
-                continue;
-            }
-
-            await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
-            var responseBytes = await resp.Content.ReadAsByteArrayAsync(ct);
-            var proxyResponse = JsonSerializer.Deserialize(responseBytes.AsSpan(), AppJsonContext.Default.ProxyResponse)
-                ?? throw new JsonException($"Empty proxy response from {url}");
-            if (proxyResponse.Body is null || proxyResponse.Headers is null || proxyResponse.Status is < 100 or > 599)
-            {
-                throw new JsonException($"Invalid proxy response from {url}");
-            }
-
-            var body = Encoding.UTF8.GetBytes(proxyResponse.Body);
-            var headers = proxyResponse.Headers.ToDictionary(
-                header => header.Key, header => new[] { header.Value }, StringComparer.OrdinalIgnoreCase);
-            var contentType = headers.TryGetValue("Content-Type", out var values) ? values[0] : DefaultJsonContentType;
-            if (proxyResponse.Status == (int)HttpStatusCode.TooManyRequests && attempt < MaxRetries)
-            {
-                RetryConditionHeaderValue? retryAfter = null;
-                if (headers.TryGetValue("Retry-After", out var retryValues))
-                {
-                    RetryConditionHeaderValue.TryParse(retryValues[0], out retryAfter);
-                }
-
-                var delay = GetRetryDelay(retryAfter, attempt);
-                resp.Dispose();
-                await Task.Delay(delay, ct);
-                continue;
-            }
-
-            if (proxyResponse.Status is < 200 or >= 300)
-            {
-                throw new UpstreamHttpException((HttpStatusCode)proxyResponse.Status, body, contentType, headers);
-            }
-
-            return (body, contentType);
-        }
+        using var resp = await GetWithBackoffAsync(client, url, completionOption, ct);
+        await EnsureSuccessOrThrowUpstreamAsync(resp, ct);
+        return (
+            await resp.Content.ReadAsByteArrayAsync(ct),
+            resp.Content.Headers.ContentType?.ToString() ?? DefaultJsonContentType
+        );
     }
 
     private static string GetLeaderboardsCacheKey(int competitionId, int? leaderboardId) =>
@@ -237,12 +240,4 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
             .ToDictionary(h => h.Key, h => h.Value.ToArray(), StringComparer.OrdinalIgnoreCase);
         throw new UpstreamHttpException(response.StatusCode, responseBody, contentType, responseHeaders);
     }
-}
-
-public class ProxyResponse
-{
-    public required string Url { get; init; }
-    public int Status { get; init; }
-    public required IReadOnlyDictionary<string, string> Headers { get; init; }
-    public required string Body { get; init; }
 }
