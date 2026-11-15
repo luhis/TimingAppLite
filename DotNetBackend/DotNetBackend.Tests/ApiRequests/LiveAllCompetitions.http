@@ -1,3 +1,7 @@
 ### LiveAllCompetitions
 GET {{baseUrl}}/API/1/LiveAllCompetitions/
 Accept: application/json
+
+### LiveAllCompetitionsNoProxy  
+GET {{baseUrl}}/API/1/LiveAllCompetitionsNoProxy/
+Accept: application/json

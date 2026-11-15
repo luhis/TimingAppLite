@@ -11,7 +11,8 @@ namespace DotNetBackend.Sapphire;
 
 public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration) : IApiClient
 {
-    internal const string RemoteApiBase = "https://proxy.cors.dev/https://autotest.sapphire-solutions.co.uk";
+    private const string ProxyBase = "https://proxy.cors.dev";
+    internal const string RemoteApiBase = $"{ProxyBase}/https://autotest.sapphire-solutions.co.uk";
     private const string ApiBase = $"{RemoteApiBase}/API/1";
     private const string EventListBase = $"{RemoteApiBase}/eventlist.php";
     private const string DefaultJsonContentType = "application/json";
@@ -101,6 +102,10 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     {
         return GetCompetitionBytesAsync(ct);
     }
+    Task<(byte[] Bytes, string ContentType)> IApiClient.GetLiveAllCompetitionsNoProxy(CancellationToken ct)
+    {
+        return FetchBytesAsync(LiveAllCompetitionsNoProxyUrl(), HttpCompletionOption.ResponseContentRead, ct);
+    }
 
     async Task<IReadOnlyList<CompetitionDto>> IApiClient.GetCompetitions(CancellationToken ct)
     {
@@ -110,6 +115,8 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     }
     private static string LiveAllCompetitionsUrl() =>
         $"{ApiBase}/LiveAllCompetitions/";
+    private static string LiveAllCompetitionsNoProxyUrl() =>
+        $"https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions/";
 
     private static string LeaderboardsUrl(int competitionId, int? leaderboardId) =>
         $"{ApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
