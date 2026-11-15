@@ -25,7 +25,7 @@ Origin: https://timingapplite.mccorry.dev
 OPTIONS https://cors-anywhere.herokuapp.com/autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions
 Origin: https://timingapplite.mccorry.dev
 
-### working but needs app change for body
+### working but needs app change for body, works in UI
 GET https://cors.io/?u=https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions 
 
 
@@ -33,5 +33,5 @@ GET https://cors.io/?u=https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCo
 GET https://proxy.cors.dev/https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions 
 
 
-
+### wget -qO- https://proxy.cors.dev/https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions 
 
