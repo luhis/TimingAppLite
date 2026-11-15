@@ -25,6 +25,8 @@ dotnet run --project DotNetBackend
 
 The API will be available at `http://localhost:5167`.
 
+`GET /API/1/Competitions/{competitionId}/SiteNameNoProxy` returns the competition's site name using a direct Sapphire request. The existing `SiteName` endpoint continues to use the proxy.
+
 To run backend tests:
 
 ```powershell

@@ -124,9 +124,15 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     private static string EventListUrl(int competitionId) =>
         $"{EventListBase}?event%3D{competitionId}";
 
-    async Task<string> IApiClient.GetSiteName(int competitionId, CancellationToken ct)
+    Task<string> IApiClient.GetSiteName(int competitionId, CancellationToken ct) =>
+        GetSiteNameAsync(competitionId, EventListUrl(competitionId), nameof(IApiClient.GetSiteName), ct);
+
+    Task<string> IApiClient.GetSiteNameNoProxy(int competitionId, CancellationToken ct) =>
+        GetSiteNameAsync(competitionId, $"https://autotest.sapphire-solutions.co.uk/eventlist.php?event={competitionId}", nameof(IApiClient.GetSiteNameNoProxy), ct);
+
+    private async Task<string> GetSiteNameAsync(int competitionId, string url, string cachePrefix, CancellationToken ct)
     {
-        var cacheKey = $"{nameof(IApiClient.GetSiteName)}:{competitionId}";
+        var cacheKey = $"{cachePrefix}:{competitionId}";
         if (cache.TryGetValue(cacheKey, out string? cached) && cached is not null)
         {
             return cached;
@@ -137,7 +143,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         await UpstreamGate.WaitAsync(ct);
         try
         {
-            resp = await GetWithBackoffAsync(client, EventListUrl(competitionId), HttpCompletionOption.ResponseHeadersRead, ct);
+            resp = await GetWithBackoffAsync(client, url, HttpCompletionOption.ResponseHeadersRead, ct);
         }
         finally
         {

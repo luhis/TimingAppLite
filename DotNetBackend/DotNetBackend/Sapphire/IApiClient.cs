@@ -9,5 +9,6 @@ public interface IApiClient
     Task<(byte[] Bytes, string ContentType)> GetLiveAllCompetitions(CancellationToken ct = default);
     Task<(byte[] Bytes, string ContentType)> GetLeaderboards(int competitionId, int? leaderboardId, CancellationToken ct = default);
     Task<string> GetSiteName(int competitionId, CancellationToken ct = default);
+    Task<string> GetSiteNameNoProxy(int competitionId, CancellationToken ct = default);
     Task<(byte[] Bytes, string ContentType)> GetLiveAllCompetitionsNoProxy(CancellationToken ct);
 }

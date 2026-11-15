@@ -361,6 +361,51 @@ public class ApiClientTests
         handler.CallCount.Should().Be(1, "second call should be served from cache");
     }
 
+    [Fact]
+    public async Task GetSiteNameNoProxy_UsesDirectUrl_AndCachesSeparatelyFromProxy()
+    {
+        var html = """<a href="https://example.com/page?sitename=TestTrack&other=1">Link</a>""";
+        var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(html), "text/html");
+        var client = CreateClient(handler);
+
+        var proxied = await client.GetSiteName(1471, TestContext.Current.CancellationToken);
+        var direct = await client.GetSiteNameNoProxy(1471, TestContext.Current.CancellationToken);
+        var cached = await client.GetSiteNameNoProxy(1471, TestContext.Current.CancellationToken);
+        var otherCompetition = await client.GetSiteNameNoProxy(1472, TestContext.Current.CancellationToken);
+
+        proxied.Should().Be("TestTrack");
+        direct.Should().Be("TestTrack");
+        cached.Should().Be("TestTrack");
+        otherCompetition.Should().Be("TestTrack");
+        handler.RequestUris.Should().HaveCount(3);
+        handler.RequestUris[0].Host.Should().Be("proxy.cors.dev");
+        handler.RequestUris[1].AbsoluteUri.Should().Be("https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1471");
+        handler.RequestUris[2].AbsoluteUri.Should().Be("https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1472");
+    }
+
+    [Fact]
+    public async Task GetSiteNameNoProxy_ThrowsWhenSiteNameNotFound()
+    {
+        var handler = new StubHttpHandler("""<html>No sitename here</html>"""u8.ToArray(), "text/html");
+        var client = CreateClient(handler);
+
+        var act = async () => await client.GetSiteNameNoProxy(1, TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*sitename not found*");
+    }
+
+    [Fact]
+    public async Task GetSiteNameNoProxy_ThrowsOnUpstreamError()
+    {
+        var handler = new StubHttpHandler("unavailable"u8.ToArray(), "text/plain", HttpStatusCode.ServiceUnavailable);
+        var client = CreateClient(handler);
+
+        var act = async () => await client.GetSiteNameNoProxy(1, TestContext.Current.CancellationToken);
+
+        var error = await act.Should().ThrowAsync<UpstreamHttpException>();
+        error.Which.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -369,10 +414,12 @@ public class ApiClientTests
         : HttpMessageHandler
     {
         public int CallCount { get; private set; }
+        public List<Uri> RequestUris { get; } = [];
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             CallCount++;
+            RequestUris.Add(request.RequestUri ?? throw new InvalidOperationException("Request URI is missing"));
             var content = new ByteArrayContent(body);
             content.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
             return Task.FromResult(new HttpResponseMessage(statusCode) { Content = content });

@@ -122,6 +122,22 @@ public class AppStartupTests
     }
 
     [Fact]
+    public async Task SiteNameNoProxy_ReturnsSuccess()
+    {
+        var client = CreateClient(mock =>
+            mock.Setup(c => c.GetSiteNameNoProxy(1471, It.IsAny<CancellationToken>()))
+                .ReturnsAsync("TestTrack"),
+            out var mockRepo);
+
+        var response = await client.GetAsync("/API/1/Competitions/1471/SiteNameNoProxy", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        content.Should().Be("TestTrack");
+        mockRepo.VerifyAll();
+    }
+
+    [Fact]
     public async Task Healthz_ReturnsSuccess()
     {
         var client = CreateClient(_ => { }, out var mockRepo);

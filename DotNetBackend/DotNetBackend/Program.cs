@@ -173,4 +173,8 @@ app.MapGet("/API/1/Competitions/{competitionId:int}/SiteName", async (IApiClient
     .Produces<string>(StatusCodes.Status200OK)
     .AddOpenApiOperationTransformer((op, _, _) => { op.Summary = "Returns the site name for a competition"; return Task.CompletedTask; });
 
+app.MapGet("/API/1/Competitions/{competitionId:int}/SiteNameNoProxy", async (IApiClient api, int competitionId, CancellationToken ct) => await api.GetSiteNameNoProxy(competitionId, ct))
+    .Produces<string>(StatusCodes.Status200OK)
+    .AddOpenApiOperationTransformer((op, _, _) => { op.Summary = "Returns the site name for a competition without using a proxy"; return Task.CompletedTask; });
+
 app.Run();
