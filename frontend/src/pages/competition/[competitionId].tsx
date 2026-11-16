@@ -6,7 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { type HeadFC } from "gatsby";
+import { graphql, type HeadFC } from "gatsby";
 import { Columns, Container, Section } from "react-bulma-components";
 import { newValidDate } from "ts-date";
 
@@ -25,7 +25,6 @@ import {
   fetchAllCompetitions,
   fetchLeaderboard,
   fetchLeaderboards,
-  fetchSiteName,
   isAbortError,
   getErrorMessage,
 } from "../../lib/leaderboardApi";
@@ -60,11 +59,17 @@ const classNamesToAlwaysInclude = ["Autosolo", "Autotest", "PCA", " "];
 const CompetitionPage = ({
   params,
   location,
+  data: pageData,
 }: {
   readonly params: { readonly competitionId: string };
   readonly location: { readonly search: string };
+  readonly data: Queries.CompetitionPageQueryQuery;
 }) => {
   const competitionId = params.competitionId;
+  const siteName =
+    pageData.allCompetitionSiteName.nodes.find(
+      (node) => node.competitionId === competitionId,
+    )?.siteName ?? null;
 
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [leaderboardsState, setLeaderboardsState] = useState<
@@ -79,7 +84,6 @@ const CompetitionPage = ({
   const [streamResults, setStreamResults] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
   const [eventNotes, setEventNotes] = useState("");
-  const [siteName, setSiteName] = useState<string | null>(null);
 
   const {
     favouriteEntries,
@@ -117,35 +121,6 @@ const CompetitionPage = ({
     };
 
     void loadCompetition();
-
-    return () => {
-      controller.abort();
-    };
-  }, [competitionId]);
-
-  useEffect(() => {
-    if (!competitionId) {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const loadSiteName = async () => {
-      try {
-        const name = await retryWithBackoff(
-          (signal) => fetchSiteName(competitionId, signal),
-          controller.signal,
-          { maxRetries: 3 },
-        );
-        if (!controller.signal.aborted) {
-          setSiteName(name);
-        }
-      } catch {
-        // non-critical — enter button simply won't appear
-      }
-    };
-
-    void loadSiteName();
 
     return () => {
       controller.abort();
@@ -507,6 +482,17 @@ const CompetitionPage = ({
 };
 
 export default CompetitionPage;
+
+export const query = graphql`
+  query CompetitionPageQuery {
+    allCompetitionSiteName {
+      nodes {
+        competitionId
+        siteName
+      }
+    }
+  }
+`;
 
 export const Head: HeadFC<object, { competitionId: string }> = ({ params }) => (
   <SeoHead

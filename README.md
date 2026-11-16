@@ -44,6 +44,14 @@ yarn run develop
 
 The site will be available at `http://localhost:8000`.
 
+At build time, Gatsby extracts competition site names directly from Sapphire
+event pages, preserving the Sapphire session across redirects. The Event List
+shows a site name only when its event name and date exactly match one
+competition; unmatched or ambiguous events show a dash. The current and
+historical events lists also show the club name using the competition ID.
+The competition entry button also uses this mapping. Newly refreshed events
+receive site names after the next build.
+
 ## Validation
 
 ```powershell

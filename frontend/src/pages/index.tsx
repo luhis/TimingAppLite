@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { graphql, Link, PageProps, type HeadFC } from "gatsby";
+import startCase from "lodash/startCase";
 import {
   Container,
   Heading,
@@ -20,12 +21,17 @@ import {
   competitionStatusLabel,
 } from "../lib/competitionStatus";
 import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
+import { createCompetitionSiteNameMap } from "../lib/eventSiteNames";
 import { fetchAllCompetitions } from "../lib/leaderboardApi";
 import { retryWithBackoff } from "../lib/retryWithBackoff";
 import { type Competition } from "../types/leaderboard";
 
 const IndexPage = (props: Readonly<PageProps<Queries.IndexPageQueryQuery>>) => {
   const { data } = props;
+  const siteNames = useMemo(
+    () => createCompetitionSiteNameMap(data.allCompetitionSiteName.nodes),
+    [data],
+  );
   const initialCompetitions = useMemo<readonly Competition[]>(
     () => data.allCompetition.nodes.map(mapCompetitionNode),
     [data],
@@ -107,6 +113,10 @@ const IndexPage = (props: Readonly<PageProps<Queries.IndexPageQueryQuery>>) => {
                   </Tag>
                   <span className="has-text-weight-medium">
                     {competition.name}
+                    <span className="is-block has-text-grey is-size-7">
+                      Club:{" "}
+                      {startCase(siteNames.get(competition.id) ?? "") || "—"}
+                    </span>
                   </span>
                   <span className="has-text-grey is-size-7 ml-auto">
                     <CompetitionDate date={competition.dateddmmyyyy} />
@@ -128,6 +138,12 @@ export default IndexPage;
 
 export const query = graphql`
   query IndexPageQuery {
+    allCompetitionSiteName {
+      nodes {
+        competitionId
+        siteName
+      }
+    }
     allCompetition {
       nodes {
         competitionId

@@ -40,7 +40,7 @@ const getEnterDisabledReason = (
   siteName: string | null,
 ): string | null => {
   if (!siteName) {
-    return "Loading...";
+    return "Entry link unavailable";
   }
   if (!competition) {
     return "Loading competition data...";

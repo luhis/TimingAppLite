@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { graphql, Link, PageProps, type HeadFC } from "gatsby";
+import startCase from "lodash/startCase";
 import {
   Container,
   Heading,
@@ -16,6 +17,7 @@ import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
 import type { Competition } from "../types/leaderboard";
 import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
+import { createCompetitionSiteNameMap } from "../lib/eventSiteNames";
 import { fetchAllCompetitions } from "../lib/leaderboardApi";
 import { retryWithBackoff } from "../lib/retryWithBackoff";
 import {
@@ -28,6 +30,10 @@ const HistoricalEventsPage = (
   props: Readonly<PageProps<Queries.HistoricalEventsPageQueryQuery>>,
 ) => {
   const { data } = props;
+  const siteNames = useMemo(
+    () => createCompetitionSiteNameMap(data.allCompetitionSiteName.nodes),
+    [data],
+  );
   const initialCompetitions = useMemo<readonly Competition[]>(
     () => data.allCompetition.nodes.map(mapCompetitionNode),
     [data],
@@ -105,6 +111,10 @@ const HistoricalEventsPage = (
                   </Tag>
                   <span className="has-text-weight-medium">
                     {competition.name}
+                    <span className="is-block has-text-grey is-size-7">
+                      Club:{" "}
+                      {startCase(siteNames.get(competition.id) ?? "") || "—"}
+                    </span>
                   </span>
                   <span>
                     &nbsp;
@@ -128,6 +138,12 @@ export default HistoricalEventsPage;
 
 export const query = graphql`
   query HistoricalEventsPageQuery {
+    allCompetitionSiteName {
+      nodes {
+        competitionId
+        siteName
+      }
+    }
     allCompetition {
       nodes {
         competitionId

@@ -7,23 +7,21 @@ import {
   fetchEventLeaderboard,
 } from "./src/lib/leaderboardApi";
 import { retryWithBackoff } from "./src/lib/retryWithBackoff";
+import { resolveSapphireSiteName } from "./sapphire-site-name";
 
 const BUILD_FETCH_MAX_RETRIES = 3;
 const BUILD_FETCH_BASE_DELAY_MS = 5000;
+const SITE_NAME_BATCH_SIZE = 4;
 
 const fetchWithBuildRetry = async <T>(
   fetchFn: (signal?: AbortSignal) => Promise<T>,
 ): Promise<T> => {
   const controller = new AbortController();
 
-  return retryWithBackoff(
-    (signal) => fetchFn(signal),
-    controller.signal,
-    {
-      maxRetries: BUILD_FETCH_MAX_RETRIES,
-      baseDelayMs: BUILD_FETCH_BASE_DELAY_MS,
-    },
-  );
+  return retryWithBackoff((signal) => fetchFn(signal), controller.signal, {
+    maxRetries: BUILD_FETCH_MAX_RETRIES,
+    baseDelayMs: BUILD_FETCH_BASE_DELAY_MS,
+  });
 };
 
 const normalizeCompetitionNode = (competition: {
@@ -40,7 +38,8 @@ const normalizeCompetitionNode = (competition: {
   active: String(competition.active ?? ""),
   provisional:
     competition.provisional == null ? null : String(competition.provisional),
-  finalised: competition.finalised == null ? null : String(competition.finalised),
+  finalised:
+    competition.finalised == null ? null : String(competition.finalised),
 });
 
 export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] =
@@ -54,6 +53,12 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
         active: String!
         provisional: String
         finalised: String
+      }
+
+      type CompetitionSiteName implements Node @dontInfer {
+        id: ID!
+        competitionId: String!
+        siteName: String!
       }
 
       type EventListColumn {
@@ -87,9 +92,7 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
     console.warn(
       "⚠️  GATSBY_BACKEND_URL is not set. Skipping competition data fetch.",
     );
-    console.warn(
-      "   Set GATSBY_BACKEND_URL in your environment or .env file.",
-    );
+    console.warn("   Set GATSBY_BACKEND_URL in your environment or .env file.");
     return;
   }
 
@@ -113,6 +116,47 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
         },
       });
     });
+
+    const competitionIds = [
+      ...new Set(
+        competitions
+          .map((competition) => String(competition.id ?? ""))
+          .filter(Boolean),
+      ),
+    ];
+    const sourceSiteNameBatch = async (offset: number): Promise<void> => {
+      if (offset >= competitionIds.length) {
+        return;
+      }
+
+      await Promise.all(
+        competitionIds
+          .slice(offset, offset + SITE_NAME_BATCH_SIZE)
+          .map(async (competitionId) => {
+            try {
+              const siteName = await resolveSapphireSiteName(competitionId);
+              const mapping = { competitionId, siteName };
+              await createNode({
+                ...mapping,
+                id: createNodeId(`CompetitionSiteName-${competitionId}`),
+                parent: null,
+                children: [],
+                internal: {
+                  type: "CompetitionSiteName",
+                  contentDigest: createContentDigest(mapping),
+                },
+              });
+            } catch (error) {
+              console.error(
+                `❌ Error fetching site name for competition ${competitionId}:`,
+                error,
+              );
+            }
+          }),
+      );
+      await sourceSiteNameBatch(offset + SITE_NAME_BATCH_SIZE);
+    };
+    await sourceSiteNameBatch(0);
   } catch (error) {
     console.error("❌ Error fetching competitions:", error);
   }
@@ -124,7 +168,9 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
       eventId: `${EVENT_COMPETITION_ID}-${EVENT_LEADERBOARD_ID}`,
       columns: event.columns,
       items: event.items,
-      id: createNodeId(`EventList-${EVENT_COMPETITION_ID}-${EVENT_LEADERBOARD_ID}`),
+      id: createNodeId(
+        `EventList-${EVENT_COMPETITION_ID}-${EVENT_LEADERBOARD_ID}`,
+      ),
       parent: null,
       children: [],
       internal: {

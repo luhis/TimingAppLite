@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { graphql, PageProps, type HeadFC } from "gatsby";
+import startCase from "lodash/startCase";
 import {
   Container,
   Heading,
@@ -13,6 +14,7 @@ import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
 import { parseDate } from "../lib/dataParser";
+import { createEventSiteNameLookup } from "../lib/eventSiteNames";
 import { fetchEventLeaderboard } from "../lib/leaderboardApi";
 import { retryWithBackoff } from "../lib/retryWithBackoff";
 import type {
@@ -38,6 +40,14 @@ const EventListPage = (
   props: Readonly<PageProps<Queries.EventListPageQueryQuery>>,
 ) => {
   const { data } = props;
+  const findSiteName = useMemo(
+    () =>
+      createEventSiteNameLookup(
+        data.allCompetition.nodes,
+        data.allCompetitionSiteName.nodes,
+      ),
+    [data],
+  );
   const initialData = useMemo<EventListData>(
     () => mapEventListNode(data.eventList ?? {}),
     [data],
@@ -121,6 +131,7 @@ const EventListPage = (
                   {eventData.columns.map((column) => (
                     <th key={column.name}>{column.label}</th>
                   ))}
+                  <th>Club Name</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,12 +147,16 @@ const EventListPage = (
                             : String(value ?? "");
                         return <td key={column.name}>{displayValue}</td>;
                       })}
+                      <td>
+                        {startCase(findSiteName(item.name, item.date) ?? "") ||
+                          "—"}
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
-                      colSpan={Math.max(eventData.columns.length, 1)}
+                      colSpan={eventData.columns.length + 1}
                       className="has-text-centered has-text-grey py-6"
                     >
                       {isLoading ? "Loading events…" : "No events found."}
@@ -162,6 +177,19 @@ export default EventListPage;
 
 export const query = graphql`
   query EventListPageQuery {
+    allCompetition {
+      nodes {
+        competitionId
+        name
+        dateddmmyyyy
+      }
+    }
+    allCompetitionSiteName {
+      nodes {
+        competitionId
+        siteName
+      }
+    }
     eventList {
       columns {
         name

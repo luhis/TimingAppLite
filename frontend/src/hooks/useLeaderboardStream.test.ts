@@ -242,7 +242,7 @@ describe("useLeaderboardStream", () => {
     expect(onColumnUpdate).not.toHaveBeenCalled();
   });
 
-  test("calls onCompetitionUpdate when a competition update is received", () => {
+  test("parses the date in a SignalR competition update", () => {
     const onCompetitionUpdate = jest.fn();
 
     renderHook(() =>
@@ -261,14 +261,19 @@ describe("useLeaderboardStream", () => {
       id: "comp-1",
       name: "Test",
       active: "0",
-      dateddmmyyyy: new Date(),
+      dateddmmyyyy: "5th June 2026",
+      provisional: null,
+      finalised: null,
     };
 
     act(() => {
       handler(competition);
     });
 
-    expect(onCompetitionUpdate).toHaveBeenCalledWith(competition);
+    expect(onCompetitionUpdate).toHaveBeenCalledWith({
+      ...competition,
+      dateddmmyyyy: new Date(2026, 5, 5),
+    });
   });
 
   test("does not reconnect when callback props change but the subscription inputs do not", () => {

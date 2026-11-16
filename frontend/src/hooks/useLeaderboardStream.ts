@@ -6,8 +6,10 @@ import {
 import { useEffect, useRef } from "react";
 
 import { trackException } from "../lib/appInsights";
+import { parseCompetitionDate } from "../lib/dataParser";
 import type {
   Competition,
+  CompetitionFromApi,
   LeaderboardColumn,
   LeaderboardItem,
 } from "../types/leaderboard";
@@ -91,8 +93,8 @@ export const useLeaderboardStream = (
 
         connection.on(
           "ReceiveCompetitionUpdate",
-          (competition: Competition) => {
-            onCompetitionUpdateRef.current(competition);
+          (competition: CompetitionFromApi) => {
+            onCompetitionUpdateRef.current(parseCompetitionDate(competition));
           },
         );
 
