@@ -14,18 +14,18 @@ describe("API JSON responses", () => {
 
   test("returns an unwrapped competition array", async () => {
     const competitions = [{ id: "1", name: "Test" }];
-    jest.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify(competitions)),
-    );
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify(competitions)));
 
     await expect(fetchAllCompetitions()).resolves.toEqual(competitions);
   });
 
   test("returns an unwrapped leaderboard object", async () => {
     const leaderboard = { columns: [], items: [] };
-    jest.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify(leaderboard)),
-    );
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify(leaderboard)));
 
     await expect(fetchLeaderboard("1", "2")).resolves.toEqual(leaderboard);
   });

@@ -19,7 +19,7 @@ test("extracts a site name from the direct Sapphire event page", async () => {
       ),
     );
   await expect(resolveSapphireSiteName("1495")).resolves.toBe("MyTrack");
-    expect(getRequestedUrl(request.mock.calls[0][0])).toBe(
+  expect(getRequestedUrl(request.mock.calls[0][0])).toBe(
     "https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1495",
   );
 });
@@ -32,6 +32,33 @@ test("reports an upstream error or a missing site name", async () => {
   await expect(resolveSapphireSiteName("2")).rejects.toThrow(
     "sitename not found",
   );
+});
+
+test("stops reading the response after finding the site name", async () => {
+  const encoder = new TextEncoder();
+  const pullCount = jest.fn();
+  const cancel = jest.fn();
+  const body = new ReadableStream<Uint8Array>(
+    {
+      pull(controller) {
+        pullCount();
+        if (pullCount.mock.calls.length === 1) {
+          controller.enqueue(encoder.encode('<a href="?site'));
+        } else if (pullCount.mock.calls.length === 2) {
+          controller.enqueue(encoder.encode('name=MyTrack&other=1">'));
+        } else {
+          controller.enqueue(encoder.encode("unused response content"));
+        }
+      },
+      cancel,
+    },
+    { highWaterMark: 0 },
+  );
+  jest.spyOn(globalThis, "fetch").mockResolvedValue(new Response(body));
+
+  await expect(resolveSapphireSiteName("1499")).resolves.toBe("MyTrack");
+  expect(pullCount).toHaveBeenCalledTimes(2);
+  expect(cancel).toHaveBeenCalled();
 });
 
 test("follows the redirect with the Sapphire session cookie", async () => {
@@ -50,9 +77,9 @@ test("follows the redirect with the Sapphire session cookie", async () => {
       new Response('<a href="?sitename=MyTrack&other=1">Enter</a>'),
     );
 
-  await expect(resolveSapphireSiteName("1495")).resolves.toBe("MyTrack");
+  await expect(resolveSapphireSiteName("1496")).resolves.toBe("MyTrack");
   expect(getRequestedUrl(request.mock.calls[0][0])).toBe(
-    "https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1495",
+    "https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1496",
   );
   expect(request).toHaveBeenCalledTimes(2);
   expect(request.mock.calls[0][1]).toEqual(
@@ -89,20 +116,19 @@ test("does not send the session cookie to another origin", async () => {
 test("reports invalid or excessive redirects", async () => {
   const request = jest.spyOn(globalThis, "fetch");
   request.mockResolvedValueOnce(new Response(null, { status: 302 }));
-  await expect(resolveSapphireSiteName("1495")).rejects.toThrow(
+  await expect(resolveSapphireSiteName("1497")).rejects.toThrow(
     "missing a location",
   );
 
-  request.mockImplementation(
-    () =>
-      Promise.resolve(
-        new Response(null, {
-          status: 302,
-          headers: { location: "eventdetails.php" },
-        }),
-      ),
+  request.mockImplementation(() =>
+    Promise.resolve(
+      new Response(null, {
+        status: 302,
+        headers: { location: "eventdetails.php" },
+      }),
+    ),
   );
-  await expect(resolveSapphireSiteName("1495")).rejects.toThrow(
+  await expect(resolveSapphireSiteName("1498")).rejects.toThrow(
     "Too many Sapphire redirects",
   );
   expect(request).toHaveBeenCalledTimes(7);

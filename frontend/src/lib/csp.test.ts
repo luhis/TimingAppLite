@@ -57,33 +57,33 @@ describe("Content-Security-Policy connect-src", () => {
   it("allows requests to the Sapphire Solutions API in both policies", () => {
     const apiOrigin = "https://autotest.sapphire-solutions.co.uk";
     expect(readGatsbySsrConnectSrc()).toContain(apiOrigin);
-    expect(readStaticWebAppConnectSrc("static/staticwebapp.config.json")).toContain(
-      apiOrigin,
-    );
+    expect(
+      readStaticWebAppConnectSrc("static/staticwebapp.config.json"),
+    ).toContain(apiOrigin);
   });
 
   it("allows requests to the Corsfix proxy in both policies", () => {
     const proxyOrigin = "https://lite.corsfix.com";
     expect(readGatsbySsrConnectSrc()).toContain(proxyOrigin);
-    expect(readStaticWebAppConnectSrc("static/staticwebapp.config.json")).toContain(
-      proxyOrigin,
-    );
+    expect(
+      readStaticWebAppConnectSrc("static/staticwebapp.config.json"),
+    ).toContain(proxyOrigin);
   });
 
   it("allows requests to the cors.lol proxy in both policies", () => {
     const proxyOrigin = "https://api.cors.lol";
     expect(readGatsbySsrConnectSrc()).toContain(proxyOrigin);
-    expect(readStaticWebAppConnectSrc("static/staticwebapp.config.json")).toContain(
-      proxyOrigin,
-    );
+    expect(
+      readStaticWebAppConnectSrc("static/staticwebapp.config.json"),
+    ).toContain(proxyOrigin);
   });
 
   it("allows requests to the cors.io proxy in both policies", () => {
     const proxyOrigin = "https://cors.io";
     expect(readGatsbySsrConnectSrc()).toContain(proxyOrigin);
-    expect(readStaticWebAppConnectSrc("static/staticwebapp.config.json")).toContain(
-      proxyOrigin,
-    );
+    expect(
+      readStaticWebAppConnectSrc("static/staticwebapp.config.json"),
+    ).toContain(proxyOrigin);
   });
 
   it("allows a wss:// upgrade for every azurewebsites.net/azurecontainerapps.io backend in gatsby-ssr.js", () => {
@@ -98,9 +98,9 @@ describe("Content-Security-Policy connect-src", () => {
 
   it("keeps gatsby-ssr.js and static/staticwebapp.config.json connect-src origins in sync", () => {
     const ssrOrigins = [...readGatsbySsrConnectSrc()].sort();
-    const swaOrigins = [...readStaticWebAppConnectSrc(
-      "static/staticwebapp.config.json",
-    )].sort();
+    const swaOrigins = [
+      ...readStaticWebAppConnectSrc("static/staticwebapp.config.json"),
+    ].sort();
     expect(swaOrigins).toEqual(ssrOrigins);
   });
 });

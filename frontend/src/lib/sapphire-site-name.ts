@@ -1,6 +1,7 @@
 const MAX_REDIRECTS = 5;
+const SITE_NAME_MARKER = "sitename=";
 
-export const resolveSapphireSiteName = async (
+const fetchSapphireSiteName = async (
   competitionId: string,
 ): Promise<string> => {
   const url = new URL(
@@ -53,13 +54,41 @@ export const resolveSapphireSiteName = async (
       );
     }
 
-    const html = await response.text();
-    const match = /sitename=([^"&]+)/.exec(html);
-    if (!match) {
-      throw new Error("sitename not found in event list");
-    }
-    return match[1];
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("sitename not found in event list");
+
+    const decoder = new TextDecoder();
+    const readSiteName = async (text: string): Promise<string> => {
+      const { value, done } = await reader.read();
+      const nextText = text + decoder.decode(value, { stream: !done });
+      const markerIndex = nextText.indexOf(SITE_NAME_MARKER);
+
+      if (markerIndex >= 0) {
+        const valueStart = markerIndex + SITE_NAME_MARKER.length;
+        const siteName = nextText.slice(valueStart);
+        const terminatorIndex = /[&"]/.exec(siteName)?.index;
+        if (terminatorIndex !== undefined) {
+          if (terminatorIndex > 0) {
+            await reader.cancel();
+            return siteName.slice(0, terminatorIndex);
+          }
+          return readSiteName(siteName.slice(1));
+        }
+        if (done && siteName.length > 0) return siteName;
+        if (done) throw new Error("sitename not found in event list");
+        return readSiteName(`${SITE_NAME_MARKER}${siteName}`);
+      }
+
+      if (done) throw new Error("sitename not found in event list");
+      return readSiteName(nextText.slice(-(SITE_NAME_MARKER.length - 1)));
+    };
+
+    return readSiteName("").finally(() => reader.releaseLock());
   };
 
   return fetchPage(url, 0);
 };
+
+export const resolveSapphireSiteName = (
+  competitionId: string,
+): Promise<string> => fetchSapphireSiteName(competitionId);
