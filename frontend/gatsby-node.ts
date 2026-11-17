@@ -7,7 +7,7 @@ import {
   fetchEventLeaderboard,
 } from "./src/lib/leaderboardApi";
 import { retryWithBackoff } from "./src/lib/retryWithBackoff";
-import { resolveSapphireSiteName } from "./sapphire-site-name";
+import { resolveSapphireSiteName } from "./src/lib/sapphire-site-name";
 
 const BUILD_FETCH_MAX_RETRIES = 3;
 const BUILD_FETCH_BASE_DELAY_MS = 5000;

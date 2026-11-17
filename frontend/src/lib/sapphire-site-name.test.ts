@@ -4,6 +4,12 @@ import { resolveSapphireSiteName } from "./sapphire-site-name";
 
 afterEach(() => jest.restoreAllMocks());
 
+const getRequestedUrl = (input: RequestInfo | URL): string => {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.href;
+  return input.url;
+};
+
 test("extracts a site name from the direct Sapphire event page", async () => {
   const request = jest
     .spyOn(globalThis, "fetch")
@@ -13,7 +19,7 @@ test("extracts a site name from the direct Sapphire event page", async () => {
       ),
     );
   await expect(resolveSapphireSiteName("1495")).resolves.toBe("MyTrack");
-  expect(request.mock.calls[0][0].toString()).toBe(
+    expect(getRequestedUrl(request.mock.calls[0][0])).toBe(
     "https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1495",
   );
 });
@@ -45,14 +51,14 @@ test("follows the redirect with the Sapphire session cookie", async () => {
     );
 
   await expect(resolveSapphireSiteName("1495")).resolves.toBe("MyTrack");
-  expect(request.mock.calls[0][0].toString()).toBe(
+  expect(getRequestedUrl(request.mock.calls[0][0])).toBe(
     "https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1495",
   );
   expect(request).toHaveBeenCalledTimes(2);
   expect(request.mock.calls[0][1]).toEqual(
     expect.objectContaining({ redirect: "manual" }),
   );
-  expect(request.mock.calls[1][0].toString()).toBe(
+  expect(getRequestedUrl(request.mock.calls[1][0])).toBe(
     "https://autotest.sapphire-solutions.co.uk/eventdetails.php",
   );
   expect(request.mock.calls[1][1]).toEqual(
@@ -88,11 +94,13 @@ test("reports invalid or excessive redirects", async () => {
   );
 
   request.mockImplementation(
-    async () =>
-      new Response(null, {
-        status: 302,
-        headers: { location: "eventdetails.php" },
-      }),
+    () =>
+      Promise.resolve(
+        new Response(null, {
+          status: 302,
+          headers: { location: "eventdetails.php" },
+        }),
+      ),
   );
   await expect(resolveSapphireSiteName("1495")).rejects.toThrow(
     "Too many Sapphire redirects",

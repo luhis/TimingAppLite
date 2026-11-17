@@ -6,7 +6,7 @@ import {
   fetchAllCompetitions,
   fetchEventLeaderboard,
 } from "./src/lib/leaderboardApi";
-import { resolveSapphireSiteName } from "./sapphire-site-name";
+import { resolveSapphireSiteName } from "./src/lib/sapphire-site-name";
 
 jest.mock("./src/lib/leaderboardApi", () => ({
   EVENT_COMPETITION_ID: "1435",
@@ -14,7 +14,7 @@ jest.mock("./src/lib/leaderboardApi", () => ({
   fetchAllCompetitions: jest.fn(),
   fetchEventLeaderboard: jest.fn(),
 }));
-jest.mock("./sapphire-site-name", () => ({
+jest.mock("./src/lib/sapphire-site-name", () => ({
   resolveSapphireSiteName: jest.fn(),
 }));
 jest.mock("./src/lib/retryWithBackoff", () => ({
@@ -25,10 +25,15 @@ jest.mock("./src/lib/retryWithBackoff", () => ({
 }));
 
 test("creates mappings for successful site lookups and continues after failures", async () => {
-  const previousBackendUrl = process.env.GATSBY_BACKEND_URL;
-  process.env.GATSBY_BACKEND_URL = "http://localhost";
+  const backendUrl = jest.replaceProperty(process, "env", {
+    ...process.env,
+    GATSBY_BACKEND_URL: "http://localhost",
+  });
   const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-  const createNode = jest.fn();
+  const createNode = jest.fn<
+    ReturnType<SourceNodesArgs["actions"]["createNode"]>,
+    Parameters<SourceNodesArgs["actions"]["createNode"]>
+  >();
   jest.mocked(fetchAllCompetitions).mockResolvedValue([
     {
       id: "1",
@@ -47,10 +52,11 @@ test("creates mappings for successful site lookups and continues after failures"
       finalised: null,
     },
   ]);
-  jest.mocked(resolveSapphireSiteName).mockImplementation(async (id) => {
-    if (id === "2") throw new Error("not found");
-    return "one-site";
-  });
+  jest.mocked(resolveSapphireSiteName).mockImplementation((id) =>
+    id === "2"
+      ? Promise.reject(new Error("not found"))
+      : Promise.resolve("one-site"),
+  );
 
   jest
     .mocked(fetchEventLeaderboard)
@@ -69,14 +75,15 @@ test("creates mappings for successful site lookups and continues after failures"
       () => {},
     );
     expect(resolveSapphireSiteName).toHaveBeenCalledTimes(2);
-    expect(createNode).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: "CompetitionSiteName-1",
-        competitionId: "1",
-        siteName: "one-site",
-        internal: expect.objectContaining({ type: "CompetitionSiteName" }),
-      }),
-    );
+    expect(
+      createNode.mock.calls.some(
+        ([node]) =>
+          node.id === "CompetitionSiteName-1" &&
+          node.competitionId === "1" &&
+          node.siteName === "one-site" &&
+          node.internal.type === "CompetitionSiteName",
+      ),
+    ).toBe(true);
     expect(createNode).not.toHaveBeenCalledWith(
       expect.objectContaining({ id: "CompetitionSiteName-2" }),
     );
@@ -88,15 +95,16 @@ test("creates mappings for successful site lookups and continues after failures"
       expect.objectContaining({ id: "EventList-1435-99999" }),
     );
   } finally {
-    if (previousBackendUrl === undefined) delete process.env.GATSBY_BACKEND_URL;
-    else process.env.GATSBY_BACKEND_URL = previousBackendUrl;
+    backendUrl.restore();
     errorSpy.mockRestore();
   }
 });
 
 test("waits for each batch of site-name requests before starting the next", async () => {
-  const previousBackendUrl = process.env.GATSBY_BACKEND_URL;
-  process.env.GATSBY_BACKEND_URL = "http://localhost";
+  const backendUrl = jest.replaceProperty(process, "env", {
+    ...process.env,
+    GATSBY_BACKEND_URL: "http://localhost",
+  });
   const gate = Promise.withResolvers<void>();
   const siteName = jest.mocked(resolveSapphireSiteName);
   siteName.mockReset();
@@ -138,7 +146,6 @@ test("waits for each batch of site-name requests before starting the next", asyn
     expect(siteName).toHaveBeenCalledTimes(5);
   } finally {
     gate.resolve();
-    if (previousBackendUrl === undefined) delete process.env.GATSBY_BACKEND_URL;
-    else process.env.GATSBY_BACKEND_URL = previousBackendUrl;
+    backendUrl.restore();
   }
 });
