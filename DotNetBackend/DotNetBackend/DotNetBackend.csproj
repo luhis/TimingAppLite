@@ -4,7 +4,7 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
     <WarningLevel>1</WarningLevel>
-    <NoWarn>1701;1702</NoWarn>
+    <NoWarn>1701;1702;IL2104;IL3053</NoWarn>
     <ContainerBaseImage>mcr.microsoft.com/dotnet/runtime-deps:11.0-alpine</ContainerBaseImage>
     <ContainerPort>8080</ContainerPort>
   </PropertyGroup>
@@ -14,6 +14,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.15" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.15" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="10.0.15" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.13.1" />

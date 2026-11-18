@@ -3,6 +3,7 @@ import {
   HttpTransportType,
   LogLevel,
 } from "@microsoft/signalr";
+import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import { useEffect, useRef } from "react";
 
 import { trackException } from "../lib/appInsights";
@@ -75,6 +76,7 @@ export const useLeaderboardStream = (
                 HttpTransportType.WebSockets | HttpTransportType.LongPolling,
             },
           )
+          .withHubProtocol(new MessagePackHubProtocol())
           .withAutomaticReconnect()
           .configureLogging(LogLevel.Warning)
           .build();

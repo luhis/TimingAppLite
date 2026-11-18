@@ -23,11 +23,16 @@ jest.mock("@microsoft/signalr", () => ({
   HubConnectionBuilder: jest.fn().mockImplementation(() => ({
     withUrl: mockWithUrl,
     withAutomaticReconnect: mockWithAutomaticReconnect,
+    withHubProtocol: jest.fn().mockReturnThis(),
     configureLogging: mockConfigureLogging,
     build: mockBuild,
   })),
   HttpTransportType: { WebSockets: 1, LongPolling: 4 },
   LogLevel: { Warning: 2 },
+}));
+
+jest.mock("@microsoft/signalr-protocol-msgpack", () => ({
+  MessagePackHubProtocol: jest.fn(),
 }));
 
 jest.mock("../lib/appInsights", () => ({

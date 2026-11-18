@@ -22,7 +22,9 @@ builder.Services.AddSingleton<LeaderboardService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<LeaderboardService>());
 builder.Services.AddSignalR()
     .AddJsonProtocol(options =>
-        options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default));
+        options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default))
+    .AddAotSafeMessagePack();
+
 
 builder.Services.AddResponseCompression(options =>
 {
