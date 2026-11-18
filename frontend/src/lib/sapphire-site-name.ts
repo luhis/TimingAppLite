@@ -5,7 +5,7 @@ const fetchSapphireSiteName = async (
   competitionId: string,
 ): Promise<string> => {
   const url = new URL(
-    "https://autotest.sapphire-solutions.co.uk/eventlist.php",
+    "https://timingapplive.co.uk/eventlist.php",
   );
   url.searchParams.set("event", competitionId);
 
