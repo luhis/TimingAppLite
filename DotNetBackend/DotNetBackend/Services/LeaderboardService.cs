@@ -45,12 +45,21 @@ public sealed partial class LeaderboardService(IApiClient apiClient, IHubContext
                         continue;
                     }
 
-                    if (comp.Active == ActiveStatus.Live && IsCompetitionToday(comp))
+                    if (_optimisePushUpdates)
                     {
-                        await SafePushChanges(key, stoppingToken);
+
+                        if (comp.Active == ActiveStatus.Live && IsCompetitionToday(comp))
+                        {
+                            await SafePushChanges(key, stoppingToken);
+                        }
+                        else
+                        {
+                            await PushCompetitionUpdate(key.competitionId, key.leaderboardId, comp, stoppingToken);
+                        }
                     }
                     else
                     {
+                        await SafePushChanges(key, stoppingToken);
                         await PushCompetitionUpdate(key.competitionId, key.leaderboardId, comp, stoppingToken);
                     }
                 }
