@@ -2,13 +2,6 @@
 
 import { resolveSapphireSiteName } from "./sapphire-site-name";
 
-beforeEach(() => {
-  jest.replaceProperty(process, "env", {
-    ...process.env,
-    GATSBY_BACKEND_URL: "https://timingapplive.co.uk/",
-  });
-});
-
 afterEach(() => jest.restoreAllMocks());
 
 const getRequestedUrl = (input: RequestInfo | URL): string => {
@@ -17,10 +10,10 @@ const getRequestedUrl = (input: RequestInfo | URL): string => {
   return input.url;
 };
 
-test("extracts a site name using the configured base URL", async () => {
+test("extracts a site name from Sapphire independently of the backend URL", async () => {
   jest.replaceProperty(process, "env", {
     ...process.env,
-    GATSBY_BACKEND_URL: "https://events.example.test/base/",
+    GATSBY_BACKEND_URL: "https://backend.example.test/",
   });
   const request = jest
     .spyOn(globalThis, "fetch")
@@ -31,20 +24,8 @@ test("extracts a site name using the configured base URL", async () => {
     );
   await expect(resolveSapphireSiteName("1495")).resolves.toBe("MyTrack");
   expect(getRequestedUrl(request.mock.calls[0][0])).toBe(
-    "https://events.example.test/base/eventlist.php?event=1495",
+    "https://timingapplive.co.uk/eventlist.php?event=1495",
   );
-});
-
-test("reports a missing configured base URL", async () => {
-  jest.replaceProperty(process, "env", {
-    ...process.env,
-    GATSBY_BACKEND_URL: undefined,
-  });
-  const request = jest.spyOn(globalThis, "fetch");
-  await expect(resolveSapphireSiteName("1")).rejects.toThrow(
-    "GATSBY_BACKEND_URL is not set",
-  );
-  expect(request).not.toHaveBeenCalled();
 });
 
 test("reports an upstream error or a missing site name", async () => {

@@ -1,12 +1,11 @@
 const MAX_REDIRECTS = 5;
 const SITE_NAME_MARKER = "sitename=";
+const SAPPHIRE_EVENT_LIST_URL = "https://timingapplive.co.uk/eventlist.php";
 
 const fetchSapphireSiteName = async (
   competitionId: string,
 ): Promise<string> => {
-  const baseUrl = process.env.GATSBY_BACKEND_URL;
-  if (!baseUrl) throw new Error("GATSBY_BACKEND_URL is not set");
-  const url = new URL(`${baseUrl.replace(/\/+$/, "")}/eventlist.php`);
+  const url = new URL(SAPPHIRE_EVENT_LIST_URL);
   url.searchParams.set("event", competitionId);
 
   const origin = url.origin;
