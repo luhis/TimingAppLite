@@ -379,8 +379,8 @@ public class ApiClientTests
         otherCompetition.Should().Be("TestTrack");
         handler.RequestUris.Should().HaveCount(3);
         handler.RequestUris[0].Host.Should().Be("proxy.cors.dev");
-        handler.RequestUris[1].AbsoluteUri.Should().Be("https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1471");
-        handler.RequestUris[2].AbsoluteUri.Should().Be("https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1472");
+        handler.RequestUris[1].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1471");
+        handler.RequestUris[2].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1472");
     }
 
     [Fact]
