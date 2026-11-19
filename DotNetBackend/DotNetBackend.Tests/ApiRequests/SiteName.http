@@ -11,5 +11,8 @@ Accept: application/json
 ### Sapphire Base
 GET https://autotest.sapphire-solutions.co.uk/eventlist.php?event={{competitionId}}
 
+### TAL Base
+GET https://timingapplive.co.uk/eventlist.php?event={{competitionId}}
+
 ### proxied sapphire
 GET https://proxy.cors.dev/https%3A%2F%2Fautotest.sapphire-solutions.co.uk%2Feventlist.php%3Fevent%3D{{competitionId}}

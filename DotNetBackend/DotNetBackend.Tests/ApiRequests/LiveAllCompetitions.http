@@ -5,3 +5,7 @@ Accept: application/json
 ### LiveAllCompetitionsNoProxy  
 GET {{baseUrl}}/API/1/LiveAllCompetitionsNoProxy/
 Accept: application/json
+
+### LiveAllCompetitions new base  
+GET https://timingapplive.co.uk/API/1/LiveAllCompetitionsNoProxy/
+Accept: application/json

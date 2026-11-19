@@ -4,9 +4,9 @@ const SITE_NAME_MARKER = "sitename=";
 const fetchSapphireSiteName = async (
   competitionId: string,
 ): Promise<string> => {
-  const url = new URL(
-    "https://timingapplive.co.uk/eventlist.php",
-  );
+  const baseUrl = process.env.GATSBY_BACKEND_URL;
+  if (!baseUrl) throw new Error("GATSBY_BACKEND_URL is not set");
+  const url = new URL(`${baseUrl.replace(/\/+$/, "")}/eventlist.php`);
   url.searchParams.set("event", competitionId);
 
   const origin = url.origin;

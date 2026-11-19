@@ -2,6 +2,13 @@
 
 import { resolveSapphireSiteName } from "./sapphire-site-name";
 
+beforeEach(() => {
+  jest.replaceProperty(process, "env", {
+    ...process.env,
+    GATSBY_BACKEND_URL: "https://timingapplive.co.uk/",
+  });
+});
+
 afterEach(() => jest.restoreAllMocks());
 
 const getRequestedUrl = (input: RequestInfo | URL): string => {
@@ -10,7 +17,11 @@ const getRequestedUrl = (input: RequestInfo | URL): string => {
   return input.url;
 };
 
-test("extracts a site name from the direct Sapphire event page", async () => {
+test("extracts a site name using the configured base URL", async () => {
+  jest.replaceProperty(process, "env", {
+    ...process.env,
+    GATSBY_BACKEND_URL: "https://events.example.test/base/",
+  });
   const request = jest
     .spyOn(globalThis, "fetch")
     .mockResolvedValue(
@@ -20,8 +31,20 @@ test("extracts a site name from the direct Sapphire event page", async () => {
     );
   await expect(resolveSapphireSiteName("1495")).resolves.toBe("MyTrack");
   expect(getRequestedUrl(request.mock.calls[0][0])).toBe(
-    "https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1495",
+    "https://events.example.test/base/eventlist.php?event=1495",
   );
+});
+
+test("reports a missing configured base URL", async () => {
+  jest.replaceProperty(process, "env", {
+    ...process.env,
+    GATSBY_BACKEND_URL: undefined,
+  });
+  const request = jest.spyOn(globalThis, "fetch");
+  await expect(resolveSapphireSiteName("1")).rejects.toThrow(
+    "GATSBY_BACKEND_URL is not set",
+  );
+  expect(request).not.toHaveBeenCalled();
 });
 
 test("reports an upstream error or a missing site name", async () => {
@@ -79,14 +102,14 @@ test("follows the redirect with the Sapphire session cookie", async () => {
 
   await expect(resolveSapphireSiteName("1496")).resolves.toBe("MyTrack");
   expect(getRequestedUrl(request.mock.calls[0][0])).toBe(
-    "https://autotest.sapphire-solutions.co.uk/eventlist.php?event=1496",
+    "https://timingapplive.co.uk/eventlist.php?event=1496",
   );
   expect(request).toHaveBeenCalledTimes(2);
   expect(request.mock.calls[0][1]).toEqual(
     expect.objectContaining({ redirect: "manual" }),
   );
   expect(getRequestedUrl(request.mock.calls[1][0])).toBe(
-    "https://autotest.sapphire-solutions.co.uk/eventdetails.php",
+    "https://timingapplive.co.uk/eventdetails.php",
   );
   expect(request.mock.calls[1][1]).toEqual(
     expect.objectContaining({

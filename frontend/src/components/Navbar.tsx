@@ -100,11 +100,10 @@ export const Navbar = () => {
           <strong>Timing App Lite</strong>
         </BulmaNavbar.Item>
         <BulmaNavbar.Burger
-          active={mobileOpen}
           onClick={() => setMobileOpen((prev) => !prev)}
         />
       </BulmaNavbar.Brand>
-      <BulmaNavbar.Menu active={mobileOpen}>
+      <BulmaNavbar.Menu>
         {navItems.map((item) => (
           <BulmaNavbar.Item
             key={item.to}
