@@ -116,7 +116,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     private static string LiveAllCompetitionsUrl() =>
         $"{ApiBase}/LiveAllCompetitions/";
     private static string LiveAllCompetitionsNoProxyUrl() =>
-        $"https://autotest.sapphire-solutions.co.uk/API/1/LiveAllCompetitions/";
+        $"https://timingapplive.co.uk/API/1/LiveAllCompetitions/";
 
     private static string LeaderboardsUrl(int competitionId, int? leaderboardId) =>
         $"{ApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
@@ -128,7 +128,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         GetSiteNameAsync(competitionId, EventListUrl(competitionId), nameof(IApiClient.GetSiteName), ct);
 
     Task<string> IApiClient.GetSiteNameNoProxy(int competitionId, CancellationToken ct) =>
-        GetSiteNameAsync(competitionId, $"https://autotest.sapphire-solutions.co.uk/eventlist.php?event={competitionId}", nameof(IApiClient.GetSiteNameNoProxy), ct);
+        GetSiteNameAsync(competitionId, $"https://timingapplive.co.uk/eventlist.php?event={competitionId}", nameof(IApiClient.GetSiteNameNoProxy), ct);
 
     private async Task<string> GetSiteNameAsync(int competitionId, string url, string cachePrefix, CancellationToken ct)
     {
