@@ -30,6 +30,7 @@ test("creates mappings for successful site lookups and continues after failures"
     GATSBY_BACKEND_URL: "http://localhost",
   });
   const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
   const createNode = jest.fn<
     ReturnType<SourceNodesArgs["actions"]["createNode"]>,
     Parameters<SourceNodesArgs["actions"]["createNode"]>
@@ -91,12 +92,14 @@ test("creates mappings for successful site lookups and continues after failures"
       expect.stringContaining("competition 2"),
       expect.any(Error),
     );
+    expect(logSpy).toHaveBeenCalledWith("✅ Fetched 1 site names");
     expect(createNode).toHaveBeenCalledWith(
       expect.objectContaining({ id: "EventList-1435-99999" }),
     );
   } finally {
     backendUrl.restore();
     errorSpy.mockRestore();
+    logSpy.mockRestore();
   }
 });
 
@@ -105,6 +108,7 @@ test("waits for each batch of site-name requests before starting the next", asyn
     ...process.env,
     GATSBY_BACKEND_URL: "http://localhost",
   });
+  const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
   const gate = Promise.withResolvers<void>();
   const siteName = jest.mocked(resolveSapphireSiteName);
   siteName.mockReset();
@@ -144,8 +148,10 @@ test("waits for each batch of site-name requests before starting the next", asyn
     gate.resolve();
     await sourcing;
     expect(siteName).toHaveBeenCalledTimes(5);
+    expect(logSpy).toHaveBeenCalledWith("✅ Fetched 5 site names");
   } finally {
     gate.resolve();
     backendUrl.restore();
+    logSpy.mockRestore();
   }
 });

@@ -124,12 +124,12 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
           .filter(Boolean),
       ),
     ];
-    const sourceSiteNameBatch = async (offset: number): Promise<void> => {
+    const sourceSiteNameBatch = async (offset: number): Promise<number> => {
       if (offset >= competitionIds.length) {
-        return;
+        return 0;
       }
 
-      await Promise.all(
+      const results = await Promise.all(
         competitionIds
           .slice(offset, offset + SITE_NAME_BATCH_SIZE)
           .map(async (competitionId) => {
@@ -146,17 +146,23 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
                   contentDigest: createContentDigest(mapping),
                 },
               });
+              return 1;
             } catch (error) {
               console.error(
                 `❌ Error fetching site name for competition ${competitionId}:`,
                 error,
               );
+              return 0;
             }
           }),
       );
-      await sourceSiteNameBatch(offset + SITE_NAME_BATCH_SIZE);
+      return (
+        results.reduce<number>((total, result) => total + result, 0) +
+        (await sourceSiteNameBatch(offset + SITE_NAME_BATCH_SIZE))
+      );
     };
-    await sourceSiteNameBatch(0);
+    const siteNameCount = await sourceSiteNameBatch(0);
+    console.log(`✅ Fetched ${siteNameCount} site names`);
   } catch (error) {
     console.error("❌ Error fetching competitions:", error);
   }
