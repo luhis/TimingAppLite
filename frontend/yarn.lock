@@ -10320,10 +10320,10 @@ preact-render-to-string@^6.7.0:
   resolved "https://registry.yarnpkg.com/preact-render-to-string/-/preact-render-to-string-6.8.3.tgz#7ce983a792e19d8386a47868fe01661cf972b0ac"
   integrity sha512-yg04edGH7f5yfBUV4uyL2brzPB3e26AimLO5WNfUtwoCv8LBJ7Z+dElG8P5v+o8UqMUM6kZhnn4I/HEXNyP0ZQ==
 
-preact@^10.29.2:
-  version "10.29.8"
-  resolved "https://registry.yarnpkg.com/preact/-/preact-10.29.8.tgz#fc85b82dc2474e245b1430b51781d417361f5fc3"
-  integrity sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q==
+preact@^11.0.0:
+  version "11.2.0"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-11.2.0.tgz#8667ca0531eb0efa529208892321313d8d3fc8d4"
+  integrity sha512-/HfHI/7N84e6GrWBJ3J280z3mLaRJiDcSvj/A+y/4AbLnND/1UlGHe1sR6oYuTGwId0nP7dqDU9OnLxMPZ7xBg==
 
 prebuild-install@^7.1.1:
   version "7.1.3"
