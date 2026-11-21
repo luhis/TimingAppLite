@@ -121,13 +121,13 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         $"{ApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
 
     private static string EventListUrl(int competitionId) =>
-        $"{EventListBase}?event%3D{competitionId}";
+        $"{EventListBase}?event={competitionId}";
 
     Task<string> IApiClient.GetSiteName(int competitionId, CancellationToken ct) =>
         GetSiteNameAsync(competitionId, EventListUrl(competitionId), nameof(IApiClient.GetSiteName), ct);
 
     Task<string> IApiClient.GetSiteNameNoProxy(int competitionId, CancellationToken ct) =>
-        GetSiteNameAsync(competitionId, $"https://timingapplive.co.uk/eventlist.php?event={competitionId}", nameof(IApiClient.GetSiteNameNoProxy), ct);
+        GetSiteNameAsync(competitionId, EventListUrl(competitionId), nameof(IApiClient.GetSiteNameNoProxy), ct);
 
     private async Task<string> GetSiteNameAsync(int competitionId, string url, string cachePrefix, CancellationToken ct)
     {

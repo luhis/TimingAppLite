@@ -32,6 +32,23 @@ public class ApiClientTests
         result.Bytes.Should().Equal(body);
         result.ContentType.Should().Be("application/json");
         handler.CallCount.Should().Be(1);
+        handler.RequestUris.Should().ContainSingle().Which.AbsoluteUri.Should()
+            .Be("https://timingapplive.co.uk/API/1/LiveAllCompetitions/");
+    }
+
+    [Fact]
+    public async Task GetLiveAllCompetitionsNoProxy_UsesDirectUrl()
+    {
+        var body = """[{"id":1}]"""u8.ToArray();
+        var handler = new StubHttpHandler(body, "application/json");
+        var client = CreateClient(handler);
+
+        var result = await client.GetLiveAllCompetitionsNoProxy(TestContext.Current.CancellationToken);
+
+        result.Bytes.Should().Equal(body);
+        result.ContentType.Should().Be("application/json");
+        handler.RequestUris.Should().ContainSingle().Which.AbsoluteUri.Should()
+            .Be("https://timingapplive.co.uk/API/1/LiveAllCompetitions/");
     }
 
     [Fact]
@@ -83,6 +100,8 @@ public class ApiClientTests
         result.Bytes.Should().Equal(body);
         result.ContentType.Should().Be("application/json");
         handler.CallCount.Should().Be(1);
+        handler.RequestUris.Should().ContainSingle().Which.AbsoluteUri.Should()
+            .Be("https://timingapplive.co.uk/API/1/Competitions/1/Leaderboards/");
     }
 
     [Fact]
@@ -250,6 +269,8 @@ public class ApiClientTests
 
         result.Columns.Should().ContainSingle(c => c.Name == "Pos" && c.Label == "Position");
         result.Items.Should().ContainSingle(r => r["Pos"] == "1" && r["Driver"] == "Alice");
+        handler.RequestUris.Should().ContainSingle().Which.AbsoluteUri.Should()
+            .Be("https://timingapplive.co.uk/API/1/Competitions/1/Leaderboards/2");
     }
 
     [Fact]
@@ -362,23 +383,23 @@ public class ApiClientTests
     }
 
     [Fact]
-    public async Task GetSiteNameNoProxy_UsesDirectUrl_AndCachesSeparatelyFromProxy()
+    public async Task GetSiteNameNoProxy_UsesDirectUrl_AndCachesSeparatelyFromGetSiteName()
     {
         var html = """<a href="https://example.com/page?sitename=TestTrack&other=1">Link</a>""";
         var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(html), "text/html");
         var client = CreateClient(handler);
 
-        var proxied = await client.GetSiteName(1471, TestContext.Current.CancellationToken);
+        var siteName = await client.GetSiteName(1471, TestContext.Current.CancellationToken);
         var direct = await client.GetSiteNameNoProxy(1471, TestContext.Current.CancellationToken);
         var cached = await client.GetSiteNameNoProxy(1471, TestContext.Current.CancellationToken);
         var otherCompetition = await client.GetSiteNameNoProxy(1472, TestContext.Current.CancellationToken);
 
-        proxied.Should().Be("TestTrack");
+        siteName.Should().Be("TestTrack");
         direct.Should().Be("TestTrack");
         cached.Should().Be("TestTrack");
         otherCompetition.Should().Be("TestTrack");
         handler.RequestUris.Should().HaveCount(3);
-        handler.RequestUris[0].Host.Should().Be("proxy.cors.dev");
+        handler.RequestUris[0].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1471");
         handler.RequestUris[1].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1471");
         handler.RequestUris[2].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1472");
     }
