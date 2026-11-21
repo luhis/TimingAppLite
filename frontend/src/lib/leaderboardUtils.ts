@@ -35,7 +35,14 @@ export const mergeRowsByEntry = (
 
   const mergedExistingRows = existingRows.map((row) => {
     const key = getEntryKey(row);
-    return key ? (incomingByKey[key] ?? row) : row;
+    const incomingRow = key ? incomingByKey[key] : undefined;
+    return incomingRow
+      ? Object.entries(incomingRow).reduce<LeaderboardItem>(
+          (updatedRow, [column, value]) =>
+            value === "" ? updatedRow : { ...updatedRow, [column]: value },
+          row,
+        )
+      : row;
   });
 
   const existingKeys = mergedExistingRows.reduce<Record<string, true>>(

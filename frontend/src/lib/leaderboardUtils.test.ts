@@ -60,6 +60,38 @@ describe("mergeRowsByEntry", () => {
     ]);
   });
 
+  test("preserves existing values when an update contains an empty string", () => {
+    const existing: readonly LeaderboardItem[] = [
+      {
+        _index: 0,
+        entry: "1",
+        driver: "Alice",
+        time: "1:30",
+        classname: "Class A",
+      },
+    ];
+
+    const incoming: readonly LeaderboardItem[] = [
+      {
+        _index: 0,
+        entry: "1",
+        driver: "",
+        time: "1:25",
+        classname: "Class A",
+      },
+    ];
+
+    expect(mergeRowsByEntry(existing, incoming)).toEqual([
+      {
+        _index: 0,
+        entry: "1",
+        driver: "Alice",
+        time: "1:25",
+        classname: "Class A",
+      },
+    ]);
+  });
+
   test("appends new rows that don't exist in existing", () => {
     const existing: readonly LeaderboardItem[] = [
       {
