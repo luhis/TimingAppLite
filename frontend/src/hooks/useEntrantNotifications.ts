@@ -9,17 +9,21 @@ const getPermission = (): NotificationPermission =>
     ? Notification.permission
     : "denied";
 
-const latestTestValue = (
+const changedTestValues = (
   row: LeaderboardItem,
-): { readonly number: number; readonly value: string } | undefined => {
-  const testKeys = Object.keys(row)
-    .filter((k) => /^test\d+$/.test(k))
-    .sort((a, b) => Number(a.slice(4)) - Number(b.slice(4)));
-  const last = testKeys[testKeys.length - 1];
-  return last
-    ? { number: Number(last.slice(4)), value: String(row[last] ?? "") }
-    : undefined;
-};
+  previousRow: LeaderboardItem | undefined,
+): readonly { readonly number: number; readonly value: string }[] =>
+  Object.keys(row)
+    .filter(
+      (key) =>
+        /^test\d+$/.test(key) &&
+        String(row[key] ?? "") !== "" &&
+        String(row[key] ?? "") !== String(previousRow?.[key] ?? ""),
+    )
+    .map((key) => ({
+      number: Number(key.slice(4)),
+      value: String(row[key]),
+    }));
 
 export const useEntrantNotifications = () => {
   const [permission, setPermission] =
@@ -50,6 +54,7 @@ export const useEntrantNotifications = () => {
       rows: readonly LeaderboardItem[],
       isFavourite: (entry: string) => boolean,
       competitionName: string,
+      previousRows: readonly LeaderboardItem[],
     ) => {
       if (
         typeof window === "undefined" ||
@@ -68,13 +73,24 @@ export const useEntrantNotifications = () => {
           })
           .forEach((row) => {
             const entry = String(row.entry);
+            const previousRow = previousRows.find(
+              (previous) =>
+                previous.entry !== undefined &&
+                String(previous.entry) === entry,
+            );
+            const testValues = changedTestValues(row, previousRow);
+            if (testValues.length === 0) {
+              return;
+            }
             const driver =
               typeof row.driver === "string" ? row.driver : `Entry ${entry}`;
             const pos = row.pos !== undefined ? ` (P${row.pos})` : "";
-            const testVal = latestTestValue(row);
-            const body = testVal
-              ? `Test ${testVal.number} result in ${competitionName} — ${testVal.value}`
-              : `New result in ${competitionName}`;
+            const body = testValues
+              .map(
+                (testVal) =>
+                  `Test ${testVal.number} result in ${competitionName} — ${testVal.value}`,
+              )
+              .join("\n");
 
             void registration.showNotification(`${entry} - ${driver}${pos}`, {
               body,

@@ -62,6 +62,7 @@ describe("useEntrantNotifications", () => {
     ...(pos !== undefined ? { pos } : {}),
     classname: "Class A",
     time: "1:30",
+    test1: "48.2",
   });
 
   describe("notifyIfFavourite", () => {
@@ -72,14 +73,14 @@ describe("useEntrantNotifications", () => {
       const isFavourite = (entry: string) => entry === "5";
 
       await act(async () => {
-        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp", []);
         await Promise.resolve();
       });
 
       expect(mockShowNotification).toHaveBeenCalledTimes(1);
       expect(mockShowNotification).toHaveBeenCalledWith(
         "5 - Alice (P1)",
-        expect.objectContaining({ body: "New result in Test Comp" }),
+        expect.objectContaining({ body: "Test 1 result in Test Comp — 48.2" }),
       );
     });
 
@@ -90,7 +91,7 @@ describe("useEntrantNotifications", () => {
       const isFavourite = (entry: string) => entry === "99";
 
       await act(async () => {
-        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp", []);
         await Promise.resolve();
       });
 
@@ -108,7 +109,7 @@ describe("useEntrantNotifications", () => {
       const isFavourite = (entry: string) => entry === "1" || entry === "3";
 
       await act(async () => {
-        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp", []);
         await Promise.resolve();
       });
 
@@ -138,7 +139,7 @@ describe("useEntrantNotifications", () => {
       const isFavourite = () => true;
 
       await act(async () => {
-        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp", []);
         await Promise.resolve();
       });
 
@@ -156,13 +157,13 @@ describe("useEntrantNotifications", () => {
       const isFavourite = () => true;
 
       await act(async () => {
-        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp", []);
         await Promise.resolve();
       });
 
       expect(mockShowNotification).toHaveBeenCalledWith(
         "1 - Alice",
-        expect.objectContaining({ body: "New result in Test Comp" }),
+        expect.objectContaining({ body: "Test 1 result in Test Comp — 48.2" }),
       );
     });
 
@@ -175,7 +176,7 @@ describe("useEntrantNotifications", () => {
       const isFavourite = () => true;
 
       await act(async () => {
-        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp", []);
         await Promise.resolve();
       });
 
@@ -190,14 +191,14 @@ describe("useEntrantNotifications", () => {
       const isFavourite = () => true;
 
       await act(async () => {
-        result.current.notifyIfFavourite([], isFavourite, "Test Comp");
+        result.current.notifyIfFavourite([], isFavourite, "Test Comp", []);
         await Promise.resolve();
       });
 
       expect(mockShowNotification).not.toHaveBeenCalled();
     });
 
-    test("includes latest test value in body", async () => {
+    test("reports the changed test even when a higher-numbered test already has a result", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
       const rows: LeaderboardItem[] = [
@@ -213,35 +214,77 @@ describe("useEntrantNotifications", () => {
           test4: "57.0 55.9 55.8  TOT=111.7",
         },
       ];
+      const previousRows = [{ ...rows[0], test2: "" }];
       const isFavourite = (entry: string) => entry === "5";
 
       await act(async () => {
-        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        result.current.notifyIfFavourite(
+          rows,
+          isFavourite,
+          "Test Comp",
+          previousRows,
+        );
         await Promise.resolve();
       });
 
       expect(mockShowNotification).toHaveBeenCalledWith(
         "5 - Alice (P1)",
         expect.objectContaining({
-          body: "Test 4 result in Test Comp — 57.0 55.9 55.8  TOT=111.7",
+          body: "Test 2 result in Test Comp — 60.0 59.1 58.2  TOT=117.3",
         }),
       );
     });
 
-    test("body has no test value when no testX columns present", async () => {
+    test("does not notify for missing, empty, or unchanged test values", async () => {
       const { result } = renderHook(() => useEntrantNotifications());
 
-      const rows = [makeRow("1", "Alice", "1")];
+      const rows = [
+        { ...makeRow("1", "Alice"), test1: "" },
+        { ...makeRow("2", "Bob"), test1: undefined },
+        makeRow("3", "Charlie"),
+        { _index: 0, classname: "Class A", entry: "4", driver: "Dana" },
+      ];
+      const previousRows = [makeRow("1", "Alice"), makeRow("3", "Charlie")];
       const isFavourite = () => true;
 
       await act(async () => {
-        result.current.notifyIfFavourite(rows, isFavourite, "Test Comp");
+        result.current.notifyIfFavourite(
+          rows,
+          isFavourite,
+          "Test Comp",
+          previousRows,
+        );
         await Promise.resolve();
       });
 
+      expect(mockShowNotification).not.toHaveBeenCalled();
+    });
+
+    test("includes every changed non-empty test in one notification", async () => {
+      const { result } = renderHook(() => useEntrantNotifications());
+      const previousRows = [
+        { ...makeRow("1", "Alice"), test2: "", test3: "old" },
+      ];
+      const rows = [
+        { ...previousRows[0], test1: "50", test2: "60", test3: "" },
+      ];
+
+      await act(async () => {
+        result.current.notifyIfFavourite(
+          rows,
+          () => true,
+          "Test Comp",
+          previousRows,
+        );
+        await Promise.resolve();
+      });
+
+      expect(mockShowNotification).toHaveBeenCalledTimes(1);
       expect(mockShowNotification).toHaveBeenCalledWith(
-        "1 - Alice (P1)",
-        expect.objectContaining({ body: "New result in Test Comp" }),
+        "1 - Alice",
+        expect.objectContaining({
+          body: "Test 1 result in Test Comp — 50\nTest 2 result in Test Comp — 60",
+        }),
       );
     });
   });

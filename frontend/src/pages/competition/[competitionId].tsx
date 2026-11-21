@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { graphql, type HeadFC } from "gatsby";
@@ -84,6 +85,11 @@ const CompetitionPage = ({
   const [streamResults, setStreamResults] = useState(true);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
   const [eventNotes, setEventNotes] = useState("");
+  const notificationRowsRef = useRef<{
+    readonly competitionId: string;
+    readonly leaderboardId: string;
+    readonly rows: readonly LeaderboardItem[];
+  } | null>(null);
 
   const {
     favouriteEntries,
@@ -185,6 +191,8 @@ const CompetitionPage = ({
       return;
     }
 
+    // eslint-disable-next-line functional/immutable-data -- discard the previous leaderboard snapshot
+    notificationRowsRef.current = null;
     const controller = new AbortController();
 
     const loadLeaderboard = async () => {
@@ -204,6 +212,12 @@ const CompetitionPage = ({
               ...item,
               _index: index,
             })),
+          };
+          // eslint-disable-next-line functional/immutable-data -- snapshot used to compare streamed updates
+          notificationRowsRef.current = {
+            competitionId,
+            leaderboardId,
+            rows: indexedData.items,
           };
           setLeaderboardState({ status: "success", data: indexedData });
         }
@@ -270,6 +284,25 @@ const CompetitionPage = ({
   const handleRowUpdate = useCallback(
     (rows: readonly LeaderboardItem[]) => {
       setLastUpdateTime(new Date());
+      const previous = notificationRowsRef.current;
+      if (
+        previous?.competitionId === competitionId &&
+        previous.leaderboardId === leaderboardId
+      ) {
+        if (favouriteEntries.size > 0) {
+          notifyIfFavourite(
+            rows,
+            isFavourite,
+            competition?.name ?? "Competition",
+            previous.rows,
+          );
+        }
+        // eslint-disable-next-line functional/immutable-data -- retain the latest stream snapshot
+        notificationRowsRef.current = {
+          ...previous,
+          rows: mergeRowsByEntry(previous.rows, rows),
+        };
+      }
       setLeaderboardState((current) =>
         current.status === "success"
           ? {
@@ -281,16 +314,15 @@ const CompetitionPage = ({
             }
           : current,
       );
-
-      if (favouriteEntries.size > 0) {
-        notifyIfFavourite(
-          rows,
-          isFavourite,
-          competition?.name ?? "Competition",
-        );
-      }
     },
-    [favouriteEntries.size, isFavourite, notifyIfFavourite, competition?.name],
+    [
+      competitionId,
+      leaderboardId,
+      favouriteEntries.size,
+      isFavourite,
+      notifyIfFavourite,
+      competition?.name,
+    ],
   );
 
   const handleColumnUpdate = useCallback(
