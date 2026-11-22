@@ -4,10 +4,10 @@ import {
   EVENT_COMPETITION_ID,
   EVENT_LEADERBOARD_ID,
   fetchAllCompetitions,
+  fetchCompetitionSiteName,
   fetchEventLeaderboard,
 } from "./src/lib/leaderboardApi";
 import { retryWithBackoff } from "./src/lib/retryWithBackoff";
-import { resolveSapphireSiteName } from "./src/lib/sapphire-site-name";
 
 const BUILD_FETCH_MAX_RETRIES = 3;
 const BUILD_FETCH_BASE_DELAY_MS = 5000;
@@ -134,7 +134,7 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async ({
           .slice(offset, offset + SITE_NAME_BATCH_SIZE)
           .map(async (competitionId) => {
             try {
-              const siteName = await resolveSapphireSiteName(competitionId);
+              const siteName = await fetchCompetitionSiteName(competitionId);
               const mapping = { competitionId, siteName };
               await createNode({
                 ...mapping,

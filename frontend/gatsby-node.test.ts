@@ -4,18 +4,16 @@ import type { SourceNodesArgs } from "gatsby";
 import { sourceNodes } from "./gatsby-node";
 import {
   fetchAllCompetitions,
+  fetchCompetitionSiteName,
   fetchEventLeaderboard,
 } from "./src/lib/leaderboardApi";
-import { resolveSapphireSiteName } from "./src/lib/sapphire-site-name";
 
 jest.mock("./src/lib/leaderboardApi", () => ({
   EVENT_COMPETITION_ID: "1435",
   EVENT_LEADERBOARD_ID: "99999",
   fetchAllCompetitions: jest.fn(),
+  fetchCompetitionSiteName: jest.fn(),
   fetchEventLeaderboard: jest.fn(),
-}));
-jest.mock("./src/lib/sapphire-site-name", () => ({
-  resolveSapphireSiteName: jest.fn(),
 }));
 jest.mock("./src/lib/retryWithBackoff", () => ({
   retryWithBackoff: (
@@ -53,7 +51,7 @@ test("creates mappings for successful site lookups and continues after failures"
       finalised: null,
     },
   ]);
-  jest.mocked(resolveSapphireSiteName).mockImplementation((id) =>
+  jest.mocked(fetchCompetitionSiteName).mockImplementation((id) =>
     id === "2"
       ? Promise.reject(new Error("not found"))
       : Promise.resolve("one-site"),
@@ -75,7 +73,7 @@ test("creates mappings for successful site lookups and continues after failures"
       { plugins: [] },
       () => {},
     );
-    expect(resolveSapphireSiteName).toHaveBeenCalledTimes(2);
+    expect(fetchCompetitionSiteName).toHaveBeenCalledTimes(2);
     expect(
       createNode.mock.calls.some(
         ([node]) =>
@@ -110,7 +108,7 @@ test("waits for each batch of site-name requests before starting the next", asyn
   });
   const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
   const gate = Promise.withResolvers<void>();
-  const siteName = jest.mocked(resolveSapphireSiteName);
+  const siteName = jest.mocked(fetchCompetitionSiteName);
   siteName.mockReset();
   siteName.mockImplementation(async (id) => {
     if (id !== "5") await gate.promise;
