@@ -8,6 +8,7 @@ public/
 DotNetBackend/**/bin/
 DotNetBackend/**/obj/
 DotNetBackend/.vs/
+DotNetBackend/DotNetBackend/data/
 
 # IDE
 .vs/

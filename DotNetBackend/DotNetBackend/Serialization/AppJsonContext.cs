@@ -10,6 +10,7 @@ namespace DotNetBackend.Serialization;
 [JsonSerializable(typeof(List<ColumnDto>))]
 [JsonSerializable(typeof(List<Dictionary<string, string>>))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
+[JsonSerializable(typeof(Dictionary<int, string>))]
 [JsonSerializable(typeof(ProblemDetails))]
 [JsonSourceGenerationOptions(
     PropertyNameCaseInsensitive = true,

@@ -25,7 +25,7 @@ dotnet run --project DotNetBackend
 
 The API will be available at `http://localhost:5167`.
 
-`GET /API/1/Competitions/{competitionId}/SiteName` returns the competition's site name using a direct Sapphire request.
+`GET /API/1/Competitions/{competitionId}/SiteName` fetches the competition's site name directly from Sapphire and stores it in a permanent JSON cache keyed by competition ID. By default it is stored at `data/site-names.json` under the backend content root. Set `ApiClient:SiteNameCachePath` (or `ApiClient__SiteNameCachePath` as an environment variable) to change the path; relative paths are resolved against the content root. The application must have write access. To correct entries, stop the backend before editing the file; invalid JSON and storage errors are reported rather than ignored. For container deployments, mount a persistent writable volume and set the path inside it; the default container filesystem may be ephemeral. Run only one backend instance per cache file because synchronization is local to the process.
 
 To run backend tests:
 
