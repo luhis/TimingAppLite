@@ -37,21 +37,6 @@ public class ApiClientTests
     }
 
     [Fact]
-    public async Task GetLiveAllCompetitionsNoProxy_UsesDirectUrl()
-    {
-        var body = """[{"id":1}]"""u8.ToArray();
-        var handler = new StubHttpHandler(body, "application/json");
-        var client = CreateClient(handler);
-
-        var result = await client.GetLiveAllCompetitionsNoProxy(TestContext.Current.CancellationToken);
-
-        result.Bytes.Should().Equal(body);
-        result.ContentType.Should().Be("application/json");
-        handler.RequestUris.Should().ContainSingle().Which.AbsoluteUri.Should()
-            .Be("https://timingapplive.co.uk/API/1/LiveAllCompetitions/");
-    }
-
-    [Fact]
     public async Task GetLiveAllCompetitions_ReturnsCachedResponse_OnSecondCall()
     {
         var body = """[{"id":1}]"""u8.ToArray();
@@ -383,45 +368,31 @@ public class ApiClientTests
     }
 
     [Fact]
-    public async Task GetSiteNameNoProxy_UsesDirectUrl_AndCachesSeparatelyFromGetSiteName()
+    public async Task GetSiteName_UsesDirectUrl_AndCachesByCompetition()
     {
         var html = """<a href="https://example.com/page?sitename=TestTrack&other=1">Link</a>""";
         var handler = new StubHttpHandler(System.Text.Encoding.UTF8.GetBytes(html), "text/html");
         var client = CreateClient(handler);
 
         var siteName = await client.GetSiteName(1471, TestContext.Current.CancellationToken);
-        var direct = await client.GetSiteNameNoProxy(1471, TestContext.Current.CancellationToken);
-        var cached = await client.GetSiteNameNoProxy(1471, TestContext.Current.CancellationToken);
-        var otherCompetition = await client.GetSiteNameNoProxy(1472, TestContext.Current.CancellationToken);
+        var cached = await client.GetSiteName(1471, TestContext.Current.CancellationToken);
+        var otherCompetition = await client.GetSiteName(1472, TestContext.Current.CancellationToken);
 
         siteName.Should().Be("TestTrack");
-        direct.Should().Be("TestTrack");
         cached.Should().Be("TestTrack");
         otherCompetition.Should().Be("TestTrack");
-        handler.RequestUris.Should().HaveCount(3);
+        handler.RequestUris.Should().HaveCount(2);
         handler.RequestUris[0].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1471");
-        handler.RequestUris[1].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1471");
-        handler.RequestUris[2].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1472");
+        handler.RequestUris[1].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1472");
     }
 
     [Fact]
-    public async Task GetSiteNameNoProxy_ThrowsWhenSiteNameNotFound()
-    {
-        var handler = new StubHttpHandler("""<html>No sitename here</html>"""u8.ToArray(), "text/html");
-        var client = CreateClient(handler);
-
-        var act = async () => await client.GetSiteNameNoProxy(1, TestContext.Current.CancellationToken);
-
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*sitename not found*");
-    }
-
-    [Fact]
-    public async Task GetSiteNameNoProxy_ThrowsOnUpstreamError()
+    public async Task GetSiteName_ThrowsOnUpstreamError()
     {
         var handler = new StubHttpHandler("unavailable"u8.ToArray(), "text/plain", HttpStatusCode.ServiceUnavailable);
         var client = CreateClient(handler);
 
-        var act = async () => await client.GetSiteNameNoProxy(1, TestContext.Current.CancellationToken);
+        var act = async () => await client.GetSiteName(1, TestContext.Current.CancellationToken);
 
         var error = await act.Should().ThrowAsync<UpstreamHttpException>();
         error.Which.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);

@@ -121,19 +121,16 @@ public class AppStartupTests
         mockRepo.VerifyAll();
     }
 
-    [Fact]
-    public async Task SiteNameNoProxy_ReturnsSuccess()
+    [Theory]
+    [InlineData("/API/1/LiveAllCompetitionsNoProxy")]
+    [InlineData("/API/1/Competitions/1471/SiteNameNoProxy")]
+    public async Task RemovedNoProxyEndpoints_ReturnNotFound(string path)
     {
-        var client = CreateClient(mock =>
-            mock.Setup(c => c.GetSiteNameNoProxy(1471, It.IsAny<CancellationToken>()))
-                .ReturnsAsync("TestTrack"),
-            out var mockRepo);
+        var client = CreateClient(_ => { }, out var mockRepo);
 
-        var response = await client.GetAsync("/API/1/Competitions/1471/SiteNameNoProxy", TestContext.Current.CancellationToken);
+        var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
 
-        response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
-        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        content.Should().Be("TestTrack");
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
         mockRepo.VerifyAll();
     }
 

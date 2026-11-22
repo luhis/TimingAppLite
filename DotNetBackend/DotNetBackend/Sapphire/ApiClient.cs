@@ -101,10 +101,6 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     {
         return GetCompetitionBytesAsync(ct);
     }
-    Task<(byte[] Bytes, string ContentType)> IApiClient.GetLiveAllCompetitionsNoProxy(CancellationToken ct)
-    {
-        return FetchBytesAsync(LiveAllCompetitionsNoProxyUrl(), HttpCompletionOption.ResponseContentRead, ct);
-    }
 
     async Task<IReadOnlyList<CompetitionDto>> IApiClient.GetCompetitions(CancellationToken ct)
     {
@@ -114,8 +110,6 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
     }
     private static string LiveAllCompetitionsUrl() =>
         $"{ApiBase}/LiveAllCompetitions/";
-    private static string LiveAllCompetitionsNoProxyUrl() =>
-        $"https://timingapplive.co.uk/API/1/LiveAllCompetitions/";
 
     private static string LeaderboardsUrl(int competitionId, int? leaderboardId) =>
         $"{ApiBase}/Competitions/{competitionId}/Leaderboards/{leaderboardId}";
@@ -125,9 +119,6 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
 
     Task<string> IApiClient.GetSiteName(int competitionId, CancellationToken ct) =>
         GetSiteNameAsync(competitionId, EventListUrl(competitionId), nameof(IApiClient.GetSiteName), ct);
-
-    Task<string> IApiClient.GetSiteNameNoProxy(int competitionId, CancellationToken ct) =>
-        GetSiteNameAsync(competitionId, EventListUrl(competitionId), nameof(IApiClient.GetSiteNameNoProxy), ct);
 
     private async Task<string> GetSiteNameAsync(int competitionId, string url, string cachePrefix, CancellationToken ct)
     {

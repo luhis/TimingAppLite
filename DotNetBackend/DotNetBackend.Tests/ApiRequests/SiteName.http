@@ -4,10 +4,6 @@
 GET {{baseUrl}}/API/1/Competitions/{{competitionId}}/SiteName
 Accept: application/json
 
-### Site Name No Proxy
-GET {{baseUrl}}/API/1/Competitions/{{competitionId}}/SiteNameNoProxy
-Accept: application/json
-
 ### Sapphire Base
 GET https://autotest.sapphire-solutions.co.uk/eventlist.php?event={{competitionId}}
 
