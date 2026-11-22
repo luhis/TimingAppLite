@@ -15,6 +15,12 @@ var builder = WebApplication.CreateSlimBuilder(args);
 var apiCacheSeconds = builder.Configuration.GetValue("ApiClient:CacheDurationSeconds", 30);
 var staleIfErrorSeconds = builder.Configuration.GetValue("ApiClient:StaleCacheDurationSeconds", 600);
 
+builder.Services.AddSingleton(sp =>
+{
+    var path = sp.GetRequiredService<IConfiguration>()["ApiClient:SiteNameCachePath"] ?? Path.Combine("data", "site-names.json");
+    var contentRoot = sp.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
+    return new SiteNameCache(Path.GetFullPath(path, contentRoot));
+});
 builder.Services.AddSingleton<IApiClient, ApiClient>();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();

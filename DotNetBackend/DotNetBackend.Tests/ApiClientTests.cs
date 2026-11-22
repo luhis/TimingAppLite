@@ -6,18 +6,38 @@ using System.Net.Http.Headers;
 
 namespace DotNetBackend.Tests;
 
-public class ApiClientTests
+public class ApiClientTests : IDisposable
 {
-    private static IApiClient CreateClient(
+    private readonly string _cacheDirectory = Path.Combine(Path.GetTempPath(), $"TimingAppLite-tests-{Guid.NewGuid():N}");
+    private readonly List<SiteNameCache> _siteNameCaches = [];
+    private string CachePath => Path.Combine(_cacheDirectory, "site-names.json");
+
+    private IApiClient CreateClient(
         HttpMessageHandler handler,
         IMemoryCache? cache = null,
         IConfiguration? configuration = null)
     {
         var factory = new StubHttpClientFactory(() => new HttpClient(handler));
+        var siteNameCache = new SiteNameCache(CachePath);
+        _siteNameCaches.Add(siteNameCache);
         return new ApiClient(
             factory,
             cache ?? new MemoryCache(new MemoryCacheOptions()),
-            configuration ?? new ConfigurationBuilder().Build());
+            configuration ?? new ConfigurationBuilder().Build(),
+            siteNameCache);
+    }
+
+    public void Dispose()
+    {
+        foreach (var cache in _siteNameCaches)
+        {
+            cache.Dispose();
+        }
+
+        if (Directory.Exists(_cacheDirectory))
+        {
+            Directory.Delete(_cacheDirectory, recursive: true);
+        }
     }
 
     [Fact]
@@ -384,6 +404,103 @@ public class ApiClientTests
         handler.RequestUris.Should().HaveCount(2);
         handler.RequestUris[0].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1471");
         handler.RequestUris[1].AbsoluteUri.Should().Be("https://timingapplive.co.uk/eventlist.php?event=1472");
+    }
+
+    [Fact]
+    public async Task GetSiteName_PersistsMultipleCompetitionsAcrossClientRestart()
+    {
+        var firstHandler = new StubHttpHandler("""<a href="?sitename=First&x=1">"""u8.ToArray(), "text/html");
+        var firstClient = CreateClient(firstHandler);
+        await firstClient.GetSiteName(1, TestContext.Current.CancellationToken);
+
+        var secondHandler = new StubHttpHandler("""<a href="?sitename=Second&x=1">"""u8.ToArray(), "text/html");
+        var secondClient = CreateClient(secondHandler);
+        var first = await secondClient.GetSiteName(1, TestContext.Current.CancellationToken);
+        var second = await secondClient.GetSiteName(2, TestContext.Current.CancellationToken);
+
+        first.Should().Be("First");
+        second.Should().Be("Second");
+        secondHandler.CallCount.Should().Be(1);
+        using var json = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(CachePath, TestContext.Current.CancellationToken));
+        json.RootElement.GetProperty("1").GetString().Should().Be("First");
+        json.RootElement.GetProperty("2").GetString().Should().Be("Second");
+
+        var unavailable = new StubHttpHandler([], "text/plain", HttpStatusCode.ServiceUnavailable);
+        var restartedClient = CreateClient(unavailable);
+        (await restartedClient.GetSiteName(1, TestContext.Current.CancellationToken)).Should().Be("First");
+        (await restartedClient.GetSiteName(2, TestContext.Current.CancellationToken)).Should().Be("Second");
+        unavailable.CallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetSiteName_ConcurrentRequestsShareFetchAndPersistAllEntries()
+    {
+        var handler = new StubHttpHandler("""<a href="?sitename=Track&x=1">"""u8.ToArray(), "text/html");
+        var client = CreateClient(handler);
+        var ct = TestContext.Current.CancellationToken;
+
+        var results = await Task.WhenAll(
+            client.GetSiteName(1, ct), client.GetSiteName(1, ct),
+            client.GetSiteName(2, ct), client.GetSiteName(2, ct));
+
+        results.Should().Equal("Track", "Track", "Track", "Track");
+        handler.CallCount.Should().Be(2);
+        var restartedClient = CreateClient(new StubHttpHandler([], "text/plain", HttpStatusCode.ServiceUnavailable));
+        (await restartedClient.GetSiteName(1, ct)).Should().Be("Track");
+        (await restartedClient.GetSiteName(2, ct)).Should().Be("Track");
+    }
+
+    [Fact]
+    public async Task GetSiteName_InvalidCacheIsReportedWithoutCallingUpstream()
+    {
+        Directory.CreateDirectory(_cacheDirectory);
+        await File.WriteAllTextAsync(CachePath, "{invalid", TestContext.Current.CancellationToken);
+        var handler = new StubHttpHandler("""<a href="?sitename=Track&x=1">"""u8.ToArray(), "text/html");
+        var client = CreateClient(handler);
+
+        var act = async () => await client.GetSiteName(1, TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<System.Text.Json.JsonException>();
+        handler.CallCount.Should().Be(0);
+        (await File.ReadAllTextAsync(CachePath, TestContext.Current.CancellationToken)).Should().Be("{invalid");
+    }
+
+    [Fact]
+    public async Task GetSiteName_FailedFetchDoesNotCreateCacheEntry()
+    {
+        var handler = new StubHttpHandler("""<html>No sitename here</html>"""u8.ToArray(), "text/html");
+        var client = CreateClient(handler);
+
+        var act = async () => await client.GetSiteName(1, TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        File.Exists(CachePath).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SiteNameCache_FailedWriteDoesNotCacheValueAndCanBeRetried()
+    {
+        using var cache = new SiteNameCache(CachePath);
+        var ct = TestContext.Current.CancellationToken;
+        var calls = 0;
+        Task<string> Fetch(CancellationToken _)
+        {
+            calls++;
+            if (calls == 1)
+            {
+                Directory.CreateDirectory(CachePath);
+            }
+
+            return Task.FromResult("Track");
+        }
+
+        var act = async () => await cache.GetOrAddAsync(1, Fetch, ct);
+        var error = await Record.ExceptionAsync(act);
+        error.Should().Match<Exception>(ex => ex is IOException || ex is UnauthorizedAccessException);
+        Directory.Delete(CachePath);
+        (await cache.GetOrAddAsync(1, Fetch, ct)).Should().Be("Track");
+        calls.Should().Be(2);
+        File.Exists(CachePath).Should().BeTrue();
     }
 
     [Fact]

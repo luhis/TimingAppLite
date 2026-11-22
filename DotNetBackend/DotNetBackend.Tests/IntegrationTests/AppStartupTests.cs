@@ -1,5 +1,6 @@
 using DotNetBackend.Sapphire;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DotNetBackend.Tests.IntegrationTests;
@@ -132,6 +133,33 @@ public class AppStartupTests
 
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
         mockRepo.VerifyAll();
+    }
+
+    [Fact]
+    public async Task SiteName_UsesConfiguredPersistentCache()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"TimingAppLite-site-names-{Guid.NewGuid():N}.json");
+        try
+        {
+            await File.WriteAllTextAsync(path, """{"1471":"StoredTrack"}""", TestContext.Current.CancellationToken);
+            using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["ApiClient:SiteNameCachePath"] = path
+                }));
+                builder.ConfigureServices(services => services.AddSingleton(new Mock<IHttpClientFactory>(MockBehavior.Strict).Object));
+            });
+            using var client = factory.CreateClient();
+
+            var response = await client.GetAsync("/API/1/Competitions/1471/SiteName", TestContext.Current.CancellationToken);
+            response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+            (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).Should().Be("StoredTrack");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]

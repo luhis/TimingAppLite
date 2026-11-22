@@ -9,13 +9,12 @@ using System.Text.RegularExpressions;
 
 namespace DotNetBackend.Sapphire;
 
-public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration) : IApiClient
+public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCache cache, IConfiguration configuration, SiteNameCache siteNameCache) : IApiClient
 {
     internal const string RemoteApiBase = $"https://timingapplive.co.uk";
     private const string ApiBase = $"{RemoteApiBase}/API/1";
     private const string EventListBase = $"{RemoteApiBase}/eventlist.php";
     private const string DefaultJsonContentType = "application/json";
-    private static readonly TimeSpan SiteNameCacheDuration = TimeSpan.FromHours(24);
 
     [GeneratedRegex(@"sitename=([^""&]+)")]
     private static partial Regex SiteNameRegex();
@@ -118,16 +117,11 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
         $"{EventListBase}?event={competitionId}";
 
     Task<string> IApiClient.GetSiteName(int competitionId, CancellationToken ct) =>
-        GetSiteNameAsync(competitionId, EventListUrl(competitionId), nameof(IApiClient.GetSiteName), ct);
+        siteNameCache.GetOrAddAsync(competitionId, token => FetchSiteNameAsync(competitionId, token), ct);
 
-    private async Task<string> GetSiteNameAsync(int competitionId, string url, string cachePrefix, CancellationToken ct)
+    private async Task<string> FetchSiteNameAsync(int competitionId, CancellationToken ct)
     {
-        var cacheKey = $"{cachePrefix}:{competitionId}";
-        if (cache.TryGetValue(cacheKey, out string? cached) && cached is not null)
-        {
-            return cached;
-        }
-
+        var url = EventListUrl(competitionId);
         using var client = httpClientFactory.CreateClient();
         HttpResponseMessage resp;
         await UpstreamGate.WaitAsync(ct);
@@ -152,9 +146,7 @@ public partial class ApiClient(IHttpClientFactory httpClientFactory, IMemoryCach
             var match = SiteNameRegex().Match(sb.ToString());
             if (match.Success)
             {
-                cached = match.Groups[1].Value;
-                cache.Set(cacheKey, cached, SiteNameCacheDuration);
-                return cached;
+                return match.Groups[1].Value;
             }
         }
 
