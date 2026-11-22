@@ -35,6 +35,22 @@ export const fetchAllCompetitions = async (
     signal,
   );
 
+export const fetchCompetitionSiteName = async (
+  competitionId: string,
+  signal?: AbortSignal,
+): Promise<string> => {
+  const response = await fetch(
+    `${API_BASE}/Competitions/${encodeURIComponent(competitionId)}/SiteName`,
+    { signal },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Unable to load site name (${response.status})`);
+  }
+
+  return response.text();
+};
+
 export const fetchLeaderboards = async (
   competitionId: string,
   signal?: AbortSignal,

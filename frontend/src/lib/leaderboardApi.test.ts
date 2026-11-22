@@ -2,6 +2,7 @@
 
 import {
   fetchAllCompetitions,
+  fetchCompetitionSiteName,
   fetchLeaderboard,
   getErrorMessage,
   isAbortError,
@@ -28,6 +29,18 @@ describe("API JSON responses", () => {
       .mockResolvedValue(new Response(JSON.stringify(leaderboard)));
 
     await expect(fetchLeaderboard("1", "2")).resolves.toEqual(leaderboard);
+  });
+
+  test("fetches a competition site name as plain text", async () => {
+    const request = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("MyTrack"));
+
+    await expect(fetchCompetitionSiteName("1495")).resolves.toBe("MyTrack");
+    expect(request.mock.calls[0][0]).toContain(
+      "/API/1/Competitions/1495/SiteName",
+    );
+    expect(request.mock.calls[0][1]).toEqual({ signal: undefined });
   });
 });
 
