@@ -44,6 +44,10 @@ yarn run develop
 
 The site will be available at `http://localhost:8000`.
 
+In production, the menu shows **Install PWA** when the browser offers an
+installation prompt. Some browsers, including Safari, require installation
+through their own Share or browser menu instead.
+
 At build time, Gatsby extracts competition site names from Sapphire's
 `https://timingapplive.co.uk/eventlist.php`, independently of
 `GATSBY_BACKEND_URL`, preserving the session across same-origin redirects. The

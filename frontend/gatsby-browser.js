@@ -4,8 +4,10 @@ import "@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css";
 import React from "react";
 import { initAppInsights, trackException } from "./src/lib/appInsights";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
+import { initializeInstallPrompt } from "./src/lib/installPrompt";
 
 export const onClientEntry = () => {
+  initializeInstallPrompt();
   initAppInsights();
 
   window.addEventListener("error", (event) => {
