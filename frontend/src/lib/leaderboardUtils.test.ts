@@ -4,12 +4,56 @@ import type {
 } from "../types/leaderboard";
 import {
   extractNotesText,
+  filterLeaderboardRows,
+  getLeaderboardClassOptions,
   isSectionRow,
   isSelectableLeaderboard,
   mergeRowsByEntry,
   rowSearchText,
   stringifyCell,
 } from "./leaderboardUtils";
+
+describe("leaderboard filtering", () => {
+  const rows: readonly LeaderboardItem[] = [
+    { _index: 0, entry: "1", driver: "Alice Smith", classname: "Class B" },
+    { _index: 1, entry: "2", driver: "Bob", classname: "Class A" },
+    { _index: 2, entry: "3", driver: "Alice Jones", classname: "Autosolo" },
+    { _index: 3, classname: "Class A" },
+    { _index: 4, entry: "4", driver: "Dana", classname: "-" },
+    { _index: 5, entry: "5", driver: "Eve", classname: "" },
+  ];
+
+  test("combines case-insensitive filters while retaining special classes", () => {
+    expect(
+      filterLeaderboardRows(rows, {
+        query: " ALICE ",
+        driver: "alice",
+        className: "class b",
+      }),
+    ).toEqual([rows[0], rows[2]]);
+  });
+
+  test("uses all fields for global search and preserves unfiltered rows", () => {
+    expect(
+      filterLeaderboardRows(rows, {
+        query: "class a",
+        driver: "",
+        className: "",
+      }),
+    ).toEqual([rows[1], rows[3]]);
+    expect(
+      filterLeaderboardRows(rows, { query: "", driver: "", className: "" }),
+    ).toEqual(rows);
+  });
+
+  test("lists distinct sorted classes for entries, excluding blank and dash", () => {
+    expect(getLeaderboardClassOptions(rows)).toEqual([
+      "Autosolo",
+      "Class A",
+      "Class B",
+    ]);
+  });
+});
 
 describe("mergeRowsByEntry", () => {
   test("updates existing rows with matching entry", () => {

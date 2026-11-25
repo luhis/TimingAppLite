@@ -1,25 +1,20 @@
 import * as React from "react";
 import { useMemo } from "react";
 import { graphql, Link, PageProps, type HeadFC } from "gatsby";
-import startCase from "lodash/startCase";
 import {
   Container,
   Heading,
   Hero,
   Panel,
   Section,
-  Tag,
 } from "react-bulma-components";
 import { addMonth, diffDate, newValidDate } from "ts-date";
 
 import { CompetitionDate } from "../components/CompetitionDate";
+import { CompetitionSummary } from "../components/CompetitionSummary";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
 import { SeoHead } from "../components/SeoHead";
-import {
-  competitionStatusColor,
-  competitionStatusLabel,
-} from "../lib/competitionStatus";
 import { useCompetitions } from "../hooks/useCompetitions";
 import { createCompetitionSiteNameMap } from "../lib/eventSiteNames";
 
@@ -69,19 +64,10 @@ const IndexPage = (props: Readonly<PageProps<Queries.IndexPageQueryQuery>>) => {
                   renderAs={Link}
                   to={`/competition/${competition.id}`}
                 >
-                  <Tag
-                    color={competitionStatusColor(competition.active)}
-                    mr={3}
-                  >
-                    {competitionStatusLabel(competition.active)}
-                  </Tag>
-                  <span className="has-text-weight-medium">
-                    {competition.name}
-                    <span className="is-block has-text-grey is-size-7">
-                      Club:{" "}
-                      {startCase(siteNames.get(competition.id) ?? "") || "—"}
-                    </span>
-                  </span>
+                  <CompetitionSummary
+                    competition={competition}
+                    siteName={siteNames.get(competition.id)}
+                  />
                   <span className="has-text-grey is-size-7 ml-auto">
                     <CompetitionDate date={competition.dateddmmyyyy} />
                     &nbsp;

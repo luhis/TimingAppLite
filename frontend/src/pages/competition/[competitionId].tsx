@@ -32,11 +32,11 @@ import {
 import { retryWithBackoff } from "../../lib/retryWithBackoff";
 import {
   extractNotesText,
+  filterLeaderboardRows,
+  getLeaderboardClassOptions,
   isSelectableLeaderboard,
   isSectionRow,
   mergeRowsByEntry,
-  rowSearchText,
-  stringifyCell,
 } from "../../lib/leaderboardUtils";
 import type { AsyncData } from "../../types/asyncData";
 import {
@@ -55,7 +55,10 @@ const initialFilters: FilterState = {
   className: "",
 };
 
-const classNamesToAlwaysInclude = ["Autosolo", "Autotest", "PCA", " "];
+const isCompetitionToday = (competition: Competition | null): boolean =>
+  competition?.dateddmmyyyy
+    ? competition.dateddmmyyyy.toDateString() === newValidDate().toDateString()
+    : false;
 
 const CompetitionPage = ({
   params,
@@ -343,10 +346,7 @@ const CompetitionPage = ({
     (newCompetition: Competition) => {
       setCompetition(newCompetition);
       const isLive = newCompetition.active === CompetitionStatus.Live;
-      const isToday = newCompetition.dateddmmyyyy
-        ? newCompetition.dateddmmyyyy.toDateString() ===
-          newValidDate().toDateString()
-        : false;
+      const isToday = isCompetitionToday(newCompetition);
       if (!isLive || (!isToday && !isDevelopment)) {
         setStreamResults(false);
       }
@@ -357,9 +357,7 @@ const CompetitionPage = ({
   // Only enable SignalR streaming if the competition is live and happening today
   // In development, skip the today check to allow testing with any event
   const isCompetitionLive = competition?.active === CompetitionStatus.Live;
-  const isToday = competition?.dateddmmyyyy
-    ? competition.dateddmmyyyy.toDateString() === newValidDate().toDateString()
-    : false;
+  const isToday = isCompetitionToday(competition);
   const enableStreaming =
     streamResults && isCompetitionLive && (isToday || isDevelopment);
 
@@ -383,23 +381,7 @@ const CompetitionPage = ({
       return [];
     }
 
-    const leaderboard = leaderboardState.data;
-
-    const query = filters.query.trim().toLowerCase();
-    const driver = filters.driver.trim().toLowerCase();
-    const className = filters.className.trim().toLowerCase();
-
-    return leaderboard.items.filter((item) => {
-      const matchesQuery = !query || rowSearchText(item).includes(query);
-      const matchesDriver =
-        !driver || stringifyCell(item.driver).toLowerCase().includes(driver);
-      const matchesClass =
-        !className ||
-        classNamesToAlwaysInclude.includes(stringifyCell(item.classname)) ||
-        stringifyCell(item.classname).toLowerCase() === className;
-
-      return matchesQuery && matchesDriver && matchesClass;
-    });
+    return filterLeaderboardRows(leaderboardState.data.items, filters);
   }, [filters, leaderboardState]);
 
   const classOptions = useMemo(() => {
@@ -407,16 +389,7 @@ const CompetitionPage = ({
       return [];
     }
 
-    const leaderboard = leaderboardState.data;
-
-    const classes = leaderboard.items
-      .filter((item) => item.entry !== undefined)
-      .map((item) => stringifyCell(item.classname).trim())
-      .filter((value) => value !== "-" && value !== "");
-
-    return Array.from(new Set(classes)).sort((left, right) =>
-      left.localeCompare(right),
-    );
+    return getLeaderboardClassOptions(leaderboardState.data.items);
   }, [leaderboardState]);
 
   const dataRowCount =

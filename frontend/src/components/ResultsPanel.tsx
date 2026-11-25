@@ -71,6 +71,70 @@ const stickyCellStyle = {
   zIndex: 1,
 };
 
+const ResultRow = ({
+  item,
+  columns,
+  isFavourite,
+  onToggleFavourite,
+}: ResultsPanelCallbacks & {
+  readonly item: LeaderboardItem;
+  readonly columns: readonly LeaderboardColumn[];
+}) => {
+  if (isSectionRow(item)) {
+    return (
+      <tr className="section-row">
+        <td colSpan={Math.max(columns.length, 1)}>
+          {stringifyCell(item.classname)}
+        </td>
+      </tr>
+    );
+  }
+
+  return (
+    <tr>
+      {columns.map((column) => {
+        const isEntry = column.name === stickyColumnHeader;
+        const Cell = isEntry ? "th" : "td";
+        const cellText = stringifyCell(item[column.name]);
+        const favourite = isEntry && cellText ? isFavourite(cellText) : false;
+        return (
+          <Cell
+            key={column.name}
+            style={cellStyleForColumn(column)}
+            title={column.name === classNameColumn ? cellText : undefined}
+          >
+            {isEntry && cellText ? (
+              <span className="is-flex is-align-items-center">
+                <button
+                  type="button"
+                  className="p-0 mr-1"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "goldenrod",
+                    fontSize: "1rem",
+                    lineHeight: 1,
+                  }}
+                  onClick={() => onToggleFavourite(cellText)}
+                  title={
+                    favourite ? "Remove from favourites" : "Add to favourites"
+                  }
+                >
+                  {favourite ? "★" : "☆"}
+                </button>
+                {cellText}
+              </span>
+            ) : (
+              cellText
+            )}
+          </Cell>
+        );
+      })}
+    </tr>
+  );
+};
+
 export const ResultsPanel = ({
   selectedLeaderboardName,
   isBusy,
@@ -132,65 +196,19 @@ export const ResultsPanel = ({
         </thead>
         <tbody>
           {visibleRows.length > 0 ? (
-            visibleRows.map((item, index) => {
-              if (isSectionRow(item)) {
-                return (
-                  <tr key={`section-${index}`} className="section-row">
-                    <td colSpan={Math.max(columns.length, 1)}>
-                      {stringifyCell(item.classname)}
-                    </td>
-                  </tr>
-                );
-              }
-
-              return (
-                <tr
-                  key={`${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`}
-                >
-                  {columns.map((column) => {
-                    const isClassName = column.name === classNameColumn;
-                    const isEntry = column.name === stickyColumnHeader;
-                    const Cell = isEntry ? "th" : "td";
-                    const cellText = stringifyCell(item[column.name]);
-                    return (
-                      <Cell
-                        key={column.name}
-                        style={cellStyleForColumn(column)}
-                        title={isClassName ? cellText : undefined}
-                      >
-                        {isEntry && cellText ? (
-                          <span className="is-flex is-align-items-center">
-                            <button
-                              type="button"
-                              className="p-0 mr-1"
-                              style={{
-                                background: "none",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "goldenrod",
-                                fontSize: "1rem",
-                                lineHeight: 1,
-                              }}
-                              onClick={() => onToggleFavourite(cellText)}
-                              title={
-                                isFavourite(cellText)
-                                  ? "Remove from favourites"
-                                  : "Add to favourites"
-                              }
-                            >
-                              {isFavourite(cellText) ? "★" : "☆"}
-                            </button>
-                            {cellText}
-                          </span>
-                        ) : (
-                          cellText
-                        )}
-                      </Cell>
-                    );
-                  })}
-                </tr>
-              );
-            })
+            visibleRows.map((item, index) => (
+              <ResultRow
+                key={
+                  isSectionRow(item)
+                    ? `section-${index}`
+                    : `${stringifyCell(item.entry)}-${stringifyCell(item.driver)}-${index}`
+                }
+                item={item}
+                columns={columns}
+                isFavourite={isFavourite}
+                onToggleFavourite={onToggleFavourite}
+              />
+            ))
           ) : (
             <tr>
               <td

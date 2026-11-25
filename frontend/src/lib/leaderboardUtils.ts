@@ -1,4 +1,5 @@
 import type {
+  FilterState,
   LeaderboardItem,
   LeaderboardPayloadFromApi,
   LeaderboardSummary,
@@ -15,6 +16,42 @@ export const rowSearchText = (item: LeaderboardItem): string =>
 
 export const isSectionRow = (item: LeaderboardItem): boolean =>
   item.classname === "" || Object.keys(item).length === 2;
+
+const classNamesToAlwaysInclude = ["Autosolo", "Autotest", "PCA", " "];
+
+export const filterLeaderboardRows = (
+  rows: readonly LeaderboardItem[],
+  filters: FilterState,
+): readonly LeaderboardItem[] => {
+  const query = filters.query.trim().toLowerCase();
+  const driver = filters.driver.trim().toLowerCase();
+  const className = filters.className.trim().toLowerCase();
+
+  return rows.filter((item) => {
+    const matchesQuery = !query || rowSearchText(item).includes(query);
+    const matchesDriver =
+      !driver || stringifyCell(item.driver).toLowerCase().includes(driver);
+    const matchesClass =
+      !className ||
+      classNamesToAlwaysInclude.includes(stringifyCell(item.classname)) ||
+      stringifyCell(item.classname).toLowerCase() === className;
+
+    return matchesQuery && matchesDriver && matchesClass;
+  });
+};
+
+export const getLeaderboardClassOptions = (
+  rows: readonly LeaderboardItem[],
+): readonly string[] => {
+  const classes = rows
+    .filter((item) => item.entry !== undefined)
+    .map((item) => stringifyCell(item.classname).trim())
+    .filter((value) => value !== "-" && value !== "");
+
+  return Array.from(new Set(classes)).sort((left, right) =>
+    left.localeCompare(right),
+  );
+};
 
 const getEntryKey = (item: LeaderboardItem): string => {
   const stringified = stringifyCell(item.entry);
