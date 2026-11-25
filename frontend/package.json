@@ -24,8 +24,8 @@
   "dependencies": {
     "@creativebulma/bulma-tooltip": "^1.2.0",
     "@microsoft/applicationinsights-web": "^3.4.3",
-    "@microsoft/signalr": "^10.0.0",
-    "@microsoft/signalr-protocol-msgpack": "10.0.11",
+    "@microsoft/signalr": "^11.0.0",
+    "@microsoft/signalr-protocol-msgpack": "11.0.0",
     "bulma": "^1.0.4",
     "gatsby": "^5.6.0",
     "gatsby-plugin-google-gtag": "^5.16.0",
