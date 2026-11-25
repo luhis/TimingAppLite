@@ -1,7 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 
 import { trackException } from "../lib/appInsights";
-import { useLeaderboardStream } from "./useLeaderboardStream";
+import { signalRHubUrl, useLeaderboardStream } from "./useLeaderboardStream";
 
 const mockTrackException = trackException as jest.MockedFunction<
   typeof trackException
@@ -285,6 +285,9 @@ describe("useLeaderboardStream", () => {
     const onRowUpdate = jest.fn();
     const onColumnUpdate = jest.fn();
     const onCompetitionUpdate = jest.fn();
+    const updatedRow = jest.fn();
+    const updatedColumn = jest.fn();
+    const updatedCompetition = jest.fn();
 
     const { rerender } = renderHook(
       ({ rowHandler, columnHandler, competitionHandler }) =>
@@ -306,12 +309,88 @@ describe("useLeaderboardStream", () => {
     );
 
     rerender({
-      rowHandler: jest.fn(),
-      columnHandler: jest.fn(),
-      competitionHandler: jest.fn(),
+      rowHandler: updatedRow,
+      columnHandler: updatedColumn,
+      competitionHandler: updatedCompetition,
+    });
+
+    const rows = [{ _index: 0, classname: "A", entry: "1" }];
+    const columns = [{ name: "entry", label: "Entry" }];
+    const competition = {
+      id: "comp-1",
+      name: "Test",
+      active: "0",
+      dateddmmyyyy: "5th June 2026",
+      provisional: null,
+      finalised: null,
+    };
+    act(() => {
+      getRegisteredHandler("ReceiveRowUpdate")(rows);
+      getRegisteredHandler("ReceiveColumnUpdate")(columns);
+      getRegisteredHandler("ReceiveCompetitionUpdate")(competition);
     });
 
     expect(mockBuild).toHaveBeenCalledTimes(1);
+    expect(updatedRow).toHaveBeenCalledWith(rows);
+    expect(updatedColumn).toHaveBeenCalledWith(columns);
+    expect(updatedCompetition).toHaveBeenCalledWith({
+      ...competition,
+      dateddmmyyyy: new Date(2026, 5, 5),
+    });
+    expect(onRowUpdate).not.toHaveBeenCalled();
+    expect(onColumnUpdate).not.toHaveBeenCalled();
+    expect(onCompetitionUpdate).not.toHaveBeenCalled();
+  });
+
+  test("stops a connection that starts after cleanup", async () => {
+    const start = Promise.withResolvers<void>();
+    mockStart.mockReturnValue(start.promise);
+    const { unmount } = renderHook(() =>
+      useLeaderboardStream(
+        "comp-1",
+        "lb-1",
+        true,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      ),
+    );
+
+    unmount();
+    expect(mockStop).not.toHaveBeenCalled();
+    await act(async () => {
+      start.resolve();
+      await start.promise;
+    });
+
+    expect(mockStop).toHaveBeenCalledTimes(1);
+  });
+
+  test("reconnects when the selected leaderboard changes", async () => {
+    const { rerender } = renderHook(
+      ({ leaderboardId }) =>
+        useLeaderboardStream(
+          "comp-1",
+          leaderboardId,
+          true,
+          jest.fn(),
+          jest.fn(),
+          jest.fn(),
+        ),
+      { initialProps: { leaderboardId: "lb-1" } },
+    );
+
+    await act(async () => {
+      rerender({ leaderboardId: "lb-2" });
+      await Promise.resolve();
+    });
+
+    expect(mockBuild).toHaveBeenCalledTimes(2);
+    expect(mockStop).toHaveBeenCalledTimes(1);
+    expect(mockWithUrl).toHaveBeenLastCalledWith(
+      expect.stringContaining("leaderboardId=lb-2"),
+      expect.anything(),
+    );
   });
 
   test("stops connection on cleanup", async () => {
@@ -382,5 +461,30 @@ describe("useLeaderboardStream", () => {
       leaderboardId: "lb-1",
     });
     expect(mockTrackException).toHaveBeenCalledWith(error, expected);
+  });
+
+  test("reports errors when stopping a connection", async () => {
+    const error = new Error("stop failed");
+    mockStop.mockRejectedValue(error);
+    const { unmount } = renderHook(() =>
+      useLeaderboardStream(
+        "comp-1",
+        "lb-1",
+        true,
+        jest.fn(),
+        jest.fn(),
+        jest.fn(),
+      ),
+    );
+
+    await act(async () => {
+      unmount();
+      await Promise.resolve();
+    });
+
+    expect(mockTrackException).toHaveBeenCalledWith(error, {
+      signalRHubUrl,
+      phase: "stop",
+    });
   });
 });
