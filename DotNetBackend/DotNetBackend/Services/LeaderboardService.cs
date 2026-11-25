@@ -45,23 +45,7 @@ public sealed partial class LeaderboardService(IApiClient apiClient, IHubContext
                         continue;
                     }
 
-                    if (_optimisePushUpdates)
-                    {
-
-                        if (comp.Active == ActiveStatus.Live && IsCompetitionToday(comp))
-                        {
-                            await SafePushChanges(key, stoppingToken);
-                        }
-                        else
-                        {
-                            await PushCompetitionUpdate(key.competitionId, key.leaderboardId, comp, stoppingToken);
-                        }
-                    }
-                    else
-                    {
-                        await SafePushChanges(key, stoppingToken);
-                        await PushCompetitionUpdate(key.competitionId, key.leaderboardId, comp, stoppingToken);
-                    }
+                    await PushForCompetitionAsync(key, comp, stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -73,6 +57,27 @@ public sealed partial class LeaderboardService(IApiClient apiClient, IHubContext
                 logger.LogError(ex, "Poll cycle failed, will retry next interval");
             }
         }
+    }
+
+    private async Task PushForCompetitionAsync(
+        (int competitionId, int leaderboardId) key,
+        CompetitionDto competition,
+        CancellationToken stoppingToken)
+    {
+        if (!_optimisePushUpdates)
+        {
+            await SafePushChanges(key, stoppingToken);
+            await PushCompetitionUpdate(key.competitionId, key.leaderboardId, competition, stoppingToken);
+            return;
+        }
+
+        if (competition.Active == ActiveStatus.Live && IsCompetitionToday(competition))
+        {
+            await SafePushChanges(key, stoppingToken);
+            return;
+        }
+
+        await PushCompetitionUpdate(key.competitionId, key.leaderboardId, competition, stoppingToken);
     }
 
     private async Task PushCompetitionUpdate(int competitionId, int leaderboardId, CompetitionDto competition, CancellationToken stoppingToken)

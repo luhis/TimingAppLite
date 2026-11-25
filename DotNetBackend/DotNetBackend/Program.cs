@@ -157,7 +157,7 @@ app.MapGet("/API/1/LiveAllCompetitions", async (IApiClient api, HttpContext cont
     return Results.Bytes(bytes, contentType);
 })
     .Produces(200, contentType: "application/json")
-    .AddOpenApiOperationTransformer((op, _, _) => { op.Summary = "Returns all live competitions as raw bytes"; return Task.CompletedTask; });
+    .WithSummary("Returns all live competitions as raw bytes");
 
 app.MapGet("/API/1/Competitions/{competitionId:int}/LeaderBoards/{leaderboardId:int?}", async (IApiClient api, int competitionId, int? leaderboardId, CancellationToken ct) =>
 {
@@ -165,10 +165,10 @@ app.MapGet("/API/1/Competitions/{competitionId:int}/LeaderBoards/{leaderboardId:
     return Results.Bytes(bytes, contentType);
 })
     .Produces(200, contentType: "application/json")
-    .AddOpenApiOperationTransformer((op, _, _) => { op.Summary = "Returns leaderboard data for a competition"; return Task.CompletedTask; });
+    .WithSummary("Returns leaderboard data for a competition");
 
 app.MapGet("/API/1/Competitions/{competitionId:int}/SiteName", async (IApiClient api, int competitionId, CancellationToken ct) => await api.GetSiteName(competitionId, ct))
     .Produces<string>(StatusCodes.Status200OK)
-    .AddOpenApiOperationTransformer((op, _, _) => { op.Summary = "Returns the site name for a competition"; return Task.CompletedTask; });
+    .WithSummary("Returns the site name for a competition");
 
 app.Run();
