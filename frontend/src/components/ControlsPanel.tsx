@@ -20,10 +20,7 @@ type ControlsPanelData = {
 
 type ControlsPanelCallbacks = {
   readonly onLeaderboardChange: (value: string) => void;
-  readonly onFilterChange: (
-    field: keyof FilterState,
-  ) => (event: ChangeEvent<HTMLInputElement>) => void;
-  readonly onClassChange: (value: string) => void;
+  readonly onFilterChange: (field: keyof FilterState, value: string) => void;
   readonly onStreamResultsChange: (checked: boolean) => void;
   readonly onResetFilters: () => void;
   readonly onRefresh: () => void;
@@ -41,7 +38,6 @@ export const ControlsPanel = ({
   isCompetitionToday,
   onLeaderboardChange,
   onFilterChange,
-  onClassChange,
   onStreamResultsChange,
   onResetFilters,
   onRefresh,
@@ -103,7 +99,9 @@ export const ControlsPanel = ({
           <Form.Input
             type="search"
             value={filters.query}
-            onChange={onFilterChange("query")}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              onFilterChange("query", event.target.value)
+            }
             placeholder="Search any result field"
           />
         </Form.Control>
@@ -115,7 +113,9 @@ export const ControlsPanel = ({
           <Form.Input
             type="search"
             value={filters.driver}
-            onChange={onFilterChange("driver")}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              onFilterChange("driver", event.target.value)
+            }
             placeholder="Filter by driver"
           />
         </Form.Control>
@@ -127,7 +127,7 @@ export const ControlsPanel = ({
           <Form.Select
             value={filters.className}
             onChange={(event: ChangeEvent<HTMLSelectElement>) =>
-              onClassChange(event.target.value)
+              onFilterChange("className", event.target.value)
             }
             disabled={classOptions.length === 0}
           >

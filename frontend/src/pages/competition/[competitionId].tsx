@@ -1,12 +1,5 @@
 import * as React from "react";
-import {
-  type ChangeEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { graphql, type HeadFC } from "gatsby";
 import { Columns, Container, Section } from "react-bulma-components";
 import { newValidDate } from "ts-date";
@@ -20,33 +13,24 @@ import { ResultsPanel } from "../../components/ResultsPanel";
 import { SeoHead } from "../../components/SeoHead";
 import { useEntrantNotifications } from "../../hooks/useEntrantNotifications";
 import { useFavourites } from "../../hooks/useFavourites";
+import { useLeaderboardData } from "../../hooks/useLeaderboardData";
 import { useLeaderboardStream } from "../../hooks/useLeaderboardStream";
 import { parseCompetitionDate } from "../../lib/dataParser";
 import {
   fetchAllCompetitions,
   fetchLeaderboard,
-  fetchLeaderboards,
-  isAbortError,
-  getErrorMessage,
 } from "../../lib/leaderboardApi";
 import { retryWithBackoff } from "../../lib/retryWithBackoff";
 import {
   extractNotesText,
   filterLeaderboardRows,
   getLeaderboardClassOptions,
-  isSelectableLeaderboard,
   isSectionRow,
-  mergeRowsByEntry,
 } from "../../lib/leaderboardUtils";
-import type { AsyncData } from "../../types/asyncData";
 import {
   type Competition,
   CompetitionStatus,
   type FilterState,
-  type LeaderboardColumn,
-  type LeaderboardItem,
-  type LeaderboardPayload,
-  type LeaderboardSummary,
 } from "../../types/leaderboard";
 
 const initialFilters: FilterState = {
@@ -76,23 +60,9 @@ const CompetitionPage = ({
     )?.siteName ?? null;
 
   const [competition, setCompetition] = useState<Competition | null>(null);
-  const [leaderboardsState, setLeaderboardsState] = useState<
-    AsyncData<readonly LeaderboardSummary[]>
-  >({ status: "loading" });
-  const [leaderboardState, setLeaderboardState] = useState<
-    AsyncData<LeaderboardPayload>
-  >({ status: "idle" });
-  const [leaderboardId, setLeaderboardId] = useState("");
   const [filters, setFilters] = useState<FilterState>(initialFilters);
-  const [refreshTick, setRefreshTick] = useState(0);
   const [streamResults, setStreamResults] = useState(true);
-  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
   const [eventNotes, setEventNotes] = useState("");
-  const notificationRowsRef = useRef<{
-    readonly competitionId: string;
-    readonly leaderboardId: string;
-    readonly rows: readonly LeaderboardItem[];
-  } | null>(null);
 
   const {
     favouriteEntries,
@@ -108,6 +78,25 @@ const CompetitionPage = ({
   const requestedLeaderboardId = useMemo(
     () => new URLSearchParams(location.search).get("leaderboardid") ?? "",
     [location.search],
+  );
+
+  const {
+    leaderboardsState,
+    leaderboardState,
+    leaderboardId,
+    lastUpdateTime,
+    isBusy,
+    changeLeaderboard,
+    refresh,
+    handleRowUpdate,
+    handleColumnUpdate,
+  } = useLeaderboardData(
+    competitionId,
+    requestedLeaderboardId,
+    favouriteEntries.size > 0,
+    isFavourite,
+    competition?.name ?? "Competition",
+    notifyIfFavourite,
   );
 
   useEffect(() => {
@@ -135,111 +124,6 @@ const CompetitionPage = ({
       controller.abort();
     };
   }, [competitionId]);
-
-  useEffect(() => {
-    if (!competitionId) {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const loadLeaderboards = async () => {
-      setLeaderboardsState({ status: "loading" });
-
-      try {
-        const data = await retryWithBackoff(
-          (signal) => fetchLeaderboards(competitionId, signal),
-          controller.signal,
-          { maxRetries: 3 },
-        );
-
-        if (!controller.signal.aborted) {
-          setLeaderboardsState({ status: "success", data });
-
-          const selectableLeaderboards = data.filter(isSelectableLeaderboard);
-
-          setLeaderboardId((currentLeaderboardId) => {
-            const preferredLeaderboard =
-              data.find((item) => String(item.id) === currentLeaderboardId) ??
-              data.find((item) => String(item.id) === requestedLeaderboardId) ??
-              selectableLeaderboards[0];
-
-            if (!preferredLeaderboard) {
-              setLeaderboardState({ status: "idle" });
-              return "";
-            }
-
-            return String(preferredLeaderboard.id);
-          });
-        }
-      } catch (fetchError) {
-        if (!controller.signal.aborted && !isAbortError(fetchError)) {
-          setLeaderboardsState({
-            status: "error",
-            error: getErrorMessage(fetchError, "Unable to load leaderboards"),
-          });
-        }
-      }
-    };
-
-    void loadLeaderboards();
-
-    return () => {
-      controller.abort();
-    };
-  }, [competitionId, requestedLeaderboardId]);
-
-  useEffect(() => {
-    if (!competitionId || !leaderboardId) {
-      return;
-    }
-
-    // eslint-disable-next-line functional/immutable-data -- discard the previous leaderboard snapshot
-    notificationRowsRef.current = null;
-    const controller = new AbortController();
-
-    const loadLeaderboard = async () => {
-      setLeaderboardState({ status: "loading" });
-
-      try {
-        const data = await retryWithBackoff(
-          (signal) => fetchLeaderboard(competitionId, leaderboardId, signal),
-          controller.signal,
-          { maxRetries: 3 },
-        );
-
-        if (!controller.signal.aborted) {
-          const indexedData = {
-            ...data,
-            items: data.items.map((item, index) => ({
-              ...item,
-              _index: index,
-            })),
-          };
-          // eslint-disable-next-line functional/immutable-data -- snapshot used to compare streamed updates
-          notificationRowsRef.current = {
-            competitionId,
-            leaderboardId,
-            rows: indexedData.items,
-          };
-          setLeaderboardState({ status: "success", data: indexedData });
-        }
-      } catch (fetchError) {
-        if (!controller.signal.aborted && !isAbortError(fetchError)) {
-          setLeaderboardState({
-            status: "error",
-            error: getErrorMessage(fetchError, "Unable to load results"),
-          });
-        }
-      }
-    };
-
-    void loadLeaderboard();
-
-    return () => {
-      controller.abort();
-    };
-  }, [competitionId, leaderboardId, refreshTick]);
 
   useEffect(() => {
     if (!competitionId || leaderboardsState.status !== "success") {
@@ -283,62 +167,6 @@ const CompetitionPage = ({
       controller.abort();
     };
   }, [competitionId, leaderboardsState]);
-
-  const handleRowUpdate = useCallback(
-    (rows: readonly LeaderboardItem[]) => {
-      setLastUpdateTime(new Date());
-      const previous = notificationRowsRef.current;
-      if (
-        previous?.competitionId === competitionId &&
-        previous.leaderboardId === leaderboardId
-      ) {
-        if (favouriteEntries.size > 0) {
-          notifyIfFavourite(
-            rows,
-            isFavourite,
-            competition?.name ?? "Competition",
-            previous.rows,
-          );
-        }
-        // eslint-disable-next-line functional/immutable-data -- retain the latest stream snapshot
-        notificationRowsRef.current = {
-          ...previous,
-          rows: mergeRowsByEntry(previous.rows, rows),
-        };
-      }
-      setLeaderboardState((current) =>
-        current.status === "success"
-          ? {
-              ...current,
-              data: {
-                ...current.data,
-                items: mergeRowsByEntry(current.data.items, rows),
-              },
-            }
-          : current,
-      );
-    },
-    [
-      competitionId,
-      leaderboardId,
-      favouriteEntries.size,
-      isFavourite,
-      notifyIfFavourite,
-      competition?.name,
-    ],
-  );
-
-  const handleColumnUpdate = useCallback(
-    (columns: readonly LeaderboardColumn[]) => {
-      setLastUpdateTime(new Date());
-      setLeaderboardState((current) =>
-        current.status === "success"
-          ? { ...current, data: { ...current.data, columns: [...columns] } }
-          : current,
-      );
-    },
-    [],
-  );
 
   const isDevelopment =
     typeof window !== "undefined" && window.location.hostname === "localhost";
@@ -395,8 +223,6 @@ const CompetitionPage = ({
   const dataRowCount =
     visibleRows.length - visibleRows.filter(isSectionRow).length;
   const loadingLeaderboards = leaderboardsState.status === "loading";
-  const loadingResults = leaderboardState.status === "loading";
-  const isBusy = loadingLeaderboards || loadingResults;
   const error =
     leaderboardsState.status === "error"
       ? leaderboardsState.error
@@ -417,24 +243,8 @@ const CompetitionPage = ({
     [isFavourite, toggleFavourite, notificationPermission, requestPermission],
   );
 
-  const handleLeaderboardChange = (value: string) => {
-    setLeaderboardId(value);
-    setLeaderboardState({ status: "idle" });
-  };
-
-  const handleFilterChange =
-    (field: keyof FilterState) => (event: ChangeEvent<HTMLInputElement>) => {
-      setFilters((current) => ({ ...current, [field]: event.target.value }));
-    };
-
-  const handleClassChange = (value: string) => {
-    setFilters((current) => ({ ...current, className: value }));
-  };
-
-  const refreshCurrentSelection = () => {
-    if (competitionId && leaderboardId && !isBusy) {
-      setRefreshTick((current) => current + 1);
-    }
+  const handleFilterChange = (field: keyof FilterState, value: string) => {
+    setFilters((current) => ({ ...current, [field]: value }));
   };
 
   return (
@@ -455,12 +265,11 @@ const CompetitionPage = ({
                 isBusy={isBusy}
                 isCompetitionLive={isCompetitionLive}
                 isCompetitionToday={isToday}
-                onLeaderboardChange={handleLeaderboardChange}
+                onLeaderboardChange={changeLeaderboard}
                 onFilterChange={handleFilterChange}
-                onClassChange={handleClassChange}
                 onStreamResultsChange={setStreamResults}
                 onResetFilters={() => setFilters(initialFilters)}
-                onRefresh={refreshCurrentSelection}
+                onRefresh={refresh}
               />
             </Columns.Column>
             <Columns.Column size={8}>
