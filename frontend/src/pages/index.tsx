@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { graphql, Link, PageProps, type HeadFC } from "gatsby";
 import startCase from "lodash/startCase";
 import {
@@ -20,11 +20,8 @@ import {
   competitionStatusColor,
   competitionStatusLabel,
 } from "../lib/competitionStatus";
-import { mapCompetitionNode, parseCompetitionDate } from "../lib/dataParser";
+import { useCompetitions } from "../hooks/useCompetitions";
 import { createCompetitionSiteNameMap } from "../lib/eventSiteNames";
-import { fetchAllCompetitions } from "../lib/leaderboardApi";
-import { retryWithBackoff } from "../lib/retryWithBackoff";
-import { type Competition } from "../types/leaderboard";
 
 const IndexPage = (props: Readonly<PageProps<Queries.IndexPageQueryQuery>>) => {
   const { data } = props;
@@ -32,40 +29,7 @@ const IndexPage = (props: Readonly<PageProps<Queries.IndexPageQueryQuery>>) => {
     () => createCompetitionSiteNameMap(data.allCompetitionSiteName.nodes),
     [data],
   );
-  const initialCompetitions = useMemo<readonly Competition[]>(
-    () => data.allCompetition.nodes.map(mapCompetitionNode),
-    [data],
-  );
-
-  const [competitions, setCompetitions] =
-    useState<readonly Competition[]>(initialCompetitions);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const refreshCompetitions = async () => {
-      try {
-        const freshData = await retryWithBackoff(
-          (signal) => fetchAllCompetitions(signal),
-          controller.signal,
-        );
-        if (!controller.signal.aborted) {
-          setCompetitions(freshData.map(parseCompetitionDate));
-        }
-      } catch (fetchError) {
-        // Keep existing data on error
-        if (!controller.signal.aborted) {
-          console.warn("Failed to refresh competitions:", fetchError);
-        }
-      }
-    };
-
-    void refreshCompetitions();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  const competitions = useCompetitions(data.allCompetition.nodes);
 
   const currentCompetitions = useMemo(() => {
     const today = newValidDate();
