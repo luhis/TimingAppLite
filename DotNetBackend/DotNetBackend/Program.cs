@@ -114,7 +114,7 @@ app.UseExceptionHandler(errorApp =>
         }
 
         var statusCode = exceptionHandler.Error is HttpRequestException { StatusCode: not null } httpRequestException
-            ? (int)(httpRequestException.StatusCode ?? HttpStatusCode.InternalServerError)
+            ? (int)httpRequestException.StatusCode.Value
             : StatusCodes.Status500InternalServerError;
 
         context.Response.StatusCode = statusCode;
@@ -167,7 +167,7 @@ app.MapGet("/API/1/Competitions/{competitionId:int}/LeaderBoards/{leaderboardId:
     .Produces(200, contentType: "application/json")
     .WithSummary("Returns leaderboard data for a competition");
 
-app.MapGet("/API/1/Competitions/{competitionId:int}/SiteName", async (IApiClient api, int competitionId, CancellationToken ct) => await api.GetSiteName(competitionId, ct))
+app.MapGet("/API/1/Competitions/{competitionId:int}/SiteName", (IApiClient api, int competitionId, CancellationToken ct) => api.GetSiteName(competitionId, ct))
     .Produces<string>(StatusCodes.Status200OK)
     .WithSummary("Returns the site name for a competition");
 
