@@ -17,7 +17,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.15" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.15" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="10.0.15" />
-    <PackageReference Include="Microsoft.OpenApi" Version="2.13.1" />
+    <PackageReference Include="Microsoft.OpenApi" Version="3.11.1" />
     <PackageReference Include="Scalar.AspNetCore" Version="3.3.0" />
   </ItemGroup>
 
