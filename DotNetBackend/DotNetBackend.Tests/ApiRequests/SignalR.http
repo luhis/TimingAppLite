@@ -1,0 +1,4 @@
+### SignalR availability
+POST {{baseUrl}}/hubs/LeaderBoard/negotiate?negotiateVersion=1
+Accept: application/json
+Content-Length: 0

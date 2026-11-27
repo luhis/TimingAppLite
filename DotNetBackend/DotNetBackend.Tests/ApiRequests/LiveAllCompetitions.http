@@ -1,7 +1,3 @@
 ### LiveAllCompetitions
 GET {{baseUrl}}/API/1/LiveAllCompetitions/
 Accept: application/json
-
-### LiveAllCompetitions new base  
-GET https://timingapplive.co.uk/API/1/LiveAllCompetitions/
-Accept: application/json
